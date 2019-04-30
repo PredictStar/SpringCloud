@@ -28,9 +28,13 @@ public class HelloController {
 
     @RequestMapping("/hello")
     public String index(){
-        ServiceInstance instance=client.getInstances("STORES").get(0);
-        logger.info("/hello,host:"+instance.getHost()+",service_id"+instance.getServiceId());
-        return "Hello World??";
+        List<ServiceInstance> list = client.getInstances("STORES");
+        if (list != null && list.size() > 0 ) {
+            ServiceInstance instance=list.get(0);
+            logger.info("/hello,host:"+instance.getHost()+",service_id"+instance.getServiceId());
+        }
+
+        return "Hello World???";
     }
 
 

@@ -1,0 +1,66 @@
+package cn.nzxxx.pojo;里也有个帮助类描述
+
+	
+	
+ 
+ 
+ 
+package cn.nzxxx.tool;-- Helper
+
+	反射类--运行方法
+	反射类--返回属性值
+	反射类--更改类属性值			
+	
+	获取数字集合的均值
+	获取数字集合的最大值
+	获取数字集合的最小值
+	获取数字集合的中值
+	获取数字集合的均方差
+	判断字符串是否为数字(包括整数或浮点型数字)
+           判断字符串是否为整数
+	对List<泛型无所谓>值判断,并返回第一个不为数字元素的下标,否则返回null;(此方法只识别整数)
+	两个Double返回大数值
+	两个Double返回小数值
+	
+	List元素个数为0返回null,否则正常返回
+	String为null赋为"",否则去两边空格
+	String为""或NULL,赋为NULL,否则去两边空格
+	
+	Str转换为BASE64位
+	SHA1加密方式
+	MD5加密方式
+	 订单id由日期+五为随机数组成 
+	 返回从1970至今的一个毫秒数+两位随机数,-且必须是两位数字;例05 
+	 
+	 List<Map<String,String>>-->List<实体类>
+	 String(json)->Map 
+	 Str(json)->List 
+	 Integer->String
+	 pojo实体类->String(json) 	
+	 String(json)->类(对象) 
+	 String(json)->List<类> 	
+	 String-->Date 
+	 List<>->String(json) 
+	 Map->String(json)  
+	  获取堆栈异常信息Exception e->String
+	  
+	 HttpClient的Get请求--录屏-第六天-09//00:14:56
+	 HttpClient的Post请求--录屏-第六天-09//00:14:56,模仿表单提交
+	 HttpClient的传值为json的Post请求--录屏-第六天-09//00:14:56
+	 
+	 Date-->String
+	 判断字符串是否为日期
+	 根据开始时间和结束时间返回时间段内的时间集合 	(包括xi与da)
+	 传日期返回,返回此日期所在月的最后一天的那个日期
+	 两个date日期比大小--返回大日期(会更改大日期的时间,为23:59:59的形式返回)
+	 两个date日期比大小--返回大日期(不对大日期做更改)
+	 两个date日期比大小--返回小日期
+	 两个date日期-返回月差|返回年差|返回日差|返回时差
+	 
+	 
+	 
+	 
+	 根据流不同返回和流对应的HSSFWorkbook 还是 XSSFWorkbook
+	导出Excel 
+ 	根据excle的cell,返回值,若Cell为null返回""
+	 
