@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Implementation-Title: predict
+Implementation-Version: 0.0.1-SNAPSHOT
+Built-By: 18722
+Implementation-Vendor-Id: cn.nzxxx
+Spring-Boot-Version: 2.0.6.RELEASE
+Main-Class: org.springframework.boot.loader.JarLauncher
+Start-Class: cn.nzxxx.predict.PredictApplication
+Spring-Boot-Classes: BOOT-INF/classes/
+Spring-Boot-Lib: BOOT-INF/lib/
+Created-By: Apache Maven 3.5.4
+Build-Jdk: 1.8.0_171
+Implementation-URL: https://projects.spring.io/spring-boot/#/spring-bo
+ ot-starter-parent/predict
+

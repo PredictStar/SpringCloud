@@ -1,0 +1,9 @@
+
+/*自定义样式*/
+.hpS_search-box{
+	background: #F8FAFC;
+	border: 1px solid #EDEDED;
+	height: 50px;
+	width: 100%;
+	padding-top: 16px;
+}

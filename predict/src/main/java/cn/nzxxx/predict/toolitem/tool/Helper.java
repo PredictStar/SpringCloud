@@ -1,14 +1,5 @@
 package cn.nzxxx.predict.toolitem.tool;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.io.PushbackInputStream;
-import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
@@ -39,6 +30,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import cn.nzxxx.predict.toolitem.entity.ReturnClass;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileItemFactory;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Collections;
@@ -82,6 +77,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
+import sun.misc.BASE64Decoder;
+import sun.misc.BASE64Encoder;
 
 public class Helper {
 
@@ -95,6 +93,7 @@ public class Helper {
 	//文件后缀白名单
 	public static final List<String> mFileList = new ArrayList<>();
 	static {//第一次Helper. 的时候就已经执行了;下添加需重启
+		//txt没有文件流头,直接就是内容
 		mFileTypes.put("jpg","['ffd8ff']");
 		mFileTypes.put("png","['89504e']");
 		mFileTypes.put("gif","['47494638']");
@@ -105,10 +104,10 @@ public class Helper {
 		mFileTypes.put("html", "['68746d6c3e']");
 		mFileTypes.put("eml", "['44656c69766572792d646174653a']");
 		mFileTypes.put("pdf", "['255044']");
-		mFileTypes.put("docx", "['504b0304']");
+		mFileTypes.put("docx", "['504b34']");
 		mFileTypes.put("doc", "['0d444f43','1234567890ff','31be000000ab0000','7ffe340a','d0cf11e0a1b11ae1']");
-		mFileTypes.put("xlsx", "['504b0304']");
-		mFileTypes.put("xls", "['d0cf11','0904060000001000f6055c00','0902060000001000b9045c00']");
+		mFileTypes.put("xlsx", "['504b34']");
+		mFileTypes.put("xls", "['d0cf11','0904060000001000','0902060000001000']");
 		mFileTypes.put("rar", "['526172']");
 		mFileTypes.put("avi", "['41564920']");
 		mFileTypes.put("mp4", "['000000186674']");
@@ -125,7 +124,22 @@ public class Helper {
 		mFileList.add("xlsx");
 	}
 	/**
-	 * 是否符合文件白名单
+	 * 符合件白名单的才允许上传
+	 * @return true表都符合
+	 */
+	public static boolean isFileList(MultipartFile[] files)throws IOException {
+		boolean bol=true;
+		for(int i=0;i<files.length;i++){
+			boolean retbol= isFileList(files[i]);
+			if(!retbol){
+				bol=false;
+				break;
+			}
+		}
+		return bol;
+	}
+	/**
+	 * 符合件白名单的才允许上传
 	 * @return true表符合
 	 */
 	public static boolean isFileList(MultipartFile file)throws IOException {
@@ -134,11 +148,20 @@ public class Helper {
 		String fileNa=file.getOriginalFilename();
 		//后缀
 		String fileType=fileNa.substring(fileNa.lastIndexOf(".")+1);
-
+		//包含在白名单中
+		if(mFileList.contains(fileType)){
+			if(file.getSize()!=0){//为0时不校验是否是篡改文件
+				//校验是否是篡改文件
+				boolean isbol=isFileFalsify(file);//return false 不是篡改,正常文件
+				if(!isbol){
+					bol=true;
+				}
+			}else{
+				bol=true;
+			}
+		}
 		return  bol;
 	}
-
-
 	/**
 	 * 判断是否存在文件后缀篡改
 	 * 二进制头与后缀对应关系 参考如下
@@ -146,7 +169,7 @@ public class Helper {
 	 *  https://blog.csdn.net/ccj2020/article/details/87603903
 	 * @return true 存在篡改现象(mFileTypes集合里没有的也返回true);txt格式不进行比对返回true
 	 * @return false 不是篡改,正常文件
-	 * 上传白名单校验
+	 * 上传白名单校验附属方法
 	 */
 	public static boolean isFileFalsify(MultipartFile file)throws IOException {
 		boolean reaBol=true;
@@ -156,15 +179,13 @@ public class Helper {
 		String fileType=fileNa.substring(fileNa.lastIndexOf(".")+1);
 		//后缀对应的流值
 		String fileByte=mFileTypes.get(fileType);
-		if (StringUtils.isBlank(fileByte)||fileType.toLowerCase().equals("txt")){//txt没有文件流头,直接就是内容
+		if (StringUtils.isBlank(fileByte)){
 			return reaBol;
-		}else{
-			fileByte=fileByte.toLowerCase();
 		}
 		List<String> fileByteList=Helper.stringJSONToList(fileByte);
 		byte[] digest=file.getBytes();
 		StringBuffer sb = new StringBuffer();
-		for (int i = 0; i < digest.length; i++) {
+		for (int i = 0; i < digest.length&&i<50; i++) {
 			sb.append(Integer.toHexString(((int) digest[i]) & 0xFF));
 		}
 		String fileCode =sb.toString();//获取到流字符
@@ -178,6 +199,15 @@ public class Helper {
 		}
 		return reaBol;
 	}
+
+	/**
+     * 简单的测试可写这,否则报类未定义(当未启动项目时)
+     * 否则还是用 @Test 最佳
+     */
+    public static void main(String[] args){
+
+
+    }
 
 
 
@@ -201,7 +231,8 @@ public class Helper {
 				}
 			}
 		}catch (Exception e){
-			System.out.println("Helper页面fsIsProperty方法报错:"+Helper.exceptionToString(e));
+			String exceptionToString = Helper.exceptionToString(e);
+			System.out.println("Helper页面fsIsProperty方法报错:"+exceptionToString.substring(0,500>exceptionToString.length()?exceptionToString.length():500));
 			return  bol;
 		}
 		return  bol;
@@ -233,7 +264,7 @@ public class Helper {
 
 		} catch (Exception e) {
 			String exceptionToString = Helper.exceptionToString(e);
-			System.out.println("Helper页面fsOperationMethod方法报错-会继续往后执行"+exceptionToString);
+			System.out.println("Helper页面fsOperationMethod方法报错-会继续往后执行"+exceptionToString.substring(0,500>exceptionToString.length()?exceptionToString.length():500));
 		}
 		return obj;
 	}
@@ -250,7 +281,7 @@ public class Helper {
 			obj=field.get(cla);
 		} catch (Exception e) {
 			String exceptionToString = Helper.exceptionToString(e);
-			System.out.println("Help页面fsGetProperty方法报错"+exceptionToString);
+			System.out.println("Help页面fsGetProperty方法报错"+exceptionToString.substring(0,500>exceptionToString.length()?exceptionToString.length():500));
 		}
 		return obj;
 	}
@@ -270,13 +301,12 @@ public class Helper {
 				try {
 					field.set(obj, map.get(str));
 				} catch (IllegalArgumentException | IllegalAccessException e) {
-
 					String exceptionToString = Helper.exceptionToString(e);
-					System.out.println("Helper页面fsClass方法报错2"+exceptionToString);
+					System.out.println("Helper页面fsClass方法报错2"+exceptionToString.substring(0,500>exceptionToString.length()?exceptionToString.length():500));
 				}
 			} catch (NoSuchFieldException | SecurityException e) {
 				String exceptionToString = Helper.exceptionToString(e);
-				System.out.println("Helper页面fsClass方法报错1"+exceptionToString);
+				System.out.println("Helper页面fsClass方法报错1"+exceptionToString.substring(0,500>exceptionToString.length()?exceptionToString.length():500));
 			}
 
 		}
@@ -490,15 +520,29 @@ public class Helper {
 
 
 	/**
-	 * Str转换为BASE64位
+	 * byte[]转换为BASE64位的字符串
 	 * @return String
 	 * NULL->NULL
 	 */
-	public static String getBASE64(String str) {
-		if(str==null){return null;}
-		return (new sun.misc.BASE64Encoder()).encode( str.getBytes() );
+	public static String byteToBase64(byte[] bt) {
+		if(bt==null){return null;}//不做null处理会异常
+		//return Base64.encodeBase64String(bt);//import org.apache.commons.codec.binary.Base64;
+		return new BASE64Encoder().encode(bt);//import sun.misc.BASE64Decoder;是jdk1.8的包
 	}
-
+	/**
+	 * BASE64位的字符串转换为byte[]
+	 * @return byte[]
+	 * NULL|异常->NULL
+	 */
+	public static byte[] base64ToByte(String str) {
+		if(str==null){return null;}//不做null处理会异常
+		//return Base64.decodeBase64(str);//此不用写try-catch
+		try{
+			return new BASE64Decoder().decodeBuffer(str);
+		}catch (Exception e){
+			return null;
+		}
+	}
 
 	/**
 	 * SHA1加密方式
@@ -599,28 +643,49 @@ public class Helper {
 		return id;
 	}
 	/**
-	 * in()格式使用占位符
+	 * in('a','b','c') 使用占位符
 	 * @author 子火
 	 * @param	str 格式:a,b,c|'a','b','c'|"a","b","c"
-	 * @return	字符串"?,?,?" list是对应的占位符赋值,空返回 "''"
-	 * 注意使用时例 in ("+Helper.inPlaceholder(str,listzwf)+")
-	 * 注意in里长度限制问题,所以此处代码需要改
+     * @param list 是对应给占位符赋值的;
+     * @param col 列名
+	 * @return	字符串 (col in(?,?,?)) str为空,返回"(col in (?))",list会赋一个元素""
+	 * 超出400个,会返回 (col in(?,?,?) or col in(?,?,?))
+	 * 注意,使用时例 where 1=1 and "+Helper.inPlaceholder(str,list,col)+" order by createtime
 	 */
 
-	public static String inPlaceholder(String str,List list) {
+	public static String inPlaceholder(String str,List list,String col) {
 		if(StringUtils.isBlank(str)){
-			return str="''";
+		    str="("+col+" in (?)";
+		    list.add("");
+			return str;
 		}
 		str=str.replaceAll("'","").replaceAll("\"","");
 		String[] strr=str.split(",");
-		StringBuffer sub=new StringBuffer();
-		sub.append("?");
-		list.add(strr[0]);
-		for(int i=1;i<strr.length;i++){
-			sub.append(",?");
-			list.add(strr[i]);
-		}
-		return sub.toString();
+		StringBuffer restr=new StringBuffer();
+		//一个in里放多少个
+		int inNums=400;
+		//数组里有多少个元素
+		int strrLength=strr.length;
+		//需要几个in,最少一个
+		double isInNum=Math.ceil((double)strrLength/inNums);
+		restr.append(" (");
+		for(int i=1;i<=isInNum;i++){
+            if(i!=1){
+                restr.append(" or ");
+            }
+            restr.append(col+" in (");
+            for(int ii=(i-1)*inNums,j=0;j<inNums&&ii<strrLength;ii++,j++){
+                if(j==0){
+                    restr.append("?");
+                }else{
+                    restr.append(",?");
+                }
+                list.add(strr[ii]);
+            }
+            restr.append(") ");
+        }
+        restr.append(") ");
+        return restr.toString();
 	}
 
 	/**
@@ -654,7 +719,38 @@ public class Helper {
 	}
 // ----------------------------------------------------------------------------------------------------------------
 //--------------------------------------数据类型转换--------------------------------------------------------------------
-	/**
+
+    /**
+     * 根据文件地址返回FileItem
+     * 方便本地测试上传文件
+     * MultipartFile mfile = new CommonsMultipartFile(Helper.getFileItem("C:\\Users\\18722\\Desktop\\a.jpg"));
+     * @param filePath 文件地址,原理,就是通过地址,声明File类再转为 FileItem
+     * @return
+     */
+    public static FileItem getFileItem(String filePath) {
+        FileItemFactory factory = new DiskFileItemFactory(16, null);
+        String textFieldName = "textField";
+        int num = filePath.lastIndexOf("\\");
+        String extFile = filePath.substring(num);
+        FileItem item = factory.createItem(textFieldName, "text/plain", true, extFile);
+        File newfile = new File(filePath);
+        int bytesRead = 0;
+        byte[] buffer = new byte[8192];
+        try {
+            FileInputStream fis = new FileInputStream(newfile);
+            OutputStream os = item.getOutputStream();
+            while ((bytesRead = fis.read(buffer, 0, 8192)) != -1) {
+                os.write(buffer, 0, bytesRead);
+            }
+            os.close();
+            fis.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return item;
+    }
+
+    /**
 	 *List<Map<String,String>>-->List<实体类>
 	 *@param listMap 参1的key要同属性值;
 	 *@param objj    参2是实体类对象,两个参其中一方为null返回null
@@ -707,7 +803,8 @@ public class Helper {
 				}
 				listObj.add(lei);
 			} catch (Exception e) {
-				System.out.println(exceptionToString(e));
+				String exceptionToString = Helper.exceptionToString(e);
+				System.out.println("Helper页面fsClass方法报错2"+exceptionToString.substring(0,500>exceptionToString.length()?exceptionToString.length():500));
 				return null;
 			}
 		}
@@ -1019,8 +1116,12 @@ public class Helper {
 	/**
 	 *获取堆栈异常信息Exception e->String
 	 *然后输出sys("页面位置"+str),可替代!!e.print...
-	 * 作用:是转为字符串后截取一定的长度进行输出(因为e.print...太长会造成资源浪费)
+	 * 作用1:是转为字符串后截取一定的长度进行输出
+	 * 	因为,当需要在后台输出看时e.print...太长会造成资源浪费(一般不会这样用,后台看哈,前台看去)
+	 * 	例 String str=Helper.exceptionToString(e);str.substring(0,500>str.length()?str.length():500)
 	 * 作用2,方便捕获到异常后返回给前台
+	 * e.getMessage():非常简洁的异常信息;e.toString()简洁的异常信息;Helper.exceptionToString(e)-全
+	 * 		详见 JAVA\其它\小知识点\try+return
 	 * @param t
 	 * @return String
 	 */
@@ -1032,9 +1133,7 @@ public class Helper {
 			return sw.toString();
 
 		}finally{
-
 			pw.close();
-
 		}
 
 	}
@@ -1046,9 +1145,10 @@ public class Helper {
 	 *HttpClient的Get请求--录屏-第六天-09//00:14:56
 	 * @param url String url(例www.xxx.cn/content/81)
 	 * @param param Map(所传递的"表单"值)--如果有map注意其value值不能为NULL
+	 * @param bol 在方法外声明个bol,若值被更改为true表是异常直接返回前台即可
 	 * @return String
 	 */
-	  public static String doGet(String url,Map<String, String> param){
+	  public static String doGet(String url,Map<String, String> param,boolean bol){
 		  //param为url赋上变量(即占位符?),如果没有可用null表示
 		  CloseableHttpClient client=HttpClients.createDefault();
 		  String resultString="";
@@ -1069,17 +1169,17 @@ public class Helper {
 
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			  bol=true;
+			  return "{statusCode: \"300\", stateDescribe: \"请求接口异常\", valueDescribe: \""+Helper.exceptionToString(e)+"\"}";
 		}finally{
-
 			try {
 				if(closeableHttpResponse!=null){
-
 					closeableHttpResponse.close();
 				}
 				client.close();
 			} catch (IOException e) {
-				e.printStackTrace();
+				bol=true;
+				return "{statusCode: \"300\", stateDescribe: \"请求接口异常\", valueDescribe: \""+Helper.exceptionToString(e)+"\"}";
 			}
 
 		}
@@ -1090,6 +1190,7 @@ public class Helper {
 	 *HttpClient的Post请求--录屏-第六天-09//00:14:56,模仿表单提交
 	 * @param url String (例www.xxx.cn/posttest)
 	 * @param param Map(所传递的"表单"值)--如果有map注意其value值不能为NULL
+	 * @param bol 在方法外声明个bol,若值被更改为true表是异常直接返回前台即可
 	 * @return String
 	 * controller处,例[]--post表只接收post请求,不用如下,别的也成
 	 * [@RequestMapping(value="/posttest",method=RequestMapping.POST")]
@@ -1097,7 +1198,7 @@ public class Helper {
 	 * controller方法里执行request.getParameter("a");若两处都赋值了,则输出?处的值;若只一处赋值,都能获取且输出
 	 * 注意用?传json格式的字符串,后台报错,用map传可以后台获取(用参及request都可以)
 	 */
-	  public static String doPost(String url,Map<String, String> param){
+	  public static String doPost(String url,Map<String, String> param,boolean bol){
 			CloseableHttpClient httpClient = HttpClients.createDefault();
 			CloseableHttpResponse closeableHttpResponse=null;
 			String resultString="";
@@ -1116,7 +1217,8 @@ public class Helper {
 					resultString= EntityUtils.toString(closeableHttpResponse.getEntity(),"utf-8");
 
 			}  catch (Exception e) {
-				e.printStackTrace();
+				  bol=true;
+				  return "{statusCode: \"300\", stateDescribe: \"请求接口异常\", valueDescribe: \""+Helper.exceptionToString(e)+"\"}";
 			}finally{
 
 				try {
@@ -1124,7 +1226,8 @@ public class Helper {
 					closeableHttpResponse.close();
 
 				} catch (IOException e) {
-					e.printStackTrace();
+					bol=true;
+					return "{statusCode: \"300\", stateDescribe: \"请求接口异常\", valueDescribe: \""+Helper.exceptionToString(e)+"\"}";
 				}
 		  }
 			  return resultString;
@@ -1137,12 +1240,13 @@ public class Helper {
 	 *HttpClient的传值为json的Post请求--录屏-第六天-09//00:14:56
 	 * @param url String (例www.xxx.cn/posttest);那个获取网站代码的是阿里云的OSS
 	 * @param json String json(如{"a":"aa","b":"bb"})--猜值不能为NULL
+	 * @param bol 在方法外声明个bol,若值被更改为true表是异常直接返回前台即可
 	 * @return String
 	 *  注意controller处,例[]
 	 * [@RequestMapping(value="/posttest",method=RequestMapping.POST")
 	 *	@ResponseBody 方法(@RequestBody Map map)]					  *
 	 */
-	  public static String doPostJSON(String url,String json){
+	  public static String doPostJSON(String url,String json,boolean bol){
 		  CloseableHttpClient httpClient=HttpClients.createDefault();
 		  CloseableHttpResponse response=null;
 		  String resultString="";
@@ -1154,15 +1258,15 @@ public class Helper {
 			resultString=EntityUtils.toString(response.getEntity(),"utf-8");
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			  bol=true;
+			  return "{statusCode: \"300\", stateDescribe: \"请求接口异常\", valueDescribe: \""+Helper.exceptionToString(e)+"\"}";
 		}finally{
-
 			try {
 				response.close();
 			} catch (IOException e) {
-				e.printStackTrace();
+				bol=true;
+				return "{statusCode: \"300\", stateDescribe: \"请求接口异常\", valueDescribe: \""+Helper.exceptionToString(e)+"\"}";
 			}
-
 		}
 		  return resultString;
 	  }
@@ -1172,8 +1276,9 @@ public class Helper {
 	 * 和HttpClient看着就不一样
 	 * @param urls 参urls例http://openapi.1card1.cn/OpenApi/Get_MembersPagedV2?openId=E1FC5F553C2D48188000D386E86AC663&signature="+urlString+"&timestamp="+time
 	 * @param data 参data例"{\"cardId\":\"desc\",\"orderBy\":\"\",\"pageSize\":\"10\",\"userAccount\":\"10000\",\"pageIndex\":\"0\"}"
+	 * @param bol 在方法外声明个bol,若值被更改为true表是异常直接返回前台即可
 	 */
-	public static String doPostYKY(String urls,String data){
+	public static String doPostYKY(String urls,String data,boolean bol){
 		PrintWriter printWriter = null;
 		BufferedReader bufferedReader = null;
 		// BufferedReader bufferedReader = null;
@@ -1221,12 +1326,12 @@ public class Helper {
 				return responseResult.toString();
 
 			} else {
-
+				bol=true;
 				return "{statusCode: \"300\", stateDescribe: \"查询接口发生错误\", valueDescribe: \"!?\"}";
 			}
 		} catch (Exception e) {
-
-			return "{statusCode: \"300\", stateDescribe: \"查询接口发生错误\", valueDescribe: \"?!\"}";
+			bol=true;
+			return "{statusCode: \"300\", stateDescribe: \"请求接口异常\", valueDescribe: \""+Helper.exceptionToString(e)+"\"}";
 
 		} finally {
 			httpURLConnection.disconnect();
@@ -1237,8 +1342,9 @@ public class Helper {
 				if (bufferedReader != null) {
 					bufferedReader.close();
 				}
-			} catch (IOException ex) {
-				ex.printStackTrace();
+			} catch (IOException e) {
+				bol=true;
+				return "{statusCode: \"300\", stateDescribe: \"请求接口异常\", valueDescribe: \""+Helper.exceptionToString(e)+"\"}";
 			}
 
 		}

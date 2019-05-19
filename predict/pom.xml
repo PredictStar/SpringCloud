@@ -50,18 +50,22 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<!--actuator 用于监控应用信息;使用见书<<SpringCloud微服务>>P27-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-freemarker</artifactId>
+        </dependency>
+		<!--actuator 用于监控应用信息;使用见书<<SpringCloud微服务>>P27
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
-		</dependency>
-		<!--服务治理 Eureka 主要作用:各个微服务实例(多个项目(项目又在多个不同地址(主机)运行))的自动化注册与实现-->
+		</dependency>-->
+		<!--服务治理 Eureka 主要作用:各个微服务实例(多个项目(项目又在多个不同地址(主机)运行))的自动化注册与实现
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId> spring-cloud-starter-eureka-server</artifactId>
             <version>1.4.5.RELEASE</version>
-        </dependency>
-        <!--依赖关系管理?开始-->
+        </dependency>-->
+        <!--依赖关系管理?开始
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-config</artifactId>
@@ -69,7 +73,7 @@
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
-        </dependency>
+        </dependency>-->
         <!--结束-->
 		<!-- Spring -->
 		<dependency>

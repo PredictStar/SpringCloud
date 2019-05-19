@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: cn.nzxxx.predict.PredictApplicationTests
 -------------------------------------------------------------------------------
-Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 8.539 s - in cn.nzxxx.predict.PredictApplicationTests
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 5.953 s - in cn.nzxxx.predict.PredictApplicationTests
