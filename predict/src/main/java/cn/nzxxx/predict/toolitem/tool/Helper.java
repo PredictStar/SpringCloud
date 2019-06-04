@@ -1118,7 +1118,8 @@ public class Helper {
 	 *然后输出sys("页面位置"+str),可替代!!e.print...
 	 * 作用1:是转为字符串后截取一定的长度进行输出
 	 * 	因为,当需要在后台输出看时e.print...太长会造成资源浪费(一般不会这样用,后台看哈,前台看去)
-	 * 	例 String str=Helper.exceptionToString(e);str.substring(0,500>str.length()?str.length():500)
+	 * 	例 String strE=Helper.exceptionToString(e);
+	 * 	   System.out.println(strE.substring(0,500>strE.length()?strE.length():500));
 	 * 作用2,方便捕获到异常后返回给前台
 	 * e.getMessage():非常简洁的异常信息;e.toString()简洁的异常信息;Helper.exceptionToString(e)-全
 	 * 		详见 JAVA\其它\小知识点\try+return
@@ -1380,7 +1381,7 @@ public class Helper {
 	 * Date-->String("yyyy-MM-dd HH:mm:ss")
 	 * @param da-Date 日期
 	 * @param ge-String 格式如 "yyyy年MM月dd日"即转换str后的格式
-	 * @return Date为null返回""因为to_date('','YYYY-mm-dd')会返回null
+	 * @return Date为null返回"",Oracle 的to_date('','YYYY-mm-dd')会返回null,所以需要考虑null的情况
 	 */
 	public static String dateToString(Date da,String ge) {
 		if(da==null){return "";}

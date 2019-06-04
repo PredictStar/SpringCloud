@@ -4,6 +4,7 @@ import cn.nzxxx.predict.toolitem.tool.Helper;
 import cn.nzxxx.predict.webrequest.HelloController;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.entity.ContentType;
 import org.hibernate.validator.internal.util.StringHelper;
 import org.junit.Before;
@@ -27,9 +28,12 @@ import java.awt.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.net.URL;
 import java.security.SecureRandom;
 import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 @RunWith(SpringRunner.class)//引入spring对JUnit4的支持
@@ -45,23 +49,20 @@ public class PredictApplicationTests {
     }
     @Test
     public void getAccount() throws Exception {
-        Integer i=null;
-        //System.out.println(i>0);
+        //System.out.println(new BigDecimal("-.8"));
 
-        /*String s="aa";
-        byte[] digest=s.getBytes();
-        StringBuffer sb = new StringBuffer();
-        for (int i = 0; i < digest.length; i++) {
-            sb.append(Integer.toHexString(((int) digest[i]) & 0xFF));
-        }
-        String resultString = sb.toString();
-        System.out.println(resultString);
-        System.out.println(new String(digest));*/
-
-
+        System.out.println("空:"+isNum(""));
+        System.out.println(".8:"+isNum(".8"));
+        System.out.println("-.8:"+isNum("-.8"));
+        System.out.println("88:"+isNum("88"));
+        System.out.println("-88:"+isNum("-88"));
     }
-
-    public void aa(Object...params){
+    //通过代码规范得知,上行提取出做常量属性(类的属性)会预编译(效率高些),例
+    private static Pattern pattern = Pattern.compile("-?[0-9]*(\\.[0-9]*)?");
+    public boolean isNum(String strNum){
+        if(StringUtils.isBlank(strNum)){return false;}
+        Matcher matcher = pattern.matcher(strNum);
+        return  matcher.matches();
     }
 
 }
