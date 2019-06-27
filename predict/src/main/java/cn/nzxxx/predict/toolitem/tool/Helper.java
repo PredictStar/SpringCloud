@@ -1143,7 +1143,7 @@ public class Helper {
 //--------------------------------------------HttpClient--------------------------------------------------------------------------
 
 	/**
-	 *HttpClient的Get请求--录屏-第六天-09//00:14:56
+	 *HttpClient的Get请求--请求是静态资源,获取返回的资源,是方法获取返回值
 	 * @param url String url(例www.xxx.cn/content/81)
 	 * @param param Map(所传递的"表单"值)--如果有map注意其value值不能为NULL
 	 * @param bol 在方法外声明个bol,若值被更改为true表是异常直接返回前台即可
@@ -1188,7 +1188,7 @@ public class Helper {
 
 	  }
 	/**
-	 *HttpClient的Post请求--录屏-第六天-09//00:14:56,模仿表单提交
+	 *HttpClient的Post请求--模仿表单提交
 	 * @param url String (例www.xxx.cn/posttest)
 	 * @param param Map(所传递的"表单"值)--如果有map注意其value值不能为NULL
 	 * @param bol 在方法外声明个bol,若值被更改为true表是异常直接返回前台即可
@@ -1239,7 +1239,7 @@ public class Helper {
 
 	/**
 	 *HttpClient的传值为json的Post请求--录屏-第六天-09//00:14:56
-	 * @param url String (例www.xxx.cn/posttest);那个获取网站代码的是阿里云的OSS
+	 * @param url String
 	 * @param json String json(如{"a":"aa","b":"bb"})--猜值不能为NULL
 	 * @param bol 在方法外声明个bol,若值被更改为true表是异常直接返回前台即可
 	 * @return String

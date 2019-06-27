@@ -1,6 +1,8 @@
 package cn.nzxxx.predict.webrequest;
 
 import org.jboss.logging.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,7 +16,6 @@ import java.util.Map;
 @Controller
 public class HelloController {
     private final Logger logger=Logger.getLogger(this.getClass());
-
     @RequestMapping(value="/test/aa")
     @ResponseBody
     public List testBB(String str) throws Exception{
