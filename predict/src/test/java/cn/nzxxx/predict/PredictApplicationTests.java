@@ -5,6 +5,7 @@ import cn.nzxxx.predict.webrequest.HelloController;
 
 import com.mongodb.*;
 import com.mongodb.client.*;
+import net.sf.json.JSONObject;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.entity.ContentType;
@@ -65,9 +66,10 @@ public class PredictApplicationTests {
 
     @Test
     public void test() throws Exception {
-        int[][] a=new int[7][];
-        a[1]=new int[8];
-        a[1][2]=4;
+        int a=2;
+        long b=5L;JSONObject jsonObject = new JSONObject();
+        //b=a;
+        //a=b;
         System.out.println(a);
        // System.out.println(-3|0);
 }
