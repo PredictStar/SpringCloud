@@ -94,6 +94,30 @@
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>-->
         <!--结束-->
+        <!-- pdf解析 -->
+        <dependency>
+            <groupId>technology.tabula</groupId>
+            <artifactId>tabula</artifactId>
+            <version>1.0.4</version>
+            <exclusions><!-- 去掉引入的slf4j-simple.jar spring-boot-starter-log4j2 里已经引入个类似的,否则idea启动时有警告 -->
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-simple</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!-- mysql -->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.13</version>
+        </dependency>
+        <!-- JDBC-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+            <version>2.0.6.RELEASE</version>
+        </dependency>
         <dependency> <!-- 引入log4j2依赖 -->
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-log4j2</artifactId>
@@ -240,28 +264,28 @@
             <version>${commons-fileupload.version}</version>
         </dependency>
         <!-- Redis客户端 -->
-        <dependency>
+        <!--<dependency>
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
             <version>${jedis.version}</version>
-        </dependency>
+        </dependency>-->
         <!-- 阿里大于jar-->
-        <dependency>
+        <!--<dependency>
             <groupId>local-repository</groupId>
             <artifactId>taobao-sdkb</artifactId>
             <version>1.0</version>
-        </dependency>
-        <!-- 阿里oss -->
+        </dependency>-->
+        <!-- 阿里oss 里面包含了httpclicent的jar-->
         <dependency>
             <groupId>com.aliyun.oss</groupId>
             <artifactId>aliyun-sdk-oss</artifactId>
             <version>${com.aliyun.oss}</version>
         </dependency>
         <!--mongodb包-->
-        <dependency>
+       <!-- <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-mongodb</artifactId>
-        </dependency>
+        </dependency>-->
         <!-- 猜是AOP包 -->
         <dependency>
             <groupId>org.aspectj</groupId>

@@ -88,126 +88,16 @@ public class Helper {
 	 * @return
 	 */
 	private static final ObjectMapper MAPPER=new ObjectMapper();
-	//文件后缀与流的对应关系
-	public static final Map<String, String> mFileTypes = new HashMap<String, String>();
-	//文件后缀白名单
-	public static final List<String> mFileList = new ArrayList<>();
-	static {//第一次Helper. 的时候就已经执行了;下添加需重启
-		//txt没有文件流头,直接就是内容
-		mFileTypes.put("jpg","['ffd8ff']");
-		mFileTypes.put("png","['89504e']");
-		mFileTypes.put("gif","['47494638']");
-		mFileTypes.put("bmp","['424d']");
-		mFileTypes.put("psd", "['384250']");
-		mFileTypes.put("rtf", "['7b5c72']");
-		mFileTypes.put("xml", "['3c3f78','fffe3c005200']");
-		mFileTypes.put("html", "['68746d6c3e']");
-		mFileTypes.put("eml", "['44656c69766572792d646174653a']");
-		mFileTypes.put("pdf", "['255044']");
-		mFileTypes.put("docx", "['504b34']");
-		mFileTypes.put("doc", "['0d444f43','1234567890ff','31be000000ab0000','7ffe340a','d0cf11e0a1b11ae1']");
-		mFileTypes.put("xlsx", "['504b34']");
-		mFileTypes.put("xls", "['d0cf11','0904060000001000','0902060000001000']");
-		mFileTypes.put("rar", "['526172']");
-		mFileTypes.put("avi", "['41564920']");
-		mFileTypes.put("mp4", "['000000186674']");
-		//文件白名单
-		mFileList.add("jpg");
-		mFileList.add("png");
-		mFileList.add("gif");
-		mFileList.add("xml");
-		mFileList.add("html");
-		mFileList.add("doc");
-		mFileList.add("docx");
-		mFileList.add("pdf");
-		mFileList.add("xls");
-		mFileList.add("xlsx");
-	}
-	/**
-	 * 符合件白名单的才允许上传
-	 * @return true表都符合
-	 */
-	public static boolean isFileList(MultipartFile[] files)throws IOException {
-		boolean bol=true;
-		for(int i=0;i<files.length;i++){
-			boolean retbol= isFileList(files[i]);
-			if(!retbol){
-				bol=false;
-				break;
-			}
-		}
-		return bol;
-	}
-	/**
-	 * 符合件白名单的才允许上传
-	 * @return true表符合
-	 */
-	public static boolean isFileList(MultipartFile file)throws IOException {
-		boolean bol=false;
-		//文件名称
-		String fileNa=file.getOriginalFilename();
-		//后缀
-		String fileType=fileNa.substring(fileNa.lastIndexOf(".")+1);
-		//包含在白名单中
-		if(mFileList.contains(fileType)){
-			if(file.getSize()!=0){//为0时不校验是否是篡改文件
-				//校验是否是篡改文件
-				boolean isbol=isFileFalsify(file);//return false 不是篡改,正常文件
-				if(!isbol){
-					bol=true;
-				}
-			}else{
-				bol=true;
-			}
-		}
-		return  bol;
-	}
-	/**
-	 * 判断是否存在文件后缀篡改
-	 * 二进制头与后缀对应关系 参考如下
-	 *  https://blog.csdn.net/cosmoslife/article/details/43114323
-	 *  https://blog.csdn.net/ccj2020/article/details/87603903
-	 * @return true 存在篡改现象(mFileTypes集合里没有的也返回true);txt格式不进行比对返回true
-	 * @return false 不是篡改,正常文件
-	 * 上传白名单校验附属方法
-	 */
-	public static boolean isFileFalsify(MultipartFile file)throws IOException {
-		boolean reaBol=true;
-		//文件名称
-		String fileNa=file.getOriginalFilename();
-		//后缀
-		String fileType=fileNa.substring(fileNa.lastIndexOf(".")+1);
-		//后缀对应的流值
-		String fileByte=mFileTypes.get(fileType);
-		if (StringUtils.isBlank(fileByte)){
-			return reaBol;
-		}
-		List<String> fileByteList=Helper.stringJSONToList(fileByte);
-		byte[] digest=file.getBytes();
-		StringBuffer sb = new StringBuffer();
-		for (int i = 0; i < digest.length&&i<50; i++) {
-			sb.append(Integer.toHexString(((int) digest[i]) & 0xFF));
-		}
-		String fileCode =sb.toString();//获取到流字符
-		for(String fileByteStr: fileByteList){
-			int fileTypeLength =fileByteStr.length();//后缀流的长度
-			String 	fileCodeStr=fileCode.substring(0,fileTypeLength).toLowerCase();//截取实际内容
-			if(fileByteStr.equals(fileCodeStr)){
-				reaBol=false;
-				return reaBol;
-			}
-		}
-		return reaBol;
-	}
-
-	/**
-     * 简单的测试可写这,否则报类未定义(当未启动项目时)
-     * 否则还是用 @Test 最佳
-     */
-    public static void main(String[] args){
 
 
-    }
+	/**
+	 * 简单的测试可写这,否则报类未定义(当未启动项目时)
+	 * 否则还是用 @Test 最佳
+	 */
+	public static void main(String[] args){
+
+
+	}
 
 
 
@@ -300,11 +190,11 @@ public class Helper {
 				field.setAccessible(true);
 				try {
 					field.set(obj, map.get(str));
-				} catch (IllegalArgumentException | IllegalAccessException e) {
+				} catch (Exception e) {
 					String exceptionToString = Helper.exceptionToString(e);
 					System.out.println("Helper页面fsClass方法报错2"+exceptionToString.substring(0,500>exceptionToString.length()?exceptionToString.length():500));
 				}
-			} catch (NoSuchFieldException | SecurityException e) {
+			} catch (Exception e) {
 				String exceptionToString = Helper.exceptionToString(e);
 				System.out.println("Helper页面fsClass方法报错1"+exceptionToString.substring(0,500>exceptionToString.length()?exceptionToString.length():500));
 			}
@@ -646,8 +536,8 @@ public class Helper {
 	 * in('a','b','c') 使用占位符
 	 * @author 子火
 	 * @param	str 格式:a,b,c|'a','b','c'|"a","b","c"
-     * @param list 是对应给占位符赋值的;
-     * @param col 列名
+	 * @param list 是对应给占位符赋值的;
+	 * @param col 列名
 	 * @return	字符串 (col in(?,?,?)) str为空,返回"(col in (?))",list会赋一个元素""
 	 * 超出400个,会返回 (col in(?,?,?) or col in(?,?,?))
 	 * 注意,使用时例 where 1=1 and "+Helper.inPlaceholder(str,list,col)+" order by createtime
@@ -655,8 +545,8 @@ public class Helper {
 
 	public static String inPlaceholder(String str,List list,String col) {
 		if(StringUtils.isBlank(str)){
-		    str="("+col+" in (?)";
-		    list.add("");
+			str="("+col+" in (?)";
+			list.add("");
 			return str;
 		}
 		str=str.replaceAll("'","").replaceAll("\"","");
@@ -670,22 +560,22 @@ public class Helper {
 		double isInNum=Math.ceil((double)strrLength/inNums);
 		restr.append(" (");
 		for(int i=1;i<=isInNum;i++){
-            if(i!=1){
-                restr.append(" or ");
-            }
-            restr.append(col+" in (");
-            for(int ii=(i-1)*inNums,j=0;j<inNums&&ii<strrLength;ii++,j++){
-                if(j==0){
-                    restr.append("?");
-                }else{
-                    restr.append(",?");
-                }
-                list.add(strr[ii]);
-            }
-            restr.append(") ");
-        }
-        restr.append(") ");
-        return restr.toString();
+			if(i!=1){
+				restr.append(" or ");
+			}
+			restr.append(col+" in (");
+			for(int ii=(i-1)*inNums,j=0;j<inNums&&ii<strrLength;ii++,j++){
+				if(j==0){
+					restr.append("?");
+				}else{
+					restr.append(",?");
+				}
+				list.add(strr[ii]);
+			}
+			restr.append(") ");
+		}
+		restr.append(") ");
+		return restr.toString();
 	}
 
 	/**
@@ -701,8 +591,8 @@ public class Helper {
 		strT=str.trim().toLowerCase();
 		StringBuffer sub=new StringBuffer();
 		boolean up=false;
-		for(int i=0;i<str.length();i++){
-			char item=str.charAt(i);
+		for(int i=0;i<strT.length();i++){
+			char item=strT.charAt(i);
 			if('_'==item){
 				up=true;
 				continue;
@@ -720,91 +610,115 @@ public class Helper {
 // ----------------------------------------------------------------------------------------------------------------
 //--------------------------------------数据类型转换--------------------------------------------------------------------
 
-    /**
-     * 根据文件地址返回FileItem
-     * 方便本地测试上传文件
-     * MultipartFile mfile = new CommonsMultipartFile(Helper.getFileItem("C:\\Users\\18722\\Desktop\\a.jpg"));
-     * @param filePath 文件地址,原理,就是通过地址,声明File类再转为 FileItem
-     * @return
-     */
-    public static FileItem getFileItem(String filePath) {
-        FileItemFactory factory = new DiskFileItemFactory(16, null);
-        String textFieldName = "textField";
-        int num = filePath.lastIndexOf("\\");
-        String extFile = filePath.substring(num);
-        FileItem item = factory.createItem(textFieldName, "text/plain", true, extFile);
-        File newfile = new File(filePath);
-        int bytesRead = 0;
-        byte[] buffer = new byte[8192];
-        try {
-            FileInputStream fis = new FileInputStream(newfile);
-            OutputStream os = item.getOutputStream();
-            while ((bytesRead = fis.read(buffer, 0, 8192)) != -1) {
-                os.write(buffer, 0, bytesRead);
-            }
-            os.close();
-            fis.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return item;
-    }
-
-    /**
-	 *List<Map<String,String>>-->List<实体类>
-	 *@param listMap 参1的key要同属性值;
-	 *@param objj    参2是实体类对象,两个参其中一方为null返回null
+	/**
+	 *List<Map<String,Object>>-->List<实体类>
+	 *@param listMap 参1的key要同属性值;value是null则为默认值(逻辑见下continue处);
+	 *@param cla    参2是实体类的class对象,两个参其中一方为null返回null
 	 *@return 接收:List<实体类>对象=此方法;
+	 *实体类是Float|Long|float|long类型数据我没做处理,因此如果需要后期再添
 	 *此方法会对map的值eToNULL;猜方法里是遍历属性,根据属性提map值,依据'@exception'规则赋值
 	 *现在只是对属性String|Double(不是数字为0.0)|Integer(不是数字为0)|Date值(此类型仅限"yyyy-MM-dd",不是日期为null)提取,其它类型以待后期补充
 	 *发生异常返回null,注无法转换的会赋值为默认值
 	 */
-	public static List listMapToListObj(List<Map<String,String>> listMap,Object objj) {
-		if(objj==null||listMap==null){return null;}//否则空指针异常
+	public static List listMapToListObj(List<Map<String,Object>> listMap,Class cla) {
+		if(cla==null||listMap==null){return null;}//否则空指针异常
 		List listObj=new ArrayList();
-		for(Map<String,String> map: listMap){
+		for(Map<String,Object> map: listMap){
 			try {
 				//Object
-				Class cl=objj.getClass();
-
+				Class cl=cla;
 				Object lei=cl.newInstance();
-
 				Field[] declaredFields = cl.getDeclaredFields();
 				for(int i=0;i<declaredFields.length;i++){
 					Field field = declaredFields[i];
 					field.setAccessible(true);
 					String name = field.getName();//属性值
-
-					String string = Helper.eToNULL(map.get(name));//map值
+					boolean isStrType=true;//Map的value是字符串类型
+					Object valObject=map.get(name);
+					if(valObject==null){
+						continue;
+					}
+					String string=null;
+					if(valObject.getClass()!=String.class){//注意valObject.getClass()不会是基本数据类型
+						isStrType=false;
+					}else{
+						string = Helper.eToNULL((String)map.get(name));//map值
+					}
 					Class classs=field.getType();
 					Object objvalue=null;
 					if(classs==String.class){
 						objvalue=string;
 					}else if(classs==Double.class){
 						Double dou=0.0;
-						if(Helper.isNumber(string, true)){
-							dou=Double.parseDouble(string);
+						if(isStrType){
+							if(Helper.isNumber(string, true)){
+								dou=Double.parseDouble(string);
+							}
+						}else{
+							if(valObject.getClass()==Double.class){
+								dou=(Double) valObject;
+							}
 						}
 						objvalue=dou;
 					}else if(classs==Integer.class){
 						Integer intt=0;
-						if(Helper.isInt(string, true)){
-							intt=Integer.parseInt(string);
+						if(isStrType){
+							if(Helper.isInt(string, true)){
+								intt=Integer.parseInt(string);
+							}
+						}else{
+							if(valObject.getClass()==Integer.class){
+								intt=(Integer)valObject;
+							}
 						}
 						objvalue=intt;
 					}else if(classs==Date.class){
 						Date da=null;
-						if(Helper.isDate(string)){
-							da=Helper.stringToDate(string, "yyyy-MM-dd");
+						if(isStrType){
+							if(Helper.isDate(string)){
+								da=Helper.stringToDateSuper(string);
+							}else if(Helper.isDateTime(string)){
+								da=Helper.stringToDate(string,"yyyy-MM-dd HH:mm:ss");
+							}
+						}else{
+							if(valObject.getClass()==Date.class){
+								da=(Date) valObject;
+							}else if(valObject.getClass()==Long.class){
+								da=new Date((Long) valObject);
+							}
 						}
 						objvalue=da;
+					}else if(classs==int.class){
+						int intt=0;
+						if(isStrType){
+							if(Helper.isInt(string, true)){
+								intt=Integer.parseInt(string);
+							}
+						}else{
+							if(valObject.getClass()==Integer.class){
+								intt=(Integer)valObject;
+							}
+						}
+						objvalue=intt;
+					}else if(classs==double.class){
+						double dou=0.0;
+						if(isStrType){
+							if(Helper.isNumber(string, true)){
+								dou=Double.parseDouble(string);
+							}
+						}else{
+							if(valObject.getClass()==Double.class){
+								dou=(Double) valObject;
+							}
+						}
+						objvalue=dou;
 					}
 					field.set(lei,objvalue);
 				}
 				listObj.add(lei);
 			} catch (Exception e) {
 				String exceptionToString = Helper.exceptionToString(e);
-				System.out.println("Helper页面fsClass方法报错2"+exceptionToString.substring(0,500>exceptionToString.length()?exceptionToString.length():500));
+				System.out.println("Helper页面 listMapToListObj 方法报错"+exceptionToString.substring(0,500>exceptionToString.length()?exceptionToString.length():500));
 				return null;
 			}
 		}
@@ -917,6 +831,10 @@ public class Helper {
 
 	/**
 	 * pojo实体类->String(json)
+	 * 返回字符串例 "{\"str\":\"xx\",\"intt\":4,\"douu\":9.99,\"datt\":1568787915759}" 这四个属性分别是String Integer Double Date 类型
+	 * 注意上datt在实体类中是日期类型;值转为日期可:Long l=1568787915759L; Date Date =new Date(l);
+	 * 上字符串如果转为Map datt会是Long类型;
+	 * 上字符串可直接使用 stringJSONToPojo 转为pojo实体类
 	 * @return String
 	 */
 	public static String pojoToStringJSON(final Object object){
@@ -934,8 +852,9 @@ public class Helper {
 	 * String(json)->类(对象)
 	 * 使用例Login login = Helper.stringJSONToPojo(str, Login.class) ;
 	 * 参1为null会异常返回null
-	 * @return 返回类----异常会返回null-----{}的key不为类属性名,值无法转换为对应属性的,产生异常,返回null
+	 * @return 返回类----异常会返回null-----{}的key不为类属性名,值无法转换为对应属性的(如在类里没有此或不对应的),产生异常,返回null
 	 * 若json里没写的,属性赋为默认,例参为{}返回类,属性值都是默认值
+	 * 实体类里面最好只有属性及其set&get方法,否则在转为字符串时会多些东西,再转为实体类时异常,如{}字符串里会多些key值
 	 * "{\"receivetime\":\"\"}"变量为Date或Integer值为NULL;为String值为""
 	 * "{\"storageroom\":\"null\"}"//变量为Date或Integer值为NULL;为String值为"null"
 	 * 前台的json->str,后台转换时不会报错,若自己写或拼一个传后台执行此方法,属性是字符串,只是[]格式的json只能是\"['a']\",否则报错返回null;若就想"[""]"可用多个转义字符解决
@@ -1036,6 +955,7 @@ public class Helper {
 	 * 参不对会出现异常,其它情况参看JAVA\Date\使用--46行
 	 * 又例"2017年8月"会转为2017-8-1
 	 * yyyy-MM-dd HH:mm:ss
+	 * Helper.stringToDate("2019-1-51 25:3:3","yyyy-MM-dd HH:mm:ss") 也是可以的
 	 * 这个月或这天的最后时刻,思路如下
 	 * Date endTime=Helper.stringToDate(endtime+" 23:59:59", "yyyy-MM-dd HH:mm:ss");
 	 */
@@ -1119,7 +1039,8 @@ public class Helper {
 	 * 作用1:是转为字符串后截取一定的长度进行输出
 	 * 	因为,当需要在后台输出看时e.print...太长会造成资源浪费(一般不会这样用,后台看哈,前台看去)
 	 * 	例 String strE=Helper.exceptionToString(e);
-	 * 	   System.out.println(strE.substring(0,500>strE.length()?strE.length():500));
+	 *     String strEInfo=strE.substring(0,500>strE.length()?strE.length():500);
+	 * 	   System.out.println(strEInfo);
 	 * 作用2,方便捕获到异常后返回给前台
 	 * e.getMessage():非常简洁的异常信息;e.toString()简洁的异常信息;Helper.exceptionToString(e)-全
 	 * 		详见 JAVA\其它\小知识点\try+return
@@ -1149,12 +1070,12 @@ public class Helper {
 	 * @param bol 在方法外声明个bol,若值被更改为true表是异常直接返回前台即可
 	 * @return String
 	 */
-	  public static String doGet(String url,Map<String, String> param,boolean bol){
-		  //param为url赋上变量(即占位符?),如果没有可用null表示
-		  CloseableHttpClient client=HttpClients.createDefault();
-		  String resultString="";
-		  CloseableHttpResponse closeableHttpResponse=null;
-		  try {
+	public static String doGet(String url,Map<String, String> param,boolean bol){
+		//param为url赋上变量(即占位符?),如果没有可用null表示
+		CloseableHttpClient client=HttpClients.createDefault();
+		String resultString="";
+		CloseableHttpResponse closeableHttpResponse=null;
+		try {
 			URIBuilder builder=new URIBuilder(url);
 			if(param!=null){
 				for(String key:param.keySet()){
@@ -1170,8 +1091,8 @@ public class Helper {
 
 			}
 		} catch (Exception e) {
-			  bol=true;
-			  return "{statusCode: \"300\", stateDescribe: \"请求接口异常\", valueDescribe: \""+Helper.exceptionToString(e)+"\"}";
+			bol=true;
+			return "{statusCode: \"300\", stateDescribe: \"请求接口异常\", valueDescribe: \""+Helper.exceptionToString(e)+"\"}";
 		}finally{
 			try {
 				if(closeableHttpResponse!=null){
@@ -1184,14 +1105,14 @@ public class Helper {
 			}
 
 		}
-		  return resultString;
+		return resultString;
 
-	  }
+	}
 	/**
-	 *HttpClient的Post请求--模仿表单提交
+	 *HttpClient的Post请求--扩展见笔记 \JAVA\类\HttpClient扩展.txt(可配置请求协议和配置)
 	 * @param url String (例www.xxx.cn/posttest)
 	 * @param param Map(所传递的"表单"值)--如果有map注意其value值不能为NULL
-	 * @param bol 在方法外声明个bol,若值被更改为true表是异常直接返回前台即可
+	 * @param bol 在方法外声明个bol,若值被更改为true表是返回的是异常
 	 * @return String
 	 * controller处,例[]--post表只接收post请求,不用如下,别的也成
 	 * [@RequestMapping(value="/posttest",method=RequestMapping.POST")]
@@ -1199,40 +1120,40 @@ public class Helper {
 	 * controller方法里执行request.getParameter("a");若两处都赋值了,则输出?处的值;若只一处赋值,都能获取且输出
 	 * 注意用?传json格式的字符串,后台报错,用map传可以后台获取(用参及request都可以)
 	 */
-	  public static String doPost(String url,Map<String, String> param,boolean bol){
-			CloseableHttpClient httpClient = HttpClients.createDefault();
-			CloseableHttpResponse closeableHttpResponse=null;
-			String resultString="";
-			  try {
-					HttpPost post = new HttpPost(url);
-					if(param!=null){
-						List<NameValuePair> formList = new ArrayList<>();
-						for(String key:param.keySet()){
-							formList.add(new BasicNameValuePair(key, param.get(key)));
-							//formList.add(new BasicNameValuePair("name", "张三"));
-						}
-						UrlEncodedFormEntity entity=new UrlEncodedFormEntity(formList, "utf-8");
-						post.setEntity(entity);
-					}
-					closeableHttpResponse=httpClient.execute(post);
-					resultString= EntityUtils.toString(closeableHttpResponse.getEntity(),"utf-8");
-
-			}  catch (Exception e) {
-				  bol=true;
-				  return "{statusCode: \"300\", stateDescribe: \"请求接口异常\", valueDescribe: \""+Helper.exceptionToString(e)+"\"}";
-			}finally{
-
-				try {
-
-					closeableHttpResponse.close();
-
-				} catch (IOException e) {
-					bol=true;
-					return "{statusCode: \"300\", stateDescribe: \"请求接口异常\", valueDescribe: \""+Helper.exceptionToString(e)+"\"}";
+	public static String doPost(String url,Map<String, String> param,boolean bol){
+		CloseableHttpClient httpClient = HttpClients.createDefault();
+		CloseableHttpResponse closeableHttpResponse=null;
+		String resultString="";
+		try {
+			HttpPost post = new HttpPost(url);
+			if(param!=null){
+				List<NameValuePair> formList = new ArrayList<NameValuePair>();
+				for(String key:param.keySet()){
+					formList.add(new BasicNameValuePair(key, param.get(key)));
+					//formList.add(new BasicNameValuePair("name", "张三"));
 				}
-		  }
-			  return resultString;
-	  }
+				UrlEncodedFormEntity entity=new UrlEncodedFormEntity(formList, "utf-8");
+				post.setEntity(entity);
+			}
+			closeableHttpResponse=httpClient.execute(post);
+			resultString= EntityUtils.toString(closeableHttpResponse.getEntity(),"utf-8");
+
+		}  catch (Exception e) {
+			bol=true;
+			return "{statusCode: \"300\", stateDescribe: \"请求接口异常\", valueDescribe: \""+Helper.exceptionToString(e)+"\"}";
+		}finally{
+
+			try {
+
+				closeableHttpResponse.close();
+
+			} catch (IOException e) {
+				bol=true;
+				return "{statusCode: \"300\", stateDescribe: \"请求接口异常\", valueDescribe: \""+Helper.exceptionToString(e)+"\"}";
+			}
+		}
+		return resultString;
+	}
 
 
 
@@ -1247,11 +1168,11 @@ public class Helper {
 	 * [@RequestMapping(value="/posttest",method=RequestMapping.POST")
 	 *	@ResponseBody 方法(@RequestBody Map map)]					  *
 	 */
-	  public static String doPostJSON(String url,String json,boolean bol){
-		  CloseableHttpClient httpClient=HttpClients.createDefault();
-		  CloseableHttpResponse response=null;
-		  String resultString="";
-		  try {
+	public static String doPostJSON(String url,String json,boolean bol){
+		CloseableHttpClient httpClient=HttpClients.createDefault();
+		CloseableHttpResponse response=null;
+		String resultString="";
+		try {
 			HttpPost httpPost=new HttpPost(url);
 			StringEntity entity=new StringEntity(json,ContentType.APPLICATION_JSON);
 			httpPost.setEntity(entity);
@@ -1259,8 +1180,8 @@ public class Helper {
 			resultString=EntityUtils.toString(response.getEntity(),"utf-8");
 
 		} catch (Exception e) {
-			  bol=true;
-			  return "{statusCode: \"300\", stateDescribe: \"请求接口异常\", valueDescribe: \""+Helper.exceptionToString(e)+"\"}";
+			bol=true;
+			return "{statusCode: \"300\", stateDescribe: \"请求接口异常\", valueDescribe: \""+Helper.exceptionToString(e)+"\"}";
 		}finally{
 			try {
 				response.close();
@@ -1269,8 +1190,8 @@ public class Helper {
 				return "{statusCode: \"300\", stateDescribe: \"请求接口异常\", valueDescribe: \""+Helper.exceptionToString(e)+"\"}";
 			}
 		}
-		  return resultString;
-	  }
+		return resultString;
+	}
 
 	/**
 	 * 请求一卡易接口--示例代码在SSM(MAVEN)\技术汇总\跨域+接口\请求一卡易接口
@@ -1294,6 +1215,10 @@ public class Helper {
 			// 打开和URL之间的连接
 			httpURLConnection = (HttpURLConnection) realUrl.openConnection();
 			// 设置通用的请求属性
+			//如果不设置超时,在网络异常的情况下,可能会导致程序僵死而不继续往下执行;默认0-不会超时;此设置为30s
+			httpURLConnection.setConnectTimeout(30000);
+			httpURLConnection.setReadTimeout(30000);
+
 			httpURLConnection.setRequestProperty("accept", "*/*");
 			httpURLConnection.setRequestProperty("connection", "Keep-Alive");
 			httpURLConnection.setRequestProperty("Content-Length", String
@@ -1415,6 +1340,16 @@ public class Helper {
 		//原自写校验只能是2010-2029期间的日期(一些日期也会返回true如2000-2-29|2004-2-29|2068-2-29等)
 		//reg = "^(((20[1-2][0-9]-)(((0{0,1}[13578]|1[02])-(0{0,1}[1-9]|[12][0-9]|3[01]))|((0{0,1}[469]|11)-(0{0,1}[1-9]|[12][0-9]|30))|(0{0,1}2-(0{0,1}[1-9]|1[0-9]|2[0-8]))))|(2000-0{0,1}2-29)|(20(0[48]|[246][048]|[135][26])-0{0,1}2-29))$";
 		//reg = "^[0-9]{1,4}-(0?[1-9]|1[012])-([12][0-9]|3[01]|0?[1-9])$";
+		return str.matches(reg);
+	}
+	/**
+	 * 判断字符串是否为日期
+	 * @param str 字符串要为yyyy-MM-dd HH:mm:ss格式
+	 * @return 不符合返回false
+	 */
+	public static boolean isDateTime(String str){
+		if(str==null){return false;}
+		String reg = "^[0-9]{1,4}-(0?[1-9]|1[012])-([12][0-9]|3[01]|0?[1-9]) [0-9]{2}:[0-9]{2}:[0-9]{2}$";
 		return str.matches(reg);
 	}
 	/**
@@ -1687,7 +1622,7 @@ public class Helper {
 	public static Workbook getWorkbook(InputStream inp) throws IOException, InvalidFormatException{
 		// If clearly doesn't do mark/reset, wrap up
 
-        return WorkbookFactory.create(inp);//poi 版本4.1.0 这样写试试
+		return WorkbookFactory.create(inp);//poi 版本4.1.0
 		/*
 		if(! inp.markSupported()) {//poi 版本 3.16-beta1
 			inp = new PushbackInputStream(inp, 8);

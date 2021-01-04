@@ -1,8 +1,6 @@
 package cn.nzxxx.predict.webrequest;
 
 import org.jboss.logging.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
