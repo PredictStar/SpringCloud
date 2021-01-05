@@ -1,4 +1,6 @@
 D:\SpringCloud\predict\src\main\java\cn\nzxxx\predict\toolitem\entity\Help.java
+D:\SpringCloud\predict\src\main\java\cn\nzxxx\predict\toolitem\tool\EncryptUtils.java
+D:\SpringCloud\predict\src\main\java\cn\nzxxx\predict\webrequest\PDFController.java
 D:\SpringCloud\predict\src\main\java\cn\nzxxx\predict\toolitem\tool\impl\HelperServiceImpl.java
 D:\SpringCloud\predict\src\main\java\cn\nzxxx\predict\toolitem\tool\CookieUtils.java
 D:\SpringCloud\predict\src\main\java\cn\nzxxx\predict\toolitem\entity\ReturnClass.java
@@ -9,5 +11,7 @@ D:\SpringCloud\predict\src\main\java\cn\nzxxx\predict\PredictApplication.java
 D:\SpringCloud\predict\src\main\java\cn\nzxxx\predict\toolitem\tool\HelperServiceI.java
 D:\SpringCloud\predict\src\main\java\cn\nzxxx\predict\toolitem\tool\controller\HelperController.java
 D:\SpringCloud\predict\src\main\java\cn\nzxxx\predict\webinterface\WebInterfaceController.java
+D:\SpringCloud\predict\src\main\java\cn\nzxxx\predict\config\pdftable\ParsePdf.java
 D:\SpringCloud\predict\src\main\java\cn\nzxxx\predict\toolitem\service\impl\TestPageServiceImpl.java
 D:\SpringCloud\predict\src\main\java\cn\nzxxx\predict\toolitem\service\TestPageServiceI.java
+D:\SpringCloud\predict\src\main\java\cn\nzxxx\predict\toolitem\entity\test.java

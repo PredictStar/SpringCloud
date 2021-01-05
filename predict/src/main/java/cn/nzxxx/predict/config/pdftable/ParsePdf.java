@@ -670,7 +670,7 @@ public class ParsePdf {
                     if(StringUtils.isBlank(strNext)) {
                         addcol=addcol-1;//其后有空格列则就不新增列,而是把值移过去
                     }
-                    Integer integer=addRe.get(ii);
+                    Integer integer=addRe.get(String.valueOf(ii));
                     if(integer==null) {
                         integer=0;
                     }
@@ -765,8 +765,7 @@ public class ParsePdf {
                         double xw=x+w;
                         double xx = textElementF.getX();
                         double diff=xx-xw;
-                        //System.out.println(upF.getText()+":"+(fontindex-1));
-                        //System.out.println(textElementF.getText()+":"+(fontindex));
+                        //System.out.println(upF.getText()+":"+(fontindex-1)+";"+textElementF.getText()+":"+(fontindex));
                         if(diff>intervalMinX) {
                             //System.out.println(i+upF.getText()+textElementF.getText()+ii+";diff:"+diff);
                             //System.out.println("valla:"+valla);
@@ -777,8 +776,7 @@ public class ParsePdf {
                     if(!bol) {//要获取后面的字符串,所以不能跳出当前循环
                         valla+=bstr+" ";
                         int strleg=Helper.nvlString(bstr).length();
-                        //System.out.println("当前字符串:"+Helper.nvlString(bstr));
-                        //System.out.println("下标改变:"+fontindex+"("+textList.get(fontindex).getText()+")"+"->"+(fontindex+strleg)+"("+textList.get(fontindex+strleg).getText()+")");
+                        //System.out.println("当前字符串:"+Helper.nvlString(bstr)+"下标改变:"+fontindex+"("+textList.get(fontindex).getText()+")"+"->"+(fontindex+strleg)+"("+textList.get(fontindex+strleg).getText()+")");
                         fontindex=fontindex+strleg;//下一个循环字的坐标
                     }else {
                         vallb+=bstr+" ";
@@ -842,8 +840,8 @@ public class ParsePdf {
         colmap.put("colXY", colXY);
         //表头的数值描述
         colmap.put("tableNum", fontindex);
-        /*TextElement tt=textList.get(fontindex);
-        System.out.println(tt.getText());*/
+        //TextElement tt=textList.get(fontindex);
+        //System.out.println(tt.getText());
         colmap.put("tableTit", tableTit);
         //表实体数据纠正
         extendTableB(rows,textList,colmap,newrows);

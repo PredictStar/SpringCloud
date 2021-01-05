@@ -1,3 +1,4 @@
+/*
 package cn.nzxxx.predict;
 
 import cn.nzxxx.predict.toolitem.entity.Help;
@@ -60,7 +61,8 @@ import java.util.regex.Pattern;
 public class PredictApplicationTests {
     private Logger log = LoggerFactory.getLogger(this.getClass());	//import org.slf4j.LoggerFactory;
 
-    /*private MockMvc mockMvc;
+    */
+/*private MockMvc mockMvc;
     @Value("${spring.freemarker.charset}")
     private String springbootUrl;
     @Before
@@ -78,11 +80,13 @@ public class PredictApplicationTests {
 
     }
     @Autowired
-    private MongoTemplate mongoTemplate;*/
+    private MongoTemplate mongoTemplate;*//*
 
 
 
-    /* //判断正整数是否是质数,是则返回true
+
+    */
+/* //判断正整数是否是质数,是则返回true
      public boolean isPrimeNum(int num){
          boolean isPrimeNum=false;
          List<Integer> pnums=new ArrayList<Integer>(16);//当前质数集
@@ -105,7 +109,8 @@ public class PredictApplicationTests {
              isPrimeNum=true;
          }
          return  isPrimeNum;
-     }*/
+     }*//*
+
     public static String[][] tableToArrayOfRows(Table table) {
         List<List<RectangularTextContainer>> tableRows = table.getRows();
 
@@ -133,9 +138,11 @@ public class PredictApplicationTests {
     }
     //@Test
     public void bb() throws Exception{
-        String urll="C:/Users/18722/Desktop/tolg/CRJ/SLOC.pdf";
-        File file = new File(urll);
-        System.out.println("AV 大\r d\n".replaceAll("\\s", ""));
+        */
+/* String urll="C:/Users/18722/Desktop/tolg/CRJ/SLOC.pdf";
+        File file = new File(urll);*//*
+
+        //System.out.println(Helper.stringJSONToMap("null"));
     }
     //@Test
     public void aa() throws Exception{
@@ -148,11 +155,13 @@ public class PredictApplicationTests {
         ObjectExtractor oe  = new ObjectExtractor(document);
         //循环页面
         Page page = oe.extract(6);//从1开始,表第一页
-			/*
+			*/
+/*
 			 //根据区域范围提取内容
 			 technology.tabula.Rectangle area = new technology.tabula.Rectangle(60, 20, 460,600);
 			 page=page.getArea(area);
-			*/
+			*//*
+
         //根据table分割线,获取数据
         //表是有横线竖线(没横线会认为是同一个单元格内容,多个仅仅空格隔开())
         SpreadsheetExtractionAlgorithm sea = new SpreadsheetExtractionAlgorithm();
@@ -171,7 +180,8 @@ public class PredictApplicationTests {
         }
         System.out.println(strrr);
 
-        /*List<TextElement> text2 = page.getText();
+        */
+/*List<TextElement> text2 = page.getText();
         for(int i=0;i<text2.size();i++){
             TextElement textElement = text2.get(i);
             System.out.print(textElement.getText());
@@ -180,7 +190,8 @@ public class PredictApplicationTests {
             System.out.print(" W:"+ textElement.getWidth());
             System.out.println(" H:"+ textElement.getHeight());
         }
-        */
+        *//*
+
         System.out.println("获取table数:"+a.size());
         //循环table
         Table table=a.get(0);
@@ -208,7 +219,7 @@ public class PredictApplicationTests {
             System.out.println("*");
         }
     }
-    @Test
+    //@Test
     public void parsePdf() throws Exception{
         //实际功能注意事项(表的线比较全,直接用 JAVA\字符,字节流+上传下载\操作PDF文件 A处)
             //b.pdf 列MPD ITEM NUMBER 有值的才录入,因为有的表主体第一行 是 ATA(即章节说明)
@@ -289,7 +300,8 @@ public class PredictApplicationTests {
             //扩展表数据获取(即添加多少列给原数据)
             extendTable(rows,textList,colmap,newrows);
             //newrows遍历输出
-            /*for(int ii=0;ii<newrows.size();ii++){
+            */
+/*for(int ii=0;ii<newrows.size();ii++){
                 List<String> rowscol=newrows.get(ii);
                 for(int iii=0;iii<rowscol.size();iii++){
                     String str=rowscol.get(iii);
@@ -299,15 +311,18 @@ public class PredictApplicationTests {
                 }
                 //当前行结尾,后期注释掉
                 System.out.println("*");
-            }*/
+            }*//*
+
 
         }
     }
-    /** 扩展表数据获取(即添加多少列给原数据)
+    */
+/** 扩展表数据获取(即添加多少列给原数据)
      * list 需要解析的数据
      * colmap 一些关联数据
      * extendTable(11,3)//表前三行是表头,共11列
-     */
+     *//*
+
     public void extendTable(List<List<String>> list,List<TextElement> textList,Map colmap,List<List<String>> newrows) {
         //原理:当检测到单元格里内容间距大于intervalMinX就认为需要拆分单元格
         int titn=(int)colmap.get("titn"); // titn 表头所在行数,从1开始
@@ -389,9 +404,11 @@ public class PredictApplicationTests {
             }
         }
     }
-    /**
+    */
+/**
      * 表新增列实现
-     */
+     *//*
+
     public void extendTableT(List<List<String>> list,List<TextElement> textList,Map colmap,List<List<String>> newrows) {
             //重新新增列
         addTableC( list,colmap);
@@ -444,12 +461,14 @@ public class PredictApplicationTests {
                     if((!bol)&&(array>0)) { //第一个就不对比了
                         //当前字的描述
                         TextElement textElementF =textList .get(fontindex);
-                        /*TextElement upF=null;
+                        */
+/*TextElement upF=null;
                         if (fontindex==0){ //防止-1的情况(上if里的array>0就已经排除此了)
                             upF=textList.get(0);
                         }else{
                             upF=textList.get(fontindex-1);//上次的尾字的描述
-                        }*/
+                        }*//*
+
                         TextElement upF=textList.get(fontindex-1);//上次的尾字的描述
                         double x = upF.getX();
                         double w = upF.getWidth();
@@ -515,8 +534,10 @@ public class PredictApplicationTests {
         colmap.put("colXY", colXY);
         //表头的数值描述
         colmap.put("tableNum", fontindex);
-        /*TextElement tt=textList.get(fontindex);
-        System.out.println(tt.getText());*/
+        */
+/*TextElement tt=textList.get(fontindex);
+        System.out.println(tt.getText());*//*
+
         colmap.put("tableTit", tableTit);
         //表实体数据纠正
         extendTableB(list,textList,colmap,newrows);
@@ -622,3 +643,4 @@ public class PredictApplicationTests {
     }
 
 }
+*/

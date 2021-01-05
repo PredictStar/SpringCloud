@@ -733,6 +733,7 @@ public class Helper {
 	 * 前台的json->str,后台转换时不会报错,若自己写或拼一个传后台执行此方法(value是[]格式的字符串,即{'':'[]'}会报错,只能是\"['a']\"或'[\"a\"]'会报错,若就想"[""]"可用多个转义字符解决
 	 * 后台接收此方法返回值时:若写泛型要注意类型冲突,不写其泛型会默认为Object
 	 * String(json)
+	 * Helper.stringJSONToMap("null") 返回 {}
 	 * @return Map
 	 */
 	public static Map stringJSONToMap(final String json)

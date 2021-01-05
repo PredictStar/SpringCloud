@@ -64,3 +64,9 @@ fastlane/test_output
 # https://github.com/johnno1962/injectionforxcode
 
 iOSInjectionProject/
+.idea
+/predict/.idea/vcs.xml
+/predict/.idea
+/predict/target/test-classes/cn/nzxxx/predict/*.class
+.idea
+/predict/.idea

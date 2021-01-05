@@ -32,7 +32,7 @@ public class PDFController {
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
     /**
-     *  http://localhost:8181/pdf/analysis
+     *  http://localhost:8181/pdf/analysis?param=null
      *  urll 文件地址 "C:/Users/18722/Desktop/tolg/CRJ/section2.pdf"
      *  fileName 文件名 "section2.pdf"
      * @return 状态说明
@@ -48,7 +48,9 @@ public class PDFController {
             }
             Map map = Helper.stringJSONToMap(param);
             String urll=(String)map.get("urll");
-            String  fileName=(String)map.get("fileName");
+            //urll="C:/Users/18722/Desktop/tolg/CRJ/section3.pdf";//"C:/Users/18722/Desktop/tolg/CRJ/SLOC.pdf";
+            String fileName=(String)map.get("fileName");
+            //fileName="section3.pdf";//"sloc.pdf";
             resstr=Help.return5002Describe(urll,fileName);
             if(resstr!=null){
                 return resstr;
@@ -93,7 +95,7 @@ public class PDFController {
                 cou+=update;
             }
             //单独测试某页(测试时一般开启 "数据输出" )
-            /*int testpage=9;//s1-46 68  39  s2-24     sloc-5 4 12 649
+            /*int testpage=83;//s1-46 68  39  s2-24     sloc-5 4 12 649
             Map conditionsMap=new HashMap();
             List<List<String>> newrows=new ArrayList<List<String>>();
             //如果是 sloc.pdf 文件 通过原生表线方式去获取
