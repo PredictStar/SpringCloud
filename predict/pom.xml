@@ -169,7 +169,7 @@
              <groupId>junit</groupId>
              <artifactId>junit</artifactId>
              <version>${junit.version}</version>
-             <scope>runntime</scope>
+             <scope>test</scope>
          </dependency>
         <!-- JSP相关 ,如cookie的包就在这-->
         <dependency>
@@ -297,13 +297,6 @@
             <artifactId>aspectjrt</artifactId>
             <version>1.8.9</version>
         </dependency>
-        <!-- 为了打war
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <version>3.1.0</version>
-            <scope>provided</scope>
-        </dependency>-->
     </dependencies>
 	<dependencyManagement>
 		<dependencies>

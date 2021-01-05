@@ -67,5 +67,6 @@ iOSInjectionProject/
 .idea
 /predict/.idea/vcs.xml
 /predict/.idea
+/predict/target
 /predict/target/test-classes/cn/nzxxx/predict/*.class
 .idea

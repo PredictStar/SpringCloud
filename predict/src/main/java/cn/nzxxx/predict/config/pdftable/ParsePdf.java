@@ -123,7 +123,7 @@ public class ParsePdf {
         listb2.add("REPEAT");
         listb2.add("APL");
         listb2.add("ENG");
-        listb2.add("HOURS");
+        listb2.add("MAN_HOURS");
         listb2.add("TASK_DESCRIPTION");
         mapb2.put("tabcols",listb2);
         //mapa.put("tabnam","BOEING_02");//表名
