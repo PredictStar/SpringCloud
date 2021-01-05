@@ -6,7 +6,7 @@
 	<groupId>cn.nzxxx</groupId>
 	<artifactId>predict</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<packaging>jar</packaging>
+	<packaging>jar</packaging><!-- 为了打war -->
 	<name>predict</name>
 	<description>Demo project for Spring Boot</description>
     <repositories><!--设立其它仓库-->
@@ -62,6 +62,11 @@
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-starter-logging</artifactId>
                 </exclusion>
+                <!-- 为了打war
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-tomcat</artifactId>
+                </exclusion>-->
             </exclusions>
         </dependency>
 		<dependency>
@@ -292,6 +297,13 @@
             <artifactId>aspectjrt</artifactId>
             <version>1.8.9</version>
         </dependency>
+        <!-- 为了打war
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>3.1.0</version>
+            <scope>provided</scope>
+        </dependency>-->
     </dependencies>
 	<dependencyManagement>
 		<dependencies>
