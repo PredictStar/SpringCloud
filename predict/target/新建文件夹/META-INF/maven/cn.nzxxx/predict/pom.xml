@@ -33,7 +33,7 @@
         <commons-fileupload.version>1.4</commons-fileupload.version>
         <jedis.version>3.0.1</jedis.version>
         <com.aliyun.oss>3.4.2</com.aliyun.oss>
-        <junit.version>4.13-beta-2</junit.version>
+        <junit.version>4.13.1</junit.version>
 	</properties>
 
 	<dependencies>
