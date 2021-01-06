@@ -1,6 +1,5 @@
 package cn.nzxxx.predict.config.pdftable;
 
-import cn.nzxxx.predict.toolitem.tool.CookieUtils;
 import cn.nzxxx.predict.toolitem.tool.Helper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -10,15 +9,13 @@ import technology.tabula.*;
 import technology.tabula.extractors.BasicExtractionAlgorithm;
 import technology.tabula.extractors.SpreadsheetExtractionAlgorithm;
 
-import java.io.File;
 import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-//后期可直接指定表头列，如第一列是啥，进行优化
-//解析pdf,table数据
-public class ParsePdf {
+
+//解析pdf,form 数据
+public class FormPdf {
     private Map<String,Map<String,Object>> mapp=new HashMap<String,Map<String,Object>>();
     private List<Map<String,String>> matchList=new ArrayList<Map<String,String>>();
     //上一次的 colXY 值,当此次表头不对,colXY值直接取此,有值就不覆盖了(即就赋一次)
@@ -26,7 +23,7 @@ public class ParsePdf {
     //根据文件名称(全小写)获取对应的表名
     //若此返回"" 则不会覆盖,初始的配置 mapHi.put("tabnam","BOEING_HI");//表名的
     //如上是为了防止一个paf 文件,需要存不同表
-    public ParsePdf() {
+    public FormPdf() {
         //页面会有未完待续,然后下个页面继续录入的情况,所以提取数据时要注意此情况
 
         //解析 SLOC.pdf -线
@@ -108,6 +105,34 @@ public class ParsePdf {
         matchmapHi.put("val","LOCATIONOFCHANGEDESCRIPTIONOFCHANGE");
         matchList.add(matchmapHi);
 
+        //解析 BOEING/02___100.pdf  -流
+        Map mapb2=new HashMap();
+        String typeB2="b2";
+        mapb2.put("titn",4);//表头所占行数,从1开始
+        mapb2.put("intervalMinX",10.0);
+        mapb2.put("delrow",2);//表头前垃圾行数,从1开始
+        mapb2.put("type",mapb2);//对应下 mapp.put(typea,mapa);
+        List<String> listb2=new ArrayList<String>();//列定义
+        listb2.add("MPD_ITEM_NUMBER");
+        listb2.add("AMM_REFERENCE");
+        listb2.add("PGM");
+        listb2.add("ZONE");
+        listb2.add("ACCESS");
+        listb2.add("THRESH");
+        listb2.add("REPEAT");
+        listb2.add("APL");
+        listb2.add("ENG");
+        listb2.add("MAN_HOURS");
+        listb2.add("TASK_DESCRIPTION");
+        mapb2.put("tabcols",listb2);
+        //mapa.put("tabnam","BOEING_02");//表名
+        mapp.put(typeB2,mapb2);
+        //根据流解析获取数据才用到,用于判断是否是要解析的表(匹配内容要为表头要的部分,最好从第一列开始).适用 BOEING_02.pdf
+        Map<String,String> matchmapb2= new HashMap<String,String>();
+        matchmapb2.put("tag",typeB2);
+        matchmapb2.put("val","MPDPINTERVALAPPLICABILITY");
+        matchList.add(matchmapb2);
+
         //解析 BOEING/01___100.pdf  -流
         Map mapb1=new HashMap();
         String typeB1="b1";
@@ -149,34 +174,6 @@ public class ParsePdf {
         matchmapb1.put("val","MPDCAITEMAMMASMAN");
         matchList.add(matchmapb1);
 
-        //解析 BOEING/02___100.pdf  -流
-        Map mapb2=new HashMap();
-        String typeB2="b2";
-        mapb2.put("titn",4);//表头所占行数,从1开始
-        mapb2.put("intervalMinX",10.0);
-        mapb2.put("delrow",2);//表头前垃圾行数,从1开始
-        mapb2.put("type",typeB2);//对应下 mapp.put(typea,mapa);
-        List<String> listb2=new ArrayList<String>();//列定义
-        listb2.add("MPD_ITEM_NUMBER");
-        listb2.add("AMM_REFERENCE");
-        listb2.add("PGM");
-        listb2.add("ZONE");
-        listb2.add("ACCESS");
-        listb2.add("THRESH");
-        listb2.add("REPEAT");
-        listb2.add("APL");
-        listb2.add("ENG");
-        listb2.add("MAN_HOURS");
-        listb2.add("TASK_DESCRIPTION");
-        mapb2.put("tabcols",listb2);
-        //mapa.put("tabnam","BOEING_02");//表名
-        mapp.put(typeB2,mapb2);
-        //根据流解析获取数据才用到,用于判断是否是要解析的表(匹配内容要为表头要的部分,最好从第一列开始).适用 BOEING_02.pdf
-        Map<String,String> matchmapb2= new HashMap<String,String>();
-        matchmapb2.put("tag",typeB2);
-        matchmapb2.put("val","MPDPINTERVALAPPLICABILITY");
-        matchList.add(matchmapb2);
-
 
         //解析 BOEING/03___100.pdf  -流
         Map mapb3=new HashMap();
@@ -207,7 +204,7 @@ public class ParsePdf {
 
     }
 
-    protected static final Logger logger = Logger.getLogger(ParsePdf.class);
+    protected static final Logger logger = Logger.getLogger(FormPdf.class);
     //根据文件名获取表名
     private String getTN(String fileName){
         //表名-根据文件名去定义(全小写校验)
@@ -220,7 +217,7 @@ public class ParsePdf {
             tabN="BOEING_02";
         }else if("03___100.pdf".equals(fileName)){
             tabN="BOEING_03";
-        }else if("hi___100.pdf".equals(fileName)){
+        }else if("HI___100.pdf".equals(fileName)){
             tabN="BOEING_HI";
         }else if("section1.pdf".equals(fileName)){
             tabN="CRJ_S1";

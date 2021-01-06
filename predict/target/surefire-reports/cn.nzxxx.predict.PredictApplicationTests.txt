@@ -1,9 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: cn.nzxxx.predict.PredictApplicationTests
 -------------------------------------------------------------------------------
-Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 1.031 s <<< FAILURE! - in cn.nzxxx.predict.PredictApplicationTests
-initializationError(cn.nzxxx.predict.PredictApplicationTests)  Time elapsed: 0.017 s  <<< ERROR!
-org.junit.runners.model.InvalidTestClassError: 
-Invalid test class 'cn.nzxxx.predict.PredictApplicationTests':
-  1. No runnable methods
-
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 15.81 s - in cn.nzxxx.predict.PredictApplicationTests

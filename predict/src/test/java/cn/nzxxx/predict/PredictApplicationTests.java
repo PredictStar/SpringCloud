@@ -87,5 +87,69 @@ public class PredictApplicationTests {
          return  isPrimeNum;
      }*/
 
+     @Test
+     public void a()throws Exception{
+        //(非"标准table 格式 ?!"的pdf,获取不到!!! a.size()==0(即有的pdf有线可能也获取不到))
+        PDDocument document = PDDocument.load(new File("C:/Users/18722/Desktop/tolg/cord/CRJ/CRJ7910MTCM-MAST-R57-V01.pdf"));
+        //pdf页数(第1页到第200页,此返回200)
+        PDPageTree pages = document.getDocumentCatalog().getPages();
+        int pagenum=pages.getCount();
+        ObjectExtractor oe  = new ObjectExtractor(document);
+        //循环页面
+        Page page = oe.extract(179);//从1开始,表第一页
+        /*
+         //根据区域范围提取内容
+         technology.tabula.Rectangle area = new technology.tabula.Rectangle(60, 20, 460,600);
+         page=page.getArea(area);
+        */
+        //根据table分割线,获取数据
+        //表是有横线竖线(没横线会认为是同一个单元格内容,多个仅仅空格隔开())
+        SpreadsheetExtractionAlgorithm sea = new SpreadsheetExtractionAlgorithm();
+        //根据流的方式去获取数据
+        //BasicExtractionAlgorithm sea = new BasicExtractionAlgorithm();
+        List<Table> tabs=sea.extract(page);
+        System.out.println("获取table数:"+tabs.size());
+            /*
+            System.out.println(page.getRulings());
+            //此页面数据读取,获取坐标等数据
+            List<TextElement> text2 = page.getText();
+            for(int i=0;i<text2.size();i++){
+                TextElement textElement = text2.get(i);
+                System.out.print(textElement.getText());
+                System.out.print(" X:"+ textElement.getX());
+                System.out.print(" Y:"+ textElement.getY());
+                System.out.print(" W:"+ textElement.getWidth());
+                System.out.println(" H:"+ textElement.getHeight());
+            }
+            */
+         //循环table
+         for(int i=0;i<tabs.size();i++){
+             System.out.println("-----------------------------");
+             Table table=tabs.get(i);
+             List<List<String>> rows=new ArrayList<List<String>>();
+             List<List<RectangularTextContainer>> tableRows = table.getRows();
+             for (int j = 0; j < tableRows.size(); j++) {
+                 List<RectangularTextContainer> row = tableRows.get(j);
+                 List<String> rowscol=new ArrayList<String>();
+                 for (int jj = 0; jj < row.size(); jj++) {
+                     rowscol.add(table.getCell(j, jj).getText());
+                 }
+                 rows.add(rowscol);
+             }
+             //原数据输出
+             for(int ii=0;ii<rows.size();ii++){
+                 List<String> rowscol=rows.get(ii);
+                 for(int iii=0;iii<rowscol.size();iii++){
+                     String str=rowscol.get(iii);
+                     //如下输出,会输出展示全,如 System.out.println("sa\rdd"); 输出 dd
+                     System.out.print(str.replaceAll("\r\n?","<换行>"));
+                     // \t方便复制到xls时有格式,后期注释掉
+                     System.out.print("	");
+                 }
+                 //当前行结尾,后期注释掉
+                 System.out.println("*");
+             }
+         }
+    }
 
 }

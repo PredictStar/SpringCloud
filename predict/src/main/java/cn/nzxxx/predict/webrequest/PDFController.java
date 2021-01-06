@@ -48,9 +48,9 @@ public class PDFController {
             }
             Map map = Helper.stringJSONToMap(param);
             String urll=(String)map.get("urll");
-            //urll="C:/Users/18722/Desktop/tolg/CRJ/section3.pdf";//"C:/Users/18722/Desktop/tolg/CRJ/SLOC.pdf";
+            //urll="C:/Users/18722/Desktop/tolg/BOEING/HI___100.PDF";//"C:/Users/18722/Desktop/tolg/CRJ/SLOC.pdf";
             String fileName=(String)map.get("fileName");
-            //fileName="section3.pdf";//"sloc.pdf";
+            //fileName="hi___100.pdf";//"sloc.pdf";
             resstr=Help.return5002Describe(urll,fileName);
             if(resstr!=null){
                 return resstr;
@@ -127,7 +127,7 @@ public class PDFController {
             logger.error(strE);
             String strEInfo=strE.substring(0,500>strE.length()?strE.length():500);
             System.out.println(strEInfo);
-            resstr=Help.returnClass(500,"add方法异常",strEInfo);
+            resstr=Help.returnClass(500,"接口异常",strEInfo);
         }
         return resstr;
 
