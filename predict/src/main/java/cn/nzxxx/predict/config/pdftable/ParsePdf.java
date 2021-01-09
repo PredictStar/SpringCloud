@@ -16,7 +16,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-//后期可直接指定表头列，如第一列是啥，进行优化
+//后期可直接指定表头列，如第一列是啥，进行优化(称为定制版(人为自定义表头),现在写的叫标准版(自动解析表头))
 //解析pdf,table数据
 public class ParsePdf {
     private Map<String,Map<String,Object>> mapp=new HashMap<String,Map<String,Object>>();
