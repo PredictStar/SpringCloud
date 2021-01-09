@@ -33,9 +33,9 @@ public class FormPdf {
     private Map<String,Map<String,Object>> mapp=new HashMap<String,Map<String,Object>>();
     //初始化
     public FormPdf() {
+        //------------CRJ 开始--------------------
         Map<String,Object> crjMap=new HashMap<String,Object>();
-        //模板
-        crjMap.put("temp","taskCardCRJT.docx");
+        crjMap.put("temp","taskCardCRJT.docx");//模板名称
         //页面类型规则定义(1:word的首页;2:需解析的页面;剩余解析成图片(注意analyPdfM没值时图片数据先不赋进去))
         //前260字包含(7)(8)(9)(10)(11)表是测试页面
         Map<String, Integer> pageTypeCM=new LinkedCaseInsensitiveMap();
@@ -43,32 +43,76 @@ public class FormPdf {
         pageTypeCM.put("AircraftSeriesAircraftNumber",2);
         crjMap.put("pageType",pageTypeCM);
         //提取值规则定义,key是字段触发开始依据
-        Map<String,Map<String,Object>> ruleCRJ=new HashMap<String,Map<String,Object>>();
-
-        Map<String, Object> valueRule1=new LinkedCaseInsensitiveMap();
-        valueRule1.put("nextY","Series");//紧接触发依据的下一个值,用于确认触发
-        valueRule1.put("indexI",1);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
-        valueRule1.put("isEntyI",true);//需提取值是否是一个整体,即无空格的字符串
-        valueRule1.put("beforTI","");//需提取值的前面是啥,""表顶行开始
-        ruleCRJ.put("Aircraft",valueRule1);//对crj的整体定义
-
-        Map<String, Object> valueRule2=new LinkedCaseInsensitiveMap();
-        valueRule2.put("nextY","Rev");//紧接触发依据的下一个值,用于确认触发
-        valueRule2.put("indexI",0);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
-        valueRule2.put("isEntyI",true);//需提取值是否是一个整体,即无空格的字符串
-        valueRule2.put("beforTI","Rev:");//需提取值的前面是啥,""表顶行开始
-        ruleCRJ.put("Manual",valueRule2);//对crj的整体定义
-
+        List<Map<String,Object>> ruleCRJ=new ArrayList<Map<String,Object>>();
+        Map<String, Object> mapRule1=new HashMap<String, Object>();
+        mapRule1.put("tempKey","AircraftSeries");//对应模板值
+        mapRule1.put("matchT","Aircraft Series");//匹配开始的正则
+        mapRule1.put("indexI",1);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
+        mapRule1.put("valType","single");//值类型:单行 single ,多行 rowset ,复合 composite
+        mapRule1.put("matchI","^(\\S+/\\S+/\\S+)");//被提取值正则匹配规则,具名组匹配提值 matcher.group(1)
+        ruleCRJ.add(mapRule1);
+        Map<String, Object> mapRule1_2=new HashMap<String, Object>();
+        mapRule1_2.put("tempKey","TaskCardNumber");//对应模板值
+        mapRule1_2.put("matchT","Task Card Number");//匹配开始的正则
+        mapRule1_2.put("indexI",1);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
+        mapRule1_2.put("valType","single");//值类型:单行 single ,多行 rowset ,复合 composite
+        mapRule1_2.put("matchI","(\\S+-\\S+-\\S+ \\(\\S+ \\S+\\))$");//被提取值正则匹配规则,具名组匹配提值 matcher.group(1)
+        ruleCRJ.add(mapRule1_2);
+        Map<String, Object> mapRule2=new HashMap<String, Object>();
+        mapRule2.put("tempKey","ManualRev");//对应模板值
+        mapRule2.put("matchT","Manual Rev:");//匹配开始的正则
+        mapRule2.put("indexI",0);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
+        mapRule2.put("valType","single");//值类型:单行 single ,多行 rowset ,复合 composite
+        mapRule2.put("matchI","Rev: ([0-9]+)");//被提取值正则匹配规则,具名组匹配提值 matcher.group(1)
+        ruleCRJ.add(mapRule2);
+        Map<String, Object> mapRule3=new HashMap<String, Object>();
+        mapRule3.put("tempKey","Amendment");//对应模板值
+        mapRule3.put("matchT","nt:");//匹配开始的正则
+        mapRule3.put("indexI",0);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
+        mapRule3.put("valType","single");//值类型:单行 single ,多行 rowset ,复合 composite
+        mapRule3.put("matchI","nt: ([0-9]+)");//被提取值正则匹配规则,具名组匹配提值 matcher.group(1)
+        ruleCRJ.add(mapRule3);
+        Map<String, Object> mapRule4=new HashMap<String, Object>();
+        mapRule4.put("tempKey","TaskType");//对应模板值
+        mapRule4.put("matchT","Task Type");//匹配开始的正则
+        mapRule4.put("indexI",1);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
+        mapRule4.put("valType","single");//值类型:单行 single ,多行 rowset ,复合 composite
+        //先如下写,若不对可直接定义 值A|值B
+        mapRule4.put("matchI","^([A-Z]+)");//被提取值正则匹配规则,具名组匹配提值 matcher.group(1)
+        ruleCRJ.add(mapRule4);
+        Map<String, Object> mapRule5=new HashMap<String, Object>();
+        mapRule5.put("tempKey","Skill");//对应模板值
+        mapRule5.put("matchT","Type Skill Labor");//匹配开始的正则
+        mapRule5.put("indexI",1);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
+        mapRule5.put("valType","single");//值类型:单行 single ,多行 rowset ,复合 composite
+        mapRule5.put("matchI"," ([A-Z]+) ");//被提取值正则匹配规则,具名组匹配提值 matcher.group(1)
+        ruleCRJ.add(mapRule5);
+        Map<String, Object> mapRule6=new HashMap<String, Object>();
+        mapRule6.put("tempKey","LaborHours");//对应模板值
+        mapRule6.put("matchT","Labor Hours");//匹配开始的正则
+        mapRule6.put("indexI",1);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
+        mapRule6.put("valType","single");//值类型:单行 single ,多行 rowset ,复合 composite
+        mapRule6.put("matchI","([0-9]+\\.[0-9]+)");//被提取值正则匹配规则,具名组匹配提值 matcher.group(1)
+        ruleCRJ.add(mapRule6);
+        Map<String, Object> mapRule7=new HashMap<String, Object>();
+        mapRule7.put("tempKey","NbrOfPersons");//对应模板值
+        mapRule7.put("matchT","Nbr of Persons");//匹配开始的正则
+        mapRule7.put("indexI",1);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
+        mapRule7.put("valType","single");//值类型:单行 single ,多行 rowset ,复合 composite
+        mapRule7.put("matchI"," ([0-9]+)$");//被提取值正则匹配规则,具名组匹配提值 matcher.group(1)
+        ruleCRJ.add(mapRule7);
+        Map<String, Object> mapRule8=new HashMap<String, Object>();
+        mapRule8.put("tempKey","Zone(s)");//对应模板值
+        mapRule8.put("matchT","Zone(s):");//匹配开始的正则
+        mapRule8.put("indexI",0);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
+        mapRule8.put("valType","single");//值类型:单行 single ,多行 rowset ,复合 composite
+        mapRule8.put("matchI","Zone\\(s\\): (.+)$");//被提取值正则匹配规则,具名组匹配提值 matcher.group(1)
+        ruleCRJ.add(mapRule8);
         crjMap.put("rule",ruleCRJ);
-        //对crj的整体定义
-        mapp.put("crj",crjMap);
-
-
-
-
+        mapp.put("crj",crjMap);//对crj的整体定义
+        //------------BOEING 开始--------------------
         Map<String,Object> boeingMap=new HashMap<String,Object>();
-        //模板
-        boeingMap.put("temp","taskCardBoeingT.docx");
+        boeingMap.put("temp","taskCardBoeingT.docx");//模板名称
         //页面类型规则定义(1:word的首页;2:需解析的页面;剩余解析成图片(注意analyPdfM没值时图片数据先不赋进去))
         Map<String, Integer> pageTypeBM=new LinkedCaseInsensitiveMap();
         pageTypeBM.put("AIRLINECARDNO",1);//先判断1,其包含2的判断依据
@@ -171,17 +215,21 @@ public class FormPdf {
             }
             rows.add(rowscol);
         }
-        //原数据输出
+        //解析数据输出
         for(int ii=0;ii<rows.size();ii++){
             List<String> rowscol=rows.get(ii);
+            StringBuilder sb=new StringBuilder();
             for(int iii=0;iii<rowscol.size();iii++){
                 String str=rowscol.get(iii);
+                sb.append(" "+str);
                 System.out.print(str);
                 // \t方便复制到xls时有格式,后期注释掉
                 System.out.print("	");
             }
             //当前行结尾,后期注释掉
             System.out.println("*");
+            //行数据
+            String rowV=sb.toString().trim().replaceAll("−","-").replaceAll("\\s{2,}"," ");
         } System.out.println("-------------------------------");
 
         return resmap;

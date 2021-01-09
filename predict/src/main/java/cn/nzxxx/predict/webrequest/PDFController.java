@@ -163,7 +163,7 @@ public class PDFController {
             Map map = Helper.stringJSONToMap(param);
             String urll=(String)map.get("urll");
             //测试-后期去掉
-            urll="C:/Users/18722/Desktop/tolg/cord/CRJ/CRJ7910MTCM-MAST-R57-V02.pdf";
+            urll="C:/Users/18722/Desktop/tolg/taskcard/CRJ/CRJ7910MTCM-MAST-R57-V02.pdf";
             String fileName=(String)map.get("fileName");
             //测试-后期去掉
             fileName="CRJ7910MTCM-MAST-R57-V02";
@@ -187,7 +187,7 @@ public class PDFController {
             int num=0;
             Map<String,Object> analyPdfM=new HashMap<String,Object>();
             //循环所有pdf页 -暂时先循环一次
-            for(int i=4;i<=pagenum;i++){ //测试-后期去掉
+            for(int i=3;i<=pagenum;i++){ //测试-后期去掉
             //for(int i=1;i<=pagenum;i++){
                 Page page=fpdf.retPageC(oe,i);
                 //当前页的类型(1:word的首页;2:需解析的页面;)
