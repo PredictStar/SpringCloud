@@ -99,6 +99,12 @@
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>-->
         <!--结束-->
+        <!-- WORD 模板操作 -->
+        <dependency>
+            <groupId>com.deepoove</groupId>
+            <artifactId>poi-tl</artifactId>
+            <version>1.7.2</version>
+        </dependency>
         <!-- pdf解析 -->
         <dependency>
             <groupId>technology.tabula</groupId>

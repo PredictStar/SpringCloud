@@ -185,9 +185,12 @@ public class PDFController {
             int pagenum=fpdf.retPagenum(document);
             //是否是一条完整的解析(一个word可能由多个pdf页构成)
             int num=0;
+            //解析pdf,后赋word所需内容
             Map<String,Object> analyPdfM=new HashMap<String,Object>();
+            //提取值规则定义
+            List<Map<String,Object>> ruleList=fpdf.getNewRule(fileType);
             //循环所有pdf页 -暂时先循环一次
-            for(int i=3;i<=pagenum;i++){ //测试-后期去掉
+            for(int i=151;i<=pagenum;i++){ //测试-后期去掉
             //for(int i=1;i<=pagenum;i++){
                 Page page=fpdf.retPageC(oe,i);
                 //当前页的类型(1:word的首页;2:需解析的页面;)
@@ -199,11 +202,13 @@ public class PDFController {
                 i=pagenum;
                 if(i==pagenum){//最后一页
                     //解析PDF
-                    fpdf.analyPdfToMap(page,document,i,analyPdfM,pageTypeN);
+                    fpdf.analyPdfToMap(page,document,i,analyPdfM,pageTypeN,ruleList);
                     if(analyPdfM.size()!=0){
                         //生成word,入数据库
                         reC=fpdf.run(page,urll,fileName,fileType,analyPdfM);
+                        //清空analyPdfM
                         analyPdfM=new HashMap<String,Object>();
+                        ruleList=fpdf.getNewRule(fileType);
                         num++;
                     }
                 }else{
@@ -211,18 +216,23 @@ public class PDFController {
                         if(analyPdfM.size()!=0){
                             //生成word,入数据库
                             reC=fpdf.run(page,urll,fileName,fileType,analyPdfM);
+                            //清空analyPdfM
                             analyPdfM=new HashMap<String,Object>();
+                            ruleList=fpdf.getNewRule(fileType);
                             num++;
                         }
                     }
                     //解析PDF
-                    fpdf.analyPdfToMap(page,document,i,analyPdfM,pageTypeN);
+                    fpdf.analyPdfToMap(page,document,i,analyPdfM,pageTypeN,ruleList);
                 }
                 if(!reC.getStatusCode().equals("200")){
                     return Helper.pojoToStringJSON(reC);
                 }
                 //测试-后期去掉
-                break;
+                if(i==156){
+                    break;
+                }
+
             }
             //关
             fpdf.closed(oe,document,input);

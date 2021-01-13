@@ -78,6 +78,22 @@ public class Help {
 	}
 	/**
 	 * 根据参返回状态码类描述
+	 * 参1,参2,参3为NULL或'',返回已经定义好的状态码描述
+	 * @return 返回null表正常 ;否则返回,Help.returnClass(500, "异常,传递的参为NULL或''!");//理论上前台应该已经拦截验证.
+	 */
+	public static String return5003Describe(String str1,String str2,String str3) {
+		str1=Helper.eToNULL(str1);
+		str2=Helper.eToNULL(str2);
+		str3=Helper.eToNULL(str3);
+		if(str1==null||str2==null|str3==null){
+			return Help.returnClass(500, "异常,传递的参为NULL或''!","参1为"+str1+"参2为"+str2+".");
+		}else{
+			return null;
+		}
+
+	}
+	/**
+	 * 根据参返回状态码类描述
 	 * @param str 参为NULL或'',返回已经定义好的状态码描述
 	 * @return 返回null表正常 ;否则返回,Help.returnClass(500, "异常,传递的参为NULL或''!");//理论上前台应该已经拦截验证.
 	 */
