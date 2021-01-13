@@ -302,26 +302,26 @@ public class FormPdf {
             }
             params.put("images", new DocxRenderData(new File(filePath+"imageT.docx"), subData));
         }
-        /*//tablee赋值
-        Map<String,MiniTableRenderData> tablee=(Map)analyPdfM.get("tablee");
-        if(tablee.size()>0){
-            for(String key:tablee.keySet()){
-                MiniTableRenderData miniTableRenderData = tablee.get(key);
-                params.put(key, miniTableRenderData);
-            }
-        }*/
-        //测试区块对;它的开始和结束标签必须在同一个单元格内
-        List list=new ArrayList();
-        Map map=new HashMap();
-        map.put("bb","xxx");
-        list.add(map);
-        Map map2=new HashMap();
-        map.put("bb","ppp");
-        list.add(map2);
-        params.put("aa", list);
+        //区块对赋值
+        List jobSetList=new ArrayList();
+        Map jobSetMap=new HashMap();
+        jobSetMap.put("titV","A. DSFSS");
+        List tableTempList=new ArrayList();
+        Map tableTempMap=new HashMap();
+        tableTempMap.put("startV","1. dddds");
+        tableTempMap.put("endV","NO: SSS");
+        RowRenderData header1 = RowRenderData.build(new TextRenderData("姓名"), new TextRenderData("学历"));//我写的时候,此设置颜色运行报错
+        List<RowRenderData> talist1=new ArrayList<RowRenderData>();
+        talist1.add(RowRenderData.build("张三", "研究生"));
+        talist1.add(RowRenderData.build("李四", "博士"));
+        tableTempMap.put("tablee",new MiniTableRenderData(header1, talist1));
+        tableTempList.add(tableTempMap);
+        jobSetMap.put("tableTemp",tableTempList);
+        jobSetList.add(jobSetMap);
+        params.put("jobSet", jobSetList);
+
         // 模板赋值
         template.render(params);
-
         //配置文件值获取
         ResourceBundle re = java.util.ResourceBundle.getBundle("application");//application.properties里值
         String saveMain = re.getString("saveurl.main");
@@ -352,10 +352,6 @@ public class FormPdf {
         byte[] bytes = os.toByteArray();
         os.close();
         List<byte[]> imagesB=(List<byte[]>) analyPdfM.get("imagesB");
-        if(imagesB==null){
-            imagesB=new ArrayList<byte[]>();
-            analyPdfM.put("imagesB",imagesB);
-        }
         imagesB.add(bytes);
     }
     /**
@@ -399,22 +395,26 @@ public class FormPdf {
             for(int iii=0;iii<rowscol.size();iii++){
                 String str=rowscol.get(iii);
                 sb.append(" "+str);
-                System.out.print(str);
+                //System.out.print(str);
                 // \t方便复制到xls时有格式,后期注释掉
-                System.out.print("	");
+                //System.out.print("	");
             }
             //当前行结尾,后期注释掉
-            System.out.println("*");
+            //System.out.println("*");
             //行数据
             String rowV=sb.toString().trim().replaceAll("−","-").replaceAll("\\s{2,}"," ");
+            System.out.println(rowV);
 
-
-
-
-
-        } System.out.println("-------------------------------");
+        }
+        System.out.println("-------------------------------");
 
         if(pageTypeN==1){
+            //初始赋值
+            List<byte[]> imagesB=new ArrayList<byte[]>();
+            analyPdfM.put("imagesB",imagesB);
+            Map<String,String> vallMap=new HashMap<>();
+            analyPdfM.put("vall",vallMap);
+            //提取值
             String taskCardNumber="000−21−310−141 (Config A04)";
             analyPdfM.put("saveName",taskCardNumber);
         }
