@@ -195,12 +195,12 @@ public class PDFController {
                 Page page=fpdf.retPageC(oe,i);
                 //当前页的类型(1:word的首页;2:需解析的页面;)
                 int pageTypeN = fpdf.pageType(page, urll, fileName, fileType);
-                if(pageTypeN==0&&analyPdfM.size()==0){//去掉无用的页面(在数据后的0是图)
+                if(pageTypeN==0&&analyPdfM.size()==0){ //去掉无用的页面(在数据后的0是图)
                     continue;
                 }
                 //测试-后期去掉
                 i=pagenum;
-                if(i==pagenum){//最后一页
+                if(i==pagenum){ //最后一页
                     //解析PDF
                     fpdf.analyPdfToMap(page,document,i,analyPdfM,pageTypeN,ruleList);
                     if(analyPdfM.size()!=0){
@@ -230,9 +230,8 @@ public class PDFController {
                 }
                 //测试-后期去掉
                 if(i==156){
-                    break;
+                    i=pagenum;
                 }
-
             }
             //关
             fpdf.closed(oe,document,input);
