@@ -152,7 +152,7 @@ public class PDFController {
      * @throws Exception
      */
     @RequestMapping("/pdfToWord")
-    public String pdfToWord(String param, String picData){
+    public String pdfToWord(String param){
         String resstr;
         ReturnClass reC=Help.returnClassT(200,"接口操作成功","");
         try{
@@ -179,6 +179,7 @@ public class PDFController {
             InputStream input=new FileInputStream(file);
             //初始化FormPdf类
             FormPdf fpdf=new FormPdf();
+            fpdf.setFileType(fileType);
             PDDocument document=fpdf.returnPDDocument(input);
             ObjectExtractor oe  = new ObjectExtractor(document);
             //页面总数(从1开始)
@@ -188,13 +189,13 @@ public class PDFController {
             //解析pdf,后赋word所需内容
             Map<String,Object> analyPdfM=new HashMap<String,Object>();
             //提取值规则定义
-            List<Map<String,Object>> ruleList=fpdf.getNewRule(fileType);
+            List<Map<String,Object>> ruleList=fpdf.getNewRule();
             //循环所有pdf页 -暂时先循环一次
             for(int i=151;i<=pagenum;i++){ //测试-后期去掉
             //for(int i=1;i<=pagenum;i++){
                 Page page=fpdf.retPageC(oe,i);
                 //当前页的类型(1:word的首页;2:需解析的页面;)
-                int pageTypeN = fpdf.pageType(page, urll, fileName, fileType);
+                int pageTypeN = fpdf.pageType(page);
                 if(pageTypeN==0&&analyPdfM.size()==0){ //去掉无用的页面(在数据后的0是图)
                     continue;
                 }
@@ -205,20 +206,20 @@ public class PDFController {
                     fpdf.analyPdfToMap(page,document,i,analyPdfM,pageTypeN,ruleList);
                     if(analyPdfM.size()!=0){
                         //生成word,入数据库
-                        reC=fpdf.run(page,urll,fileName,fileType,analyPdfM);
+                        reC=fpdf.run(page,urll,fileName,analyPdfM);
                         //清空analyPdfM
                         analyPdfM=new HashMap<String,Object>();
-                        ruleList=fpdf.getNewRule(fileType);
+                        ruleList=fpdf.getNewRule();
                         num++;
                     }
                 }else{
                     if(pageTypeN==1){
                         if(analyPdfM.size()!=0){
                             //生成word,入数据库
-                            reC=fpdf.run(page,urll,fileName,fileType,analyPdfM);
+                            reC=fpdf.run(page,urll,fileName,analyPdfM);
                             //清空analyPdfM
                             analyPdfM=new HashMap<String,Object>();
-                            ruleList=fpdf.getNewRule(fileType);
+                            ruleList=fpdf.getNewRule();
                             num++;
                         }
                     }
