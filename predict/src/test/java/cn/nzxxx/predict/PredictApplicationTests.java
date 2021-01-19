@@ -5,12 +5,21 @@ import cn.nzxxx.predict.toolitem.entity.test;
 import cn.nzxxx.predict.toolitem.tool.Helper;
 import cn.nzxxx.predict.webrequest.HelloController;
 
+
 import net.sf.json.JSONObject;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.entity.ContentType;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageTree;
+import org.apache.pdfbox.pdmodel.PDResources;
+import org.apache.pdfbox.pdmodel.common.PDStream;
+import org.apache.pdfbox.pdmodel.graphics.PDXObject;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.apache.pdfbox.rendering.PDFRenderer;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.hibernate.validator.internal.util.StringHelper;
 import org.junit.Assert;
 import org.junit.Before;
@@ -41,9 +50,10 @@ import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.DESKeySpec;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
+import javax.imageio.ImageIO;
+import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
+import java.io.*;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.net.URL;
@@ -86,45 +96,109 @@ public class PredictApplicationTests {
          }
          return  isPrimeNum;
      }*/
+    @Test
+    public void b()throws Exception{
+        //549 556
 
-     @Test
-     public void a()throws Exception{
-        //(非"标准table 格式 ?!"的pdf,获取不到!!! a.size()==0(即有的pdf有线可能也获取不到))
-        PDDocument document = PDDocument.load(new File("C:/Users/18722/Desktop/tolg/cord/CRJ/CRJ7910MTCM-MAST-R57-V01.pdf"));
-        //pdf页数(第1页到第200页,此返回200)
-        PDPageTree pages = document.getDocumentCatalog().getPages();
-        int pagenum=pages.getCount();
-        ObjectExtractor oe  = new ObjectExtractor(document);
-        //循环页面
-        Page page = oe.extract(179);//从1开始,表第一页
-        /*
-         //根据区域范围提取内容
-         technology.tabula.Rectangle area = new technology.tabula.Rectangle(60, 20, 460,600);
-         page=page.getArea(area);
-        */
-        //根据table分割线,获取数据
-        //表是有横线竖线(没横线会认为是同一个单元格内容,多个仅仅空格隔开())
-        SpreadsheetExtractionAlgorithm sea = new SpreadsheetExtractionAlgorithm();
-        //根据流的方式去获取数据
-        //BasicExtractionAlgorithm sea = new BasicExtractionAlgorithm();
-        List<Table> tabs=sea.extract(page);
-        System.out.println("获取table数:"+tabs.size());
-            /*
-            System.out.println(page.getRulings());
-            //此页面数据读取,获取坐标等数据
-            List<TextElement> text2 = page.getText();
-            for(int i=0;i<text2.size();i++){
-                TextElement textElement = text2.get(i);
-                System.out.print(textElement.getText());
-                System.out.print(" X:"+ textElement.getX());
-                System.out.print(" Y:"+ textElement.getY());
-                System.out.print(" W:"+ textElement.getWidth());
-                System.out.println(" H:"+ textElement.getHeight());
+        String a="621BR Fixed Leading−Edge Skin CSP-B-001 AMM 57-41-05-400-802";
+        String aa="621BR Fixed Leading−Edge Skin";
+        String aaa="Fiyxed";
+        List List=new ArrayList();
+        List.add("([A-Z0-9]+ )(.+)( \\S+-\\S+-\\S+)( AMM \\S+)");
+        List.add("([A-Z0-9]+ )?(.+)()()");
+        String pp=Helper.listToStringJSON(List);
+        List list = Helper.stringJSONToList(pp);
+       /* for(int i=0;i<list.size();i++){
+            String s = (String)list.get(i);
+            Pattern pattern = Pattern.compile(s);
+            Matcher matcher = pattern.matcher(aaa);
+            if(matcher.find()){
+                System.out.println(matcher.group(0));
+                System.out.println(matcher.group(1));
+                System.out.println(matcher.group(2));
+                System.out.println(matcher.group(3));
+                System.out.println(matcher.group(4));*//*
+                System.out.println(matcher.group(5));
+                System.out.println(matcher.group(6));
+                System.out.println(matcher.group(7));
+                System.out.println(matcher.group(8));*//*
+                break;
             }
-            */
+        }*/
+
+        Pattern pattern = Pattern.compile("(aa)|(b)|(c)");
+        Matcher matcher = pattern.matcher("xabcd");
+        if(matcher.find()){
+            int groupCount = matcher.groupCount();
+            for(int i=1;i<=groupCount;i++){
+                String group = matcher.group(i);
+                if(StringUtils.isNotBlank(group)){
+                    System.out.println(group);
+                    break;
+                }
+            }
+        }
+    }
+    public void clearTag(Object obj){
+        if(obj instanceof Map){
+            Map<String,Object> map=(Map)obj;
+            for(Object value:map.values()){
+                if(value instanceof Map){
+                    clearTag(value);
+                }
+            }
+            map.put("alreadyOver",null);
+            map.put("donotEnd",null);
+        }else if(obj instanceof List){
+            List list=(List)obj;
+            for(int i=0;i<list.size();i++){
+                Object value = list.get(i);
+                if((value instanceof Map)||(value instanceof List)){
+                    clearTag(value);
+                }
+            }
+        }
+    }
+     //@Test
+     public void a()throws Exception{
+         /*try {
+
+         }catch (Exception e){
+
+         }*/
+         PDDocument document = PDDocument.load(new File("C:/Users/18722/Desktop/tolg/taskcard/CRJ/CRJ7910MTCM-MAST-R57-V02.pdf"));
+         //pdf页数(第1页到第200页,此返回200)
+         PDPageTree pages = document.getDocumentCatalog().getPages();
+         int pagenum=pages.getCount();
+         ObjectExtractor oe  = new ObjectExtractor(document);
+         //循环页面
+         Page page = oe.extract(40);//从1开始,表第一页
+			/*
+			 //根据区域范围提取内容
+			 technology.tabula.Rectangle area = new technology.tabula.Rectangle(60, 20, 460,600);
+			 page=page.getArea(area);
+			*/
+         //根据table分割线,获取数据
+         //表是有横线竖线(没横线会认为是同一个单元格内容,多个仅仅空格隔开())
+         SpreadsheetExtractionAlgorithm sea = new SpreadsheetExtractionAlgorithm();
+         //根据流的方式去获取数据
+         //BasicExtractionAlgorithm sea = new BasicExtractionAlgorithm();
+         List<Table> tabs=sea.extract(page);
+         System.out.println("获取table数:"+tabs.size());
+			/*System.out.println(page.getRulings());
+			//此页面数据读取,获取坐标等数据
+			List<TextElement> text2 = page.getText();
+			for(int i=0;i<text2.size();i++){
+				TextElement textElement = text2.get(i);
+				System.out.print(textElement.getText());
+				System.out.print(" X:"+ textElement.getX());
+				System.out.print(" Y:"+ textElement.getY());
+				System.out.print(" W:"+ textElement.getWidth());
+				System.out.println(" H:"+ textElement.getHeight());
+			}*/
+
          //循环table
          for(int i=0;i<tabs.size();i++){
-             System.out.println("-----------------------------");
              Table table=tabs.get(i);
              List<List<String>> rows=new ArrayList<List<String>>();
              List<List<RectangularTextContainer>> tableRows = table.getRows();
@@ -149,7 +223,10 @@ public class PredictApplicationTests {
                  //当前行结尾,后期注释掉
                  System.out.println("*");
              }
+             System.out.println("---------------------------");
+
          }
-    }
+
+     }
 
 }

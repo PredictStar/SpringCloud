@@ -49,26 +49,38 @@ public class FormPdf {
         //列个数即key以空格分隔的数组个数
         // 匹配时_要换为空格,且获取值清除两边空格 !!!
         Map<String,Object> table2=new HashMap<String,Object>();
-        table2.put("colMatch","^(.+ )?(\\S+) (AIPC \\S+)$");//列值获取方式
+        List<String> table2List=new ArrayList<String>();
+        table2List.add("^(.+ )?(\\S+) (AIPC \\S+)$");
+        table2.put("colMatch",table2List);//列值获取方式
         table2.put("valNVL","up");// //up 列无值时,取上行值
         tableCRJ.put("NAME MANUAL AIPC_REFERENCE",table2);                                                     //1. part
         Map<String,Object> table1=new HashMap<String,Object>();
-        table1.put("colMatch","^(\\S+)( .+)?$");//列值获取方式
+        List<String> table1List=new ArrayList<String>();
+        table1List.add("^(\\S+)( .+)?$");
+        table1.put("colMatch",table1List);//列值获取方式
         table1.put("valNVL","add");// //up 列无值时,取上行值; add 无值时和上行合并
         tableCRJ.put("REFERENCE DESIGNATION",table1);                      //1. Consumable Materials; Tools and Equipment;
         Map<String,Object> table3=new HashMap<String,Object>();
-        table3.put("colMatch","^(\\S+ )?(AMM \\S+ )?(.+)$");//列值获取方式
+        List<String> table3List=new ArrayList<String>();
+        table3List.add("^(\\S+ )?(AMM \\S+ )?(.+)$");
+        table3.put("colMatch",table3List);//列值获取方式
         table3.put("valNVL","add");// //up 列无值时,取上行值; add 无值时和上行合并
         tableCRJ.put("MANUAL_NO REFERENCE DESIGNATION",table3);//1. Reference Information ; Standard Practices Information
         Map<String,Object> table4=new HashMap<String,Object>();
         List<Integer> setMat = Arrays.asList(1, 3, 4);
-        //列与具名组匹配对应规则;默认就表示第一列就是.group(1)以此类推
+        //列与具名组匹配对应规则;
         table4.put("setMat",setMat);
-        table4.put("colMatch","^(\\S+ )?(AMM \\S+ )?(.+)$");//列值获取方式
+        List<String> table4List=new ArrayList<String>();
+        table4List.add("^(\\S+( LOWER)? )(\\S+ )(.+)$");
+        table4.put("colMatch",table4List);//列值获取方式
         tableCRJ.put("CB-PANEL CB-NO NAME",table4);                                                       //2 Job Set−Up
         Map<String,Object> table5=new HashMap<String,Object>();
-        table5.put("colMatch","^(\\S+ )?(.+)()()$");//列值获取方式
-        table3.put("valNVL","add");// //up 列无值时,取上行值; add 无值时和上行合并
+        List<String> table5List=new ArrayList<String>();//621BR Fixed Leading−Edge Skin CSP−B−001 AMM 57−41−05−400−802;142AR Forward Potable−Water
+        //第一个不匹配,匹配第二个
+        table5List.add("([A-Z0-9]+ )(.+)( \\S+-\\S+-\\S+)( AMM \\S+)");
+        table5List.add("([A-Z0-9]+ )?(.+)()()");
+        table5.put("colMatch",table5List);//列值获取方式
+        table5.put("valNVL","add");// //up 列无值时,取上行值; add 无值时和上行合并
         tableCRJ.put("PANEL NAME MANUAL_NO REFERENCE",table5);//2 Job Set−Up;4 Close Out
         //此行如果值和表头数不对,认为是同一条数据
         crjMap.put("tableRule",tableCRJ);
@@ -89,28 +101,28 @@ public class FormPdf {
         mapRule1.put("matchT","Aircraft Series");//匹配开始的正则
         mapRule1.put("indexI",1);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
         mapRule1.put("valType","single");//值类型:单行 single ,多行 rowset ,复合 composite
-        mapRule1.put("matchI","^(\\S+/\\S+/\\S+)");//被提取值正则匹配规则,具名组匹配提值 matcher.group(1)
+        mapRule1.put("matchI","^(\\S+/\\S+/\\S+)");//被提取值正则匹配规则,具名组匹配提值
         ruleCRJ.add(mapRule1);
         Map<String, Object> mapRule1_2=new HashMap<String, Object>();
         mapRule1_2.put("tempKey","TaskCardNumber");//对应模板值
         mapRule1_2.put("matchT","Task Card Number");//匹配开始的正则
         mapRule1_2.put("indexI",1);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
         mapRule1_2.put("valType","single");//值类型:单行 single ,多行 rowset ,复合 composite
-        mapRule1_2.put("matchI","(\\S+-\\S+-\\S+ \\(\\S+ \\S+\\))$");//被提取值正则匹配规则,具名组匹配提值 matcher.group(1)
+        mapRule1_2.put("matchI","(\\S+-\\S+-\\S+ \\(\\S+ \\S+\\))$");//被提取值正则匹配规则,具名组匹配提值
         ruleCRJ.add(mapRule1_2);
         Map<String, Object> mapRule2=new HashMap<String, Object>();
         mapRule2.put("tempKey","Rev");//对应模板值
         mapRule2.put("matchT","Manual Rev:");//匹配开始的正则
         mapRule2.put("indexI",0);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
         mapRule2.put("valType","single");//值类型:单行 single ,多行 rowset ,复合 composite
-        mapRule2.put("matchI","Rev: ([0-9]+)");//被提取值正则匹配规则,具名组匹配提值 matcher.group(1)
+        mapRule2.put("matchI","Rev: ([0-9]+)");//被提取值正则匹配规则,具名组匹配提值
         ruleCRJ.add(mapRule2);
         Map<String, Object> mapRule3=new HashMap<String, Object>();
         mapRule3.put("tempKey","Amend");//对应模板值
         mapRule3.put("matchT","e\\S*n\\S*t:");//匹配开始的正则
         mapRule3.put("indexI",0);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
         mapRule3.put("valType","single");//值类型:单行 single ,多行 rowset ,复合 composite
-        mapRule3.put("matchI","e\\S*n\\S*t: ([0-9]+)");//被提取值正则匹配规则,具名组匹配提值 matcher.group(1)
+        mapRule3.put("matchI","e\\S*n\\S*t: ([0-9]+)");//被提取值正则匹配规则,具名组匹配提值
         mapRule3.put("continueMatch","true");//当前行未匹配是否继续匹配下一个,因为此容易不匹配(老乱码),所以设此
         ruleCRJ.add(mapRule3);
         Map<String, Object> mapRule4=new HashMap<String, Object>();
@@ -119,35 +131,35 @@ public class FormPdf {
         mapRule4.put("indexI",1);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
         mapRule4.put("valType","single");//值类型:单行 single ,多行 rowset ,复合 composite
         //先如下写,若不对可直接定义 值A|值B
-        mapRule4.put("matchI","^([A-Z]+)");//被提取值正则匹配规则,具名组匹配提值 matcher.group(1)
+        mapRule4.put("matchI","^([A-Z]+)");//被提取值正则匹配规则,具名组匹配提值
         ruleCRJ.add(mapRule4);
         Map<String, Object> mapRule5=new HashMap<String, Object>();
         mapRule5.put("tempKey","Skill");//对应模板值
         mapRule5.put("matchT","Type Skill Labor");//匹配开始的正则
         mapRule5.put("indexI",1);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
         mapRule5.put("valType","single");//值类型:单行 single ,多行 rowset ,复合 composite
-        mapRule5.put("matchI"," ([A-Z]+) ");//被提取值正则匹配规则,具名组匹配提值 matcher.group(1)
+        mapRule5.put("matchI"," ([A-Z]+) ");//被提取值正则匹配规则,具名组匹配提值
         ruleCRJ.add(mapRule5);
         Map<String, Object> mapRule6=new HashMap<String, Object>();
         mapRule6.put("tempKey","LaborHours");//对应模板值
         mapRule6.put("matchT","Labor Hours");//匹配开始的正则
         mapRule6.put("indexI",1);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
         mapRule6.put("valType","single");//值类型:单行 single ,多行 rowset ,复合 composite
-        mapRule6.put("matchI","([0-9]+\\.[0-9]+)");//被提取值正则匹配规则,具名组匹配提值 matcher.group(1)
+        mapRule6.put("matchI","([0-9]+\\.[0-9]+)");//被提取值正则匹配规则,具名组匹配提值
         ruleCRJ.add(mapRule6);
         Map<String, Object> mapRule7=new HashMap<String, Object>();
         mapRule7.put("tempKey","NbrOfPersons");//对应模板值
         mapRule7.put("matchT","Nbr of Persons");//匹配开始的正则
         mapRule7.put("indexI",1);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
         mapRule7.put("valType","single");//值类型:单行 single ,多行 rowset ,复合 composite
-        mapRule7.put("matchI"," ([0-9]+)$");//被提取值正则匹配规则,具名组匹配提值 matcher.group(1)
+        mapRule7.put("matchI"," ([0-9]+)$");//被提取值正则匹配规则,具名组匹配提值
         ruleCRJ.add(mapRule7);
         Map<String, Object> mapRule8=new HashMap<String, Object>();
         mapRule8.put("tempKey","Zones");//对应模板值
         mapRule8.put("matchT","Zone\\(s\\):");//匹配开始的正则
         mapRule8.put("indexI",0);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
         mapRule8.put("valType","single");//值类型:单行 single ,多行 rowset ,复合 composite
-        mapRule8.put("matchI","Zone\\(s\\): (.+)$");//被提取值正则匹配规则,具名组匹配提值 matcher.group(1)
+        mapRule8.put("matchI","Zone\\(s\\): (.+)$");//被提取值正则匹配规则,具名组匹配提值
         ruleCRJ.add(mapRule8);
         Map<String, Object> mapRule9=new HashMap<String, Object>();
         mapRule9.put("tempKey","Effectivity");//对应模板值
@@ -184,14 +196,14 @@ public class FormPdf {
         mapRule11.put("matchT","REFERENCE:");//匹配开始的正则
         mapRule11.put("indexI",0);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
         mapRule11.put("valType","single");//值类型:单行 single ,多行 rowset ,复合 composite
-        mapRule11.put("matchI","^REFERENCE: (.+)");//被提取值正则匹配规则,具名组匹配提值 matcher.group(1)
+        mapRule11.put("matchI","^REFERENCE: (.+)");//被提取值正则匹配规则,具名组匹配提值
         ruleCRJ.add(mapRule11);
         Map<String, Object> mapRule12=new HashMap<String, Object>();
         mapRule12.put("tempKey","MrmReference");//对应模板值
         mapRule12.put("matchT","MRM REFERENCE:");//匹配开始的正则
         mapRule12.put("indexI",0);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
         mapRule12.put("valType","single");//值类型:单行 single ,多行 rowset ,复合 composite
-        mapRule12.put("matchI","^MRM REFERENCE: (.+)");//被提取值正则匹配规则,具名组匹配提值 matcher.group(1)
+        mapRule12.put("matchI","^MRM REFERENCE: (.+)");//被提取值正则匹配规则,具名组匹配提值
         ruleCRJ.add(mapRule12);
         Map<String, Object> mapRule13=new HashMap<String, Object>();
         mapRule13.put("tempKey","jobSet");//对应模板值
@@ -282,15 +294,13 @@ public class FormPdf {
      *     tabHead 表头值
      *     tabBody 表主体
      */
-    public void putTable(Map<String, Object> setMap,Map<String, Object> tabMap){
-        //表的模板名
-        String tempKey=(String) tabMap.get("tempKey");
+    public void putTable(Map<String, Object> setMap,Map<String, Object> tabMap,String key){
         //表头值
         String[] tabHead=(String[]) tabMap.get("tabHead");
         //表主体
         List<String[]> tabBody=(List) tabMap.get("tabBody");
         List<RowRenderData> talist=new ArrayList<RowRenderData>();
-        RowRenderData row0 = Rows.of(tabHead).textBold().bgColor("607D8B").center().create();//颜色即: #607D8B
+        RowRenderData row0 = Rows.of(tabHead).textBold().center().create();//颜色即: .bgColor("607D8B") #607D8B
         talist.add(row0);
         for(int i=0;i<tabBody.size();i++){
             String[] strings = tabBody.get(i);
@@ -298,7 +308,7 @@ public class FormPdf {
             talist.add(tablRrow);
         }
         RowRenderData[] rowRenderData = talist.toArray(new RowRenderData[talist.size()]);
-        setMap.put(tempKey, Tables.create(rowRenderData));
+        setMap.put(key, Tables.create(rowRenderData));
     }
     /**
      * 生成word
@@ -319,7 +329,6 @@ public class FormPdf {
         String templatePath = filePath+mainNameT;
         //System.out.println(filePath);
         XWPFTemplate template = XWPFTemplate.compile(templatePath);
-
         Map<String, Object> params = new HashMap<String, Object>();
         // 普通文本赋值|table的赋值
         Map<String,String> vallMap=(Map)analyPdfM.get("vall");
@@ -330,14 +339,15 @@ public class FormPdf {
                 Map<String,Map> tableMap=(Map)analyPdfM.get("tableMap");//value是对表的说明,key是UUID,如 table_uuid值
                 if(tableMap.containsKey(value)){
                     Map tabMap = tableMap.get(value);
-                    putTable(params,tabMap);
+                    //表的模板名
+                    String tempKey=(String) tabMap.get("tempKey");
+                    putTable(params,tabMap,tempKey);
                 }else{
                     params.put(key, value);
                 }
             }else{
                 params.put(key, value);
             }
-
         }
         // 图片赋值
         List<byte[]> imagesB=(List)analyPdfM.get("imagesB");
@@ -356,6 +366,7 @@ public class FormPdf {
         Map<String,List> sectionsMap=(Map)analyPdfM.get("sections");
         for(String key:sectionsMap.keySet()){
             List list = sectionsMap.get(key);
+            forListToTable(list,analyPdfM);
             params.put(key, list);
         }
         // 模板赋值
@@ -444,7 +455,7 @@ public class FormPdf {
         Map temporaryMap=new HashMap();
         //头部数据初始位置
         int initI = getInitI(rows, pageTypeN);
-        //下标记录
+        //下标记录(初始赋值)
         temporaryMap.put("index",initI);
         //当前页的行数据
         temporaryMap.put("rows",rows);
@@ -462,12 +473,13 @@ public class FormPdf {
                 break;
             }
             if(StringUtils.isBlank(rowV)){
+                //更改当前下标(表)
+                setIndex(temporaryMap,ii+1);
                 continue;
             }
             //对数据的处理
             //System.out.println(rowV);
-            int nextIndex=matchRule(temporaryMap,ruleList,analyPdfM,rowV);
-            temporaryMap.put("index",nextIndex);
+            matchRule(temporaryMap,ruleList,analyPdfM);
         }
         //System.out.println("-------------------------------");
         if(pageTypeN==1){
@@ -480,7 +492,7 @@ public class FormPdf {
         }
     }
     //操作下标
-    public int matchRule(Map temporaryMap,List<Map<String,Object>> ruleList,Map<String,Object> analyPdfM,String rowV){
+    public void matchRule(Map temporaryMap,List<Map<String,Object>> ruleList,Map<String,Object> analyPdfM){
         //现循环所在的行数
         int index=(int)temporaryMap.get("index");
         //下次循环的行数
@@ -494,94 +506,95 @@ public class FormPdf {
             //当前匹配完成则 mapRule.size() 会为0-会继续匹配下一个规则;
             // (未完,已完,已开始未完结)
             //匹配规则已开始未完结,则  mapRule.put("donotEnd","true");
-            matchStr(mapRule,temporaryMap,rowV,analyPdfM,null);
-            //当前规则 已开始未完结,或未匹配到
-            if(mapRule.size()!=0){
+            matchStr(mapRule,temporaryMap,analyPdfM,null);
+            //完结当前规则时,当前行继续匹配下一个规则
+            if("true".equals(mapRule.get("alreadyOver"))){
+                continue;
+            }else{
+                //当前规则未完结,或未匹配到
                 String continueMatch=(String)mapRule.get("continueMatch");
                 if("true".equals(continueMatch)){ //设置true 则继续匹配规则
                     continue;
                 }else{ //默认:已开始未完结,或未匹配到 直接break规则,获取下一行数据匹配规则去
                     break;
                 }
-            }else{//完结当前规则时,当前行继续匹配下一个规则
-                continue;
             }
         }
-        return index;
+        setIndex(temporaryMap,index);
+        //return index;
     }
-    //返回当前匹配的字符串
-    public String matchStr(Map<String, Object> mapRule,Map temporaryMap,String rowV,Map<String,Object> analyPdfM,Map sectionsMapT){
-        String resStr="";
-        //现行数
-        int index=(int)temporaryMap.get("index");
-        //当前页的行数据
-        List<List<String>> rows=(List)temporaryMap.get("rows");
-        //初始有效行数
-        int initI=(int)temporaryMap.get("initI");
-        //值类型:单行 single ,多行 rowset ,复合 composite,区块对 sections,表 table
-        String valType=(String) mapRule.get("valType");
-        //结束标记是否匹配表头
-        String matchEndTable=(String) mapRule.get("matchEndTable");
-        //表匹配规则
-        Map<String,Object> mMap=mapp.get(fileType);
-        Map<String,Map> tableRule=(Map)mMap.get("tableRule");
-        //rs 为true 表初次匹配
-        boolean rs =false;
-        //上次的规则未完待续判断
-        String donotEnd=(String) mapRule.get("donotEnd");
-        if("table".equals(valType)){
-            //改变i为当前行
-            String isChangeIndex=(String) mapRule.get("isChangeIndex");
-            for (int i=index;i<rows.size();i++){
-                //行数据
-                String rowsetV=getRowSte(rows,i,initI);
-                //表未完结
-                if("true".equals(donotEnd)){
-                    //是否是尾的垃圾数据
-                    boolean endrow = isEndrow(rowsetV);
-                    if(endrow){
+    //更改当前下标
+    public void setIndex(Map temporaryMap,int index){
+        Integer nowI= (Integer)temporaryMap.get("index");
+        if(nowI==null){
+            nowI=0;
+        }
+        //实时更新行
+        if(index>nowI){//防止死循环
+            temporaryMap.put("index",index);
+        }
+    }
+    //table的匹配方法
+    public void matchStrTable(Map<String, Object> mapRule,Map temporaryMap,Map<String,Object> analyPdfM,Map sectionsMapT,String matchEndTable,Map<String,Map> tableRule,int index,int initI,List<List<String>> rows,String donotEnd){
+        //改变i为当前行
+        String isChangeIndex=(String) mapRule.get("isChangeIndex");
+        //System.out.println("进入表匹配,开始行:"+index);
+        for (int i=index;i<rows.size();i++){
+            //行数据
+            String rowsetV=getRowSte(rows,i,initI);
+            //表未完结
+            if("true".equals(donotEnd)){
+                //是否是尾的垃圾数据
+                boolean endrow = isEndrow(rowsetV);
+                if(endrow){
+                    //更改当前下标(表)
+                    setIndex(temporaryMap,i);
+                    break;
+                }
+                //更改当前下标(表)
+                setIndex(temporaryMap,i);
+                if(StringUtils.isBlank(rowsetV)){
+                    continue;
+                }
+                //有效校验数据结束
+                //获取当前table的uuid标记
+                String newTableUUID= (String)analyPdfM.get("newTableUUID");
+                //当前表数据提取
+                Map<String,Map> tableMap=(Map)analyPdfM.get("tableMap");
+                //表描述:value是对表的说明,key是UUID,如 table_uuid值
+                Map<String,Object> tablem=tableMap.get(newTableUUID);
+                //表头行数据记录
+                String tabROWV=(String)tablem.get("tabROWV");
+                //如果内容同当前表的表头,内容紧接着当前表
+                if(tabROWV.equals(rowsetV)){
+                    continue;
+                }else{
+                    //匹配结束标记(//结束标记是否匹配表头在下)
+                    boolean rsEndMatch=isEndMatch(mapRule,rowsetV);
+                    //结束标记是否匹配表头
+                    boolean matchEndT=matchTabH(matchEndTable,rowsetV,tableRule);
+                    if(rsEndMatch||matchEndT){
+                        //触发结束
+                        matchEnd(isChangeIndex,i,index,temporaryMap,mapRule);
                         break;
                     }
-                    if(StringUtils.isBlank(rowsetV)){
-                        continue;
-                    }
-                    //有效校验数据结束
-                    //获取当前table的uuid标记
-                    String newTableUUID= (String)analyPdfM.get("newTableUUID");
-                    //当前表数据提取
-                    Map<String,Map> tableMap=(Map)analyPdfM.get("tableMap");
-                    //表描述:value是对表的说明,key是UUID,如 table_uuid值
-                    Map<String,Object> tablem=tableMap.get(newTableUUID);
-                    //表头行数据记录
-                    String tabROWV=(String)tablem.get("tabROWV");
-                    //如果内容同当前表的表头,内容紧接着当前表
-                    if(tabROWV.equals(rowsetV)){
-                        continue;
-                    }else{
-                        //匹配结束标记(//结束标记是否匹配表头在下)
-                        boolean rsEndMatch=isEndMatch(mapRule,rowsetV);
-                        //结束标记是否匹配表头
-                        boolean matchEndT=matchTabH(matchEndTable,rowsetV,tableRule);
-                        if(rsEndMatch||matchEndT){
-                            //触发结束
-                            matchEnd(isChangeIndex,i,index,temporaryMap,mapRule);
-                            break;
-                        }
-                    }
-                    //表头值
-                    String[] tabHead=(String[])tablem.get("tabHead");
-                    //列个数
-                    int colN=tabHead.length;//从1开始
-                    //表主体
-                    List<String[]> tabBody=(List)tablem.get("tabBody");
-                    //列值获取方式
-                    String colMatch=(String)tablem.get("colMatch");
-                    //up 列无值时,取上行值; add 无值时和上行合并
-                    String valNVL=(String)tablem.get("valNVL");
-                    //列与具名组匹配对应规则;默认就表示第一列就是.group(1)以此类推
-                    List<Integer> setMat=(List)tablem.get("setMat");
-                    //匹配行数据
-                    Pattern pattern = Pattern.compile(colMatch);
+                }
+                //表头值
+                String[] tabHead=(String[])tablem.get("tabHead");
+                //列个数
+                int colN=tabHead.length;//从1开始
+                //表主体
+                List<String[]> tabBody=(List)tablem.get("tabBody");
+                //列值获取方式
+                List<String> colMatch=(List)tablem.get("colMatch");
+                //up 列无值时,取上行值; add 无值时和上行合并
+                String valNVL=(String)tablem.get("valNVL");
+                //列与具名组匹配对应规则;
+                List<Integer> setMat=(List)tablem.get("setMat");
+                //匹配行数据
+                for(int c=0;c<colMatch.size();c++){
+                    String matchh = colMatch.get(c);
+                    Pattern pattern = Pattern.compile(matchh);
                     Matcher matcher = pattern.matcher(rowsetV);
                     if(matcher.find()){
                         //行数据
@@ -592,7 +605,7 @@ public class FormPdf {
                             //直接根据自定义list获取列值
                             for(int array=0;array<setMat.size();array++){
                                 Integer integer = setMat.get(array);
-                                String group = matcher.group(integer);
+                                String group = Helper.nvlString(matcher.group(integer));
                                 //赋值
                                 tabBodyStr[array]=group;
                                 //是否有空的情况
@@ -603,7 +616,7 @@ public class FormPdf {
                         }else{
                             //直接根据列数获取列值
                             for(int array=0;array<colN;array++){
-                                String group =matcher.group(array+1);
+                                String group =Helper.nvlString(matcher.group(array+1));
                                 //赋值
                                 tabBodyStr[array]=group;
                                 //是否有空的情况
@@ -614,7 +627,7 @@ public class FormPdf {
                         }
                         if(isBlank){ //有空的情况
                             int size = tabBody.size();
-                            if(size>1){
+                            if(size>0){
                                 //最新的一行数据
                                 String[] presentStr= tabBody.get(size - 1);
                                 //up 列无值时,取上行值; add 无值时和上行合并
@@ -644,57 +657,93 @@ public class FormPdf {
                             tabBody.add(tabBodyStr);
                         }
                     }
-                }else{
-                    //表类型还未正式开启
-                    Map<String,Object> tablerul=new HashMap<String,Object>();
-                    String newRow=rowsetV.replaceAll("\\s", "").replaceAll("_", "");
-                    //表头值
-                    String[] tabHead=null;
-                    //遍历表规则
-                    for(String key:tableRule.keySet()){
-                        String newKey=key.replaceAll("\\s", "").replaceAll("_", "");
-                        if(newKey.equals(newRow)){//匹配表规则成功
-                            tablerul=tableRule.get(key);
-                            tabHead=key.split(" ");
-                            //此规则开启;
-                            mapRule.put("donotEnd","true");
-                            donotEnd="true";
-                            break;
-                        }
+                    break;
+                }
+            }else{
+                //表类型还未正式开启
+                Map<String,Object> tablerul=new HashMap<String,Object>();
+                String newRow=rowsetV.replaceAll("\\s", "").replaceAll("_", "");
+                //表头值
+                String[] tabHead=null;
+                //遍历表规则
+                for(String key:tableRule.keySet()){
+                    String newKey=key.replaceAll("\\s", "").replaceAll("_", "");
+                    if(newKey.equals(newRow)){//匹配表规则成功
+                        tablerul=tableRule.get(key);
+                        tabHead=key.split(" ");
+                        //此规则开启;
+                        mapRule.put("donotEnd","true");
+                        donotEnd="true";
+                        break;
                     }
-                    //匹配表规则
-                    if(tablerul.size()!=0){
-                        //对应模板值
-                        String tempKey=(String) mapRule.get("tempKey");
-                        //当前最新table的uuid标记
-                        String uuidS = "table_"+UUID.randomUUID().toString();
-                        analyPdfM.put("newTableUUID",uuidS);
-                        //表说明
-                        Map<String,Object> tablem=new HashMap<String,Object>();
-                        //表头行数据记录
-                        tablem.put("tabROWV",rowsetV);
-                        //表的模板说明
-                        tablem.put("tempKey",tempKey);
-                        //表头值
-                        tablem.put("tabHead",tabHead);
-                        //表主体
-                        List<String[]> tabBody=new ArrayList<String[]>();
-                        tablem.put("tabBody",tabBody);
-                        //列值获取方式
-                        String colMatch=(String)tablerul.get("colMatch");//"^(.+ )?(\\S+) (AIPC \\S+)$");
-                        tablem.put("colMatch",colMatch);
-                        //up 列无值时,取上行值; add 无值时和上行合并
-                        String valNVL=(String)tablerul.get("valNVL");
-                        tablem.put("valNVL",valNVL);
-                        //列与具名组匹配对应规则;默认就表示第一列就是.group(1)以此类推
-                        List<Integer> setMat=(List)tablerul.get("setMat");
-                        tablem.put("setMat",setMat);
-                        //表描述存在集合里//value是对表的说明,key是UUID,如 table_uuid值
-                        Map<String,Map> tableMap=(Map)analyPdfM.get("tableMap");
-                        tableMap.put(uuidS,tablem);
+                }
+                //匹配表规则
+                if(tablerul.size()!=0){
+                    //System.out.println("表匹配");
+                    //对应模板值
+                    String tempKey=(String) mapRule.get("tempKey");
+                    //当前最新table的uuid标记
+                    String uuidS = "table_"+UUID.randomUUID().toString();
+                    analyPdfM.put("newTableUUID",uuidS);
+                    //表说明
+                    Map<String,Object> tablem=new HashMap<String,Object>();
+                    //表头行数据记录
+                    tablem.put("tabROWV",rowsetV);
+                    //表的模板说明
+                    tablem.put("tempKey",tempKey);
+                    //表头值
+                    tablem.put("tabHead",tabHead);
+                    //表主体
+                    List<String[]> tabBody=new ArrayList<String[]>();
+                    tablem.put("tabBody",tabBody);
+                    //列值获取方式
+                    List<String> colMatch=(List)tablerul.get("colMatch");
+                    tablem.put("colMatch",colMatch);
+                    //up 列无值时,取上行值; add 无值时和上行合并
+                    String valNVL=(String)tablerul.get("valNVL");
+                    tablem.put("valNVL",valNVL);
+                    //列与具名组匹配对应规则;
+                    List<Integer> setMat=(List)tablerul.get("setMat");
+                    tablem.put("setMat",setMat);
+                    //表描述存在集合里//value是对表的说明,key是UUID,如 table_uuid值
+                    Map<String,Map> tableMap=(Map)analyPdfM.get("tableMap");
+                    tableMap.put(uuidS,tablem);
+
+                    if(sectionsMapT!=null){ //说明是从区块对传过来的
+                        sectionsMapT.put(tempKey,uuidS);
+                    }else{
+                        Map<String,String> vallMap=(Map)analyPdfM.get("vall");
+                        vallMap.put(tempKey,uuidS);
                     }
                 }
             }
+        }
+    }
+    //返回当前匹配的字符串
+    public String matchStr(Map<String, Object> mapRule,Map temporaryMap,Map<String,Object> analyPdfM,Map sectionsMapT){
+        String resStr="";
+        //现行数
+        int index=(int)temporaryMap.get("index");
+        //当前页的行数据
+        List<List<String>> rows=(List)temporaryMap.get("rows");
+        //初始有效行数
+        int initI=(int)temporaryMap.get("initI");
+        //当前行数据
+        String rowV=getRowSte(rows,index,initI);
+        //值类型:单行 single ,多行 rowset ,复合 composite,区块对 sections,表 table
+        String valType=(String) mapRule.get("valType");
+        //结束标记是否匹配表头
+        String matchEndTable=(String) mapRule.get("matchEndTable");
+        //表匹配规则
+        Map<String,Object> mMap=mapp.get(fileType);
+        Map<String,Map> tableRule=(Map)mMap.get("tableRule");
+        //rs 为true 表初次匹配
+        boolean rs =false;
+        //上次的规则未完待续判断
+        String donotEnd=(String) mapRule.get("donotEnd");
+        if("table".equals(valType)){
+            //table的匹配方法
+            matchStrTable(mapRule,temporaryMap,analyPdfM,sectionsMapT,matchEndTable,tableRule,index,initI,rows,donotEnd);
         }else if("sections".equals(valType)){   //区块对(只要没 alreadyOver ,此时重新又匹配到了就认为是个新的)
             String isFirstS=(String) mapRule.get("isFirstS");
             String matchT=(String) mapRule.get("matchT");//匹配开始的正则
@@ -708,7 +757,7 @@ public class FormPdf {
             if(!rs&&(!"true".equals(donotEnd))){
                 return resStr;
             }
-            //当前模板的MAP
+            //当前模板的Map
             Map sectionsMap=new HashMap();
             String tempKey=(String) mapRule.get("tempKey");//对应模板值
             List<Map> list =new ArrayList<Map>();
@@ -716,29 +765,67 @@ public class FormPdf {
                 //是首提取对应的模板集合
                 Map<String,List<Map>> sections=(Map)analyPdfM.get("sections");//N个模板所放位置
                 list = sections.get(tempKey);//提取出叫"tempKey" 模板集合
+                //赋初始值
+                if(list==null){
+                    list =new ArrayList<Map>();
+                    sections.put(tempKey,list);
+                }
             }else {
                 //非首模板,表是其他模板递归过来的
                 list = (List)sectionsMapT.get(tempKey);//提取出叫"tempKey" 模板集合
+                //赋初始值
+                if(list==null){
+                    list =new ArrayList<Map>();
+                    sectionsMapT.put(tempKey,list);
+                }
             }
             if(rs){ //匹配开启个新的
-                //清除标记
+                //清除标记(区块对的规则可被重复利用,所以此每次重启清除下标记)
                 clearTag(mapRule);
                 //此规则开启;
                 mapRule.put("donotEnd","true");
                 donotEnd="true";
                 //是首,往从模板集合赋个空集合
                 list.add(sectionsMap);
-            }else if("true".equals(donotEnd)){
-                //是继续操作则,提取老数据操作
-                sectionsMap=list.get(list.size()-1);
+            }else {
+                //匹配结束标记(//结束标记是否匹配表头在下)
+                boolean rsEndMatch=isEndMatch(mapRule,rowV);
+                //结束标记是否匹配表头
+                boolean matchEndT=matchTabH(matchEndTable,rowV,tableRule);
+                if(rsEndMatch||matchEndT){
+                    //标记为结束
+                    mapRule.put("alreadyOver","true");
+                    mapRule.put("donotEnd","false");
+                    return resStr;
+                }
+                if(list.size()==0){
+                    System.out.println("-------list为0:"+list.size());
+                }
+                if(list.size()>0){//防止报错
+                    //是继续操作则,提取老数据操作
+                    sectionsMap=list.get(list.size()-1);
+                }
+
             }
             List<Map<String, Object>> templateList=(List) mapRule.get("templateList");//区块对匹配规则
+            //System.out.println("当前行:"+temporaryMap.get("index"));
             for(int i=0;i<templateList.size();i++){
                 Map<String, Object> tempValMap=templateList.get(i);
                 if("true".equals(tempValMap.get("alreadyOver"))){//失效的匹配规则过滤
                     continue;
                 }
-                matchStr(tempValMap, temporaryMap, rowV, analyPdfM,sectionsMap);
+                matchStr(tempValMap, temporaryMap, analyPdfM,sectionsMap);
+                if("true".equals(tempValMap.get("alreadyOver"))){
+                    continue;
+                }else{
+                    //当前规则未完结,或未匹配到
+                    String continueMatch=(String)tempValMap.get("continueMatch");
+                    if("true".equals(continueMatch)){ //设置true 则继续匹配规则
+                        continue;
+                    }else{ //默认:已开始未完结,或未匹配到 直接break规则,获取下一行数据匹配规则去
+                        break;
+                    }
+                }
             }
         }else{
             if(!"true".equals(donotEnd)){
@@ -760,7 +847,7 @@ public class FormPdf {
                 //比如 复合型的单行匹配是没对应模板值的,所以如下有值的才往 analyPdfM 赋值
                 String tempKey=(String) mapRule.get("tempKey");//对应模板值
                 if("single".equals(valType)){
-                    String matchI=(String) mapRule.get("matchI");//被提取值正则匹配规则,具名组匹配提值 matcher.group(1)
+                    String matchI=(String) mapRule.get("matchI");//被提取值正则匹配规则,具名组匹配提值
                     Integer indexI=(Integer) mapRule.get("indexI");//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
                     if(indexI==null){
                         indexI=0;
@@ -775,12 +862,24 @@ public class FormPdf {
                     Matcher matcherSingle = patternSingle.matcher(rowVNew);
                     String groupSingle ="";
                     if(matcherSingle.find()){
-                        groupSingle = matcherSingle.group(1);
+                        //groupSingle = matcherSingle.group(1);
+                        int groupCount = matcherSingle.groupCount();
+                        for(int i=1;i<=groupCount;i++){
+                            String group = matcherSingle.group(i);
+                            if(StringUtils.isNotBlank(group)){
+                                groupSingle=group;
+                                break;
+                            }
+                        }
                         resStr=groupSingle;
                     }
                     if(StringUtils.isNotBlank(tempKey)){
-                        Map<String,String> vallMap=(Map)analyPdfM.get("vall");
-                        vallMap.put(tempKey,groupSingle);
+                        if(sectionsMapT!=null){ //说明是从区块对传过来的
+                            sectionsMapT.put(tempKey,groupSingle);
+                        }else{
+                            Map<String,String> vallMap=(Map)analyPdfM.get("vall");
+                            vallMap.put(tempKey,groupSingle);
+                        }
                     }
                     //标记为结束
                     mapRule.put("alreadyOver","true");
@@ -793,34 +892,49 @@ public class FormPdf {
                     String rowsetStr="";
                     if(rs){ //初次匹配规则
                         indexI=(Integer) mapRule.get("indexI"); //需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
+                        if(indexI==null){
+                            indexI=0;
+                        }
                     }
                     int newIndex=index+indexI;
-                    //if(rs){//初次匹配
                     for (int i=newIndex;i<rows.size();i++){
                         //行数据
                         String rowsetV=getRowSte(rows,i,initI);
                         if(rs&&(i==newIndex)){ //第一次匹配值
-                            String matchI=(String) mapRule.get("matchI");//被提取值正则匹配规则,具名组匹配提值 matcher.group(1)
+                            String matchI=(String) mapRule.get("matchI");//被提取值正则匹配规则,具名组匹配提值
                             Pattern patternRowset = Pattern.compile(matchI);
                             Matcher matcherRowset = patternRowset.matcher(rowsetV);
                             if(matcherRowset.find()){
-                                rowsetStr= matcherRowset.group(1);
+                                //rowsetStr= matcherRowset.group(1);
+                                int groupCount = matcherRowset.groupCount();
+                                for(int gc=1;gc<=groupCount;gc++){
+                                    String group = matcherRowset.group(gc);
+                                    if(StringUtils.isNotBlank(group)){
+                                        rowsetStr=group;
+                                        break;
+                                    }
+                                }
                             }
                         }else{
-                            //匹配结束
-                            boolean rsEndMatch=isEndMatch(mapRule,rowsetV);
-                            if(rsEndMatch){
-                                //触发结束
-                                matchEnd(isChangeIndex,i,index,temporaryMap,mapRule);
-                                break;
-                            }
                             //是否是尾的垃圾数据
                             boolean endrow = isEndrow(rowsetV);
                             if(endrow){
+                                setIndex(temporaryMap,i);
                                 break;
                             }
                             if(StringUtils.isBlank(rowsetV)){
+                                //更改当前下标(表)
+                                setIndex(temporaryMap,i+1);
                                 continue;
+                            }
+                            //匹配结束标记(//结束标记是否匹配表头在下)
+                            boolean rsEndMatch=isEndMatch(mapRule,rowsetV);
+                            //结束标记是否匹配表头
+                            boolean matchEndT=matchTabH(matchEndTable,rowsetV,tableRule);
+                            if(rsEndMatch||matchEndT){
+                                //触发结束
+                                matchEnd(isChangeIndex,i,index,temporaryMap,mapRule);
+                                break;
                             }
                             if(StringUtils.isBlank(rowsetStr)){
                                 rowsetStr=rowsetV;
@@ -833,12 +947,21 @@ public class FormPdf {
                     //此方法return出去的值
                     resStr=rowsetStr;
                     if(StringUtils.isNotBlank(tempKey)){
-                        Map<String,String> vallMap=(Map)analyPdfM.get("vall");
-                        String str=vallMap.get(tempKey);
-                        if(StringUtils.isBlank(str)){
-                            vallMap.put(tempKey,rowsetStr);
+                        if(sectionsMapT!=null){ //说明是从区块对传过来的
+                            String str=(String) sectionsMapT.get(tempKey);
+                            if(StringUtils.isBlank(str)){
+                                sectionsMapT.put(tempKey,rowsetStr);
+                            }else{
+                                sectionsMapT.put(tempKey,str+"\n"+rowsetStr);
+                            }
                         }else{
-                            vallMap.put(tempKey,str+"\n"+rowsetStr);
+                            Map<String,String> vallMap=(Map)analyPdfM.get("vall");
+                            String str=vallMap.get(tempKey);
+                            if(StringUtils.isBlank(str)){
+                                vallMap.put(tempKey,rowsetStr);
+                            }else{
+                                vallMap.put(tempKey,str+"\n"+rowsetStr);
+                            }
                         }
                     }
                 }else if("composite".equals(valType)){ //复合形(可多个单行或多行)
@@ -852,7 +975,7 @@ public class FormPdf {
                             conN++;
                             continue;
                         }
-                        String s = matchStr(Effectivity, temporaryMap, rowV, analyPdfM,null);
+                        String s = matchStr(Effectivity, temporaryMap,analyPdfM,null);
                         if("true".equals(Effectivity.get("alreadyOver"))){
                             conN++;
                         }
@@ -899,12 +1022,8 @@ public class FormPdf {
     //触发结束
     public void matchEnd(String isChangeIndex,int i,int index,Map temporaryMap,Map<String, Object> mapRule){
         if("true".equals(isChangeIndex)){
-            //将要赋的行数值
-            int nextI=i;
-            //index+1 : 现下次循环的行数
-            if(nextI>(index+1)){//防止死循环
-                temporaryMap.put("index",nextI);
-            }
+            //更改当前下标
+            setIndex(temporaryMap,i);
         }
         //标记为结束
         mapRule.put("alreadyOver","true");
@@ -921,12 +1040,44 @@ public class FormPdf {
         boolean rsEndMatch = matcherEndMatch.find();
         return  rsEndMatch;
     }
+    //集合里包括表转为表数据(参1是List或Map此才生效)
+    public void forListToTable(Object obj,Map<String,Object> analyPdfM){
+        if(obj instanceof Map){
+            Map<String,Object> map=(Map)obj;
+            for(String key:map.keySet()){
+                Object value=map.get(key);
+                if(value instanceof Map||(value instanceof List)){
+                    forListToTable(value,analyPdfM);
+                }else if(value instanceof String){
+                    //校验value是否是表uuid,是则value替换为表TableRenderData类
+                    String str=(String)value;
+                    if(str.indexOf("table_")!=-1){
+                        //说明是table表
+                        Map<String,Map> tableMap=(Map)analyPdfM.get("tableMap");//value是对表的说明,key是UUID,如 table_uuid值
+                        //根据uuid找对应的表解释数据
+                        if(tableMap.containsKey(str)){
+                            Map tabMap = tableMap.get(str);
+                            putTable(map,tabMap,key);
+                        }
+                    }
+                }
+            }
+        }else if(obj instanceof List){
+            List list=(List)obj;
+            for(int i=0;i<list.size();i++){
+                Object value = list.get(i);
+                if((value instanceof Map)||(value instanceof List)){
+                    forListToTable(value,analyPdfM);
+                }
+            }
+        }
+    }
     //清除标记
     public void clearTag(Object obj){
         if(obj instanceof Map){
             Map<String,Object> map=(Map)obj;
             for(Object value:map.values()){
-                if(value instanceof Map){
+                if((value instanceof Map)||(value instanceof List)){
                     clearTag(value);
                 }
             }

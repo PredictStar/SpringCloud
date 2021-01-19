@@ -200,7 +200,9 @@ public class PDFController {
                     continue;
                 }
                 //测试-后期去掉
-                i=pagenum;
+                if(i==157){
+                    i=pagenum;
+                }
                 if(i==pagenum){ //最后一页
                     //解析PDF
                     fpdf.analyPdfToMap(page,document,i,analyPdfM,pageTypeN,ruleList);
@@ -228,10 +230,6 @@ public class PDFController {
                 }
                 if(!reC.getStatusCode().equals("200")){
                     return Helper.pojoToStringJSON(reC);
-                }
-                //测试-后期去掉
-                if(i==156){
-                    i=pagenum;
                 }
             }
             //关
