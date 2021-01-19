@@ -86,8 +86,8 @@ public class FormPdf {
         crjMap.put("tableRule",tableCRJ);
 
         crjMap.put("temp","taskCardCRJT.docx");//模板名称
-        crjMap.put("imageW",600);//图片宽
-        crjMap.put("imageH",400);//图片高
+        crjMap.put("imageW",660);//图片宽
+        crjMap.put("imageH",960);//图片高
         //页面类型规则定义(1:word的首页;2:需解析的页面;剩余解析成图片(注意analyPdfM没值时图片数据先不赋进去))
         //前260字包含(7)(8)(9)(10)(11)表是测试页面
         Map<String, Integer> pageTypeCM=new LinkedCaseInsensitiveMap();
@@ -230,10 +230,10 @@ public class FormPdf {
                 List<Map> templateList13_2=new ArrayList<Map>();
                 Map tempVal13_2_1=new HashMap();
                     tempVal13_2_1.put("tempKey","startV");//对应模板值
-                    tempVal13_2_1.put("matchT","^[A-Z]\\. ");//匹配开始的正则
+                    tempVal13_2_1.put("matchT","(^[A-Z]\\.)|(^\\([0-9]+\\))");//匹配开始的正则
                     tempVal13_2_1.put("valType","rowset");//值类型
                     tempVal13_2_1.put("indexI",0);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
-                    tempVal13_2_1.put("matchI","(^[A-Z]\\..+)|(^\\([0-9]+\\).+)");//匹配开始()里是要的值
+                    tempVal13_2_1.put("matchI","(^[A-Z]\\..+)|(^\\([0-9]+\\).+)");//匹配开始()里是要的值 B....
                     tempVal13_2_1.put("endMatch","(^[A-Z]\\.)|(^\\([0-9]+\\))|(^[0-9]\\.)");//匹配结束
                     tempVal13_2_1.put("matchEndTable","true");//结束标记是否匹配表头
                     tempVal13_2_1.put("isChangeIndex","true");//改变i为当前行
@@ -252,11 +252,12 @@ public class FormPdf {
                     tempVal13_2_3.put("matchT","([A-Z]+:)|(^Refer)|(^ON)");//匹配开始的正则
                     tempVal13_2_3.put("valType","rowset");;//值类型
                     tempVal13_2_3.put("indexI",0);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
-                    tempVal13_2_3.put("matchI","^([A-Z]\\. .+)");//匹配开始()里是要的值
+                    tempVal13_2_3.put("matchI","([A-Z]+: .+)|(^Refer .+)|(^ON .+)");//匹配开始()里是要的值
                     tempVal13_2_3.put("endMatch","(^[A-Z]\\.)|(^\\([0-9]+\\))|(^[0-9]\\.)");//匹配结束
                     //tempVal13_2_3.put("matchEndTable","true");//结束标记是否匹配表头
                     tempVal13_2_3.put("isChangeIndex","true");//改变i为当前行
                 templateList13_2.add(tempVal13_2_3);
+            //.put("continueMatch","true");//未匹配表跳过继续匹配下一个
             tempVal13_2.put("templateList",templateList13_2);
             templateList13.add(tempVal13_2);
         mapRule13.put("templateList",templateList13);
@@ -542,6 +543,9 @@ public class FormPdf {
         for (int i=index;i<rows.size();i++){
             //行数据
             String rowsetV=getRowSte(rows,i,initI);
+
+
+
             //表未完结
             if("true".equals(donotEnd)){
                 //是否是尾的垃圾数据
@@ -715,6 +719,19 @@ public class FormPdf {
                         Map<String,String> vallMap=(Map)analyPdfM.get("vall");
                         vallMap.put(tempKey,uuidS);
                     }
+                }else{
+                    //未匹配表,且匹配结束标记,直接完结表
+                    boolean rsEndMatch=isEndMatch(mapRule,rowsetV);
+                    if(rsEndMatch){
+                        if("true".equals(isChangeIndex)){
+                            //更改当前下标
+                            setIndex(temporaryMap,i);
+                        }
+                        //标记为结束
+                        mapRule.put("alreadyOver","true");
+                        mapRule.put("donotEnd","false");
+                        break;
+                    }
                 }
             }
         }
@@ -730,6 +747,10 @@ public class FormPdf {
         int initI=(int)temporaryMap.get("initI");
         //当前行数据
         String rowV=getRowSte(rows,index,initI);
+        //测试
+        /*if(rowV.indexOf("24-00-00-861-801")!=-1){
+            System.out.println(rowV);
+        }*/
         //值类型:单行 single ,多行 rowset ,复合 composite,区块对 sections,表 table
         String valType=(String) mapRule.get("valType");
         //结束标记是否匹配表头

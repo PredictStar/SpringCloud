@@ -203,9 +203,8 @@ public class PDFController {
                 if(i==157){
                     i=pagenum;
                 }
-                if(i==pagenum){ //最后一页
-                    //解析PDF
-                    fpdf.analyPdfToMap(page,document,i,analyPdfM,pageTypeN,ruleList);
+                if(pageTypeN==1){
+                    //之前解析好的数据,生成word,入数据库
                     if(analyPdfM.size()!=0){
                         //生成word,入数据库
                         reC=fpdf.run(page,urll,fileName,analyPdfM);
@@ -214,19 +213,18 @@ public class PDFController {
                         ruleList=fpdf.getNewRule();
                         num++;
                     }
-                }else{
-                    if(pageTypeN==1){
-                        if(analyPdfM.size()!=0){
-                            //生成word,入数据库
-                            reC=fpdf.run(page,urll,fileName,analyPdfM);
-                            //清空analyPdfM
-                            analyPdfM=new HashMap<String,Object>();
-                            ruleList=fpdf.getNewRule();
-                            num++;
-                        }
+                }
+                //解析PDF
+                fpdf.analyPdfToMap(page,document,i,analyPdfM,pageTypeN,ruleList);
+                if(i==pagenum){ //最后一页
+                    if(analyPdfM.size()!=0){
+                        //生成word,入数据库
+                        reC=fpdf.run(page,urll,fileName,analyPdfM);
+                        //清空analyPdfM
+                        analyPdfM=new HashMap<String,Object>();
+                        ruleList=fpdf.getNewRule();
+                        num++;
                     }
-                    //解析PDF
-                    fpdf.analyPdfToMap(page,document,i,analyPdfM,pageTypeN,ruleList);
                 }
                 if(!reC.getStatusCode().equals("200")){
                     return Helper.pojoToStringJSON(reC);
