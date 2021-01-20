@@ -56,13 +56,16 @@ public class FormPdf {
         tableCRJ.put("NAME MANUAL AIPC_REFERENCE",table2);                                                     //1. part
         Map<String,Object> table1=new HashMap<String,Object>();
         List<String> table1List=new ArrayList<String>();
-        table1List.add("^(\\S+)( .+)?$");
+        table1List.add("^([A-Z0-9\\- \\(\\)/:]+)( .+)?$");
+        table1List.add("()(.+)");
         table1.put("colMatch",table1List);//列值获取方式
         table1.put("valNVL","add");// //up 列无值时,取上行值; add 无值时和上行合并
         tableCRJ.put("REFERENCE DESIGNATION",table1);                      //1. Consumable Materials; Tools and Equipment;
         Map<String,Object> table3=new HashMap<String,Object>();
         List<String> table3List=new ArrayList<String>();
-        table3List.add("^(\\S+ )?(AMM \\S+ )?(.+)$");
+        table3List.add("^([A-Z0-9\\-]+ )(AMM \\S+ )(.+)$");
+        table3List.add("^([A-Z0-9\\-]+ )(CMM \\S+ )(.+)$");
+        table3List.add("^()()(.+)$");
         table3.put("colMatch",table3List);//列值获取方式
         table3.put("valNVL","add");// //up 列无值时,取上行值; add 无值时和上行合并
         tableCRJ.put("MANUAL_NO REFERENCE DESIGNATION",table3);//1. Reference Information ; Standard Practices Information
@@ -200,11 +203,21 @@ public class FormPdf {
         ruleCRJ.add(mapRule11);
         Map<String, Object> mapRule12=new HashMap<String, Object>();
         mapRule12.put("tempKey","MrmReference");//对应模板值
-        mapRule12.put("matchT","MRM REFERENCE:");//匹配开始的正则
+        mapRule12.put("matchT","(MRM REFERENCE:)|(MRM REFERENCES:)");//匹配开始的正则
         mapRule12.put("indexI",0);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
         mapRule12.put("valType","single");//值类型:单行 single ,多行 rowset ,复合 composite
-        mapRule12.put("matchI","^MRM REFERENCE: (.+)");//被提取值正则匹配规则,具名组匹配提值
+        mapRule12.put("matchI","^MRM REFERENCE: (.+)|^MRM REFERENCES: (.+)");//被提取值正则匹配规则,具名组匹配提值
         ruleCRJ.add(mapRule12);
+        Map<String, Object> mapRule121=new HashMap<String, Object>();
+        mapRule121.put("tempKey","Note");//对应模板值
+        mapRule121.put("matchT","NOTE: ");//匹配开始的正则
+        mapRule121.put("indexI",0);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
+        mapRule121.put("valType","rowset");//值类型:单行 single ,多行 rowset ,复合 composite
+        mapRule121.put("matchI","^NOTE: (.+)");//被提取值正则匹配规则,具名组匹配提值
+        mapRule121.put("endMatch","^[0-9]\\. (.+)");//匹配结束
+        mapRule121.put("isChangeIndex","true");//改变i为当前行
+        mapRule121.put("continueMatch","true");//未匹配表跳过继续匹配下一个
+        ruleCRJ.add(mapRule121);
         Map<String, Object> mapRule13=new HashMap<String, Object>();
         mapRule13.put("tempKey","jobSet");//对应模板值
         mapRule13.put("matchT","^[0-9]\\. (.+)");//匹配开始的正则
@@ -244,15 +257,15 @@ public class FormPdf {
                     tempVal13_2_2.put("matchEndTable","true");//结束标记是否匹配表头
                         //表头同当前表头直接赋当前表里面
                         //若有多表紧挨,临时:再如{{#tablee2}},后期改用模板,动态生成多个表
-                    tempVal13_2_2.put("endMatch","(^[A-Z]\\.)|(^\\([0-9]+\\))|(^[0-9]\\.)|([A-Z]+:)|(^Refer)|(^ON )");//匹配结束
+                    tempVal13_2_2.put("endMatch","(^[A-Z]\\.)|(^\\([0-9]+\\))|(^[0-9]\\.)|(^[A-Z]+:)|(^Refer)|(^ON )");//匹配结束
                     tempVal13_2_2.put("isChangeIndex","true");//改变i为当前行
                 templateList13_2.add(tempVal13_2_2);
                 Map tempVal13_2_3=new HashMap();
                     tempVal13_2_3.put("tempKey","endV");//对应模板值
-                    tempVal13_2_3.put("matchT","([A-Z]+:)|(^Refer)|(^ON)");//匹配开始的正则
+                    tempVal13_2_3.put("matchT","(^[A-Z]+:)|(^Refer)|(^ON)");//匹配开始的正则
                     tempVal13_2_3.put("valType","rowset");;//值类型
                     tempVal13_2_3.put("indexI",0);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
-                    tempVal13_2_3.put("matchI","([A-Z]+: .+)|(^Refer .+)|(^ON .+)");//匹配开始()里是要的值
+                    tempVal13_2_3.put("matchI","(^[A-Z]+: .+)|(^Refer .+)|(^ON .+)");//匹配开始()里是要的值
                     tempVal13_2_3.put("endMatch","(^[A-Z]\\.)|(^\\([0-9]+\\))|(^[0-9]\\.)");//匹配结束
                     //tempVal13_2_3.put("matchEndTable","true");//结束标记是否匹配表头
                     tempVal13_2_3.put("isChangeIndex","true");//改变i为当前行
@@ -536,6 +549,19 @@ public class FormPdf {
             temporaryMap.put("index",index);
         }
     }
+    //获取字符串括号没关个数(-2说明缺两个开)
+    public int bracketM(String str){
+        int n=0;
+        for (int i = 0; i < str.length(); i++) {
+            char  item =  str.charAt(i);
+            if('('==item){
+                n++;
+            }else if(')'==item){
+                n--;
+            }
+        }
+        return n;
+    }
     //table的匹配方法
     public void matchStrTable(Map<String, Object> mapRule,Map temporaryMap,Map<String,Object> analyPdfM,Map sectionsMapT,String matchEndTable,Map<String,Map> tableRule,int index,int initI,List<List<String>> rows,String donotEnd){
         //改变i为当前行
@@ -544,9 +570,6 @@ public class FormPdf {
         for (int i=index;i<rows.size();i++){
             //行数据
             String rowsetV=getRowSte(rows,i,initI);
-
-
-
             //表未完结
             if("true".equals(donotEnd)){
                 //是否是尾的垃圾数据
@@ -584,6 +607,10 @@ public class FormPdf {
                         break;
                     }
                 }
+                //测试
+                /*if(rowsetV.indexOf("VENDOR")!=-1){
+                    System.out.println(rowsetV);
+                }*/
                 //表头值
                 String[] tabHead=(String[])tablem.get("tabHead");
                 //列个数
@@ -630,39 +657,96 @@ public class FormPdf {
                                 }
                             }
                         }
-                        if(isBlank){ //有空的情况
-                            int size = tabBody.size();
-                            if(size>0){
-                                //最新的一行数据
-                                String[] presentStr= tabBody.get(size - 1);
-                                //up 列无值时,取上行值; add 无值时和上行合并
+
+                        int size = tabBody.size();
+                        if(size>0){ //不是初始
+                            //有"("在上一行数据
+                            boolean isNotC=false;
+                            //最新的一行数据
+                            String[] presentStr= tabBody.get(size - 1);
+                            for(int arr=0;arr<presentStr.length;arr++){
+                                //已存值
+                                String strP=presentStr[arr];
+                                //a(b)c( 返回1
+                                int bracketM = bracketM(strP);
+                                if(bracketM>0){
+                                    isNotC=true;
+                                    break;
+                                }
+                            }
+                            if(isNotC){ //当前数据要合并
                                 for(int array=0;array<tabBodyStr.length;array++){
                                     //已存值
                                     String strP=presentStr[array];
+                                    //获取字符串括号没关个数:-2说明有两个)没匹配到(
+                                    int bracketMP = bracketM(strP);
                                     //当前解析值
                                     String strN=tabBodyStr[array];
-                                    if("up".equals(valNVL)){
-                                        if(StringUtils.isBlank(strN)){
-                                            //up 列无值时,取上行值
-                                            tabBodyStr[array]=strP;
+                                    int bracketMN = bracketM(strN);
+                                    //上无(,下有)
+                                    if(bracketMN<0&&bracketMP==0){
+                                        //赋给下一列好了
+                                        int arrI=array+1;
+                                        if(arrI>(presentStr.length-1)){
+                                            arrI=presentStr.length-1;
                                         }
-                                    }else if("add".equals(valNVL)){
+                                        String strP1=presentStr[arrI];
                                         if(StringUtils.isNotBlank(strN)){
-                                            presentStr[array]=strP+"\n"+strN;
+                                            if(StringUtils.isNotBlank(strP1)){
+                                                presentStr[arrI]=strP1+"\n"+strN;
+                                            }else{
+                                                presentStr[arrI]=strN;
+                                            }
+                                        }
+                                    }else{
+                                        //直接累加
+                                        if(StringUtils.isNotBlank(strN)){
+                                            if(StringUtils.isNotBlank(strP)){
+                                                presentStr[array]=strP+"\n"+strN;
+                                            }else{
+                                                presentStr[array]=strN;
+                                            }
                                         }
                                     }
                                 }
-                                if("up".equals(valNVL)){
+
+                            }else {
+                                if(isBlank){ //有空的情况
+                                    //up 列无值时,取上行值; add 无值时和上行合并
+                                    for(int array=0;array<tabBodyStr.length;array++){
+                                        //已存值
+                                        String strP=presentStr[array];
+                                        //当前解析值
+                                        String strN=tabBodyStr[array];
+                                        if("up".equals(valNVL)){ //up 列无值时,取上行值
+                                            if(StringUtils.isBlank(strN)){
+                                                tabBodyStr[array]=strP;
+                                            }
+                                        }else if("add".equals(valNVL)){ // add 无值时和上行合并
+                                            if(StringUtils.isNotBlank(strN)){
+                                                if(StringUtils.isNotBlank(strP)){
+                                                    presentStr[array]=strP+"\n"+strN;
+                                                }
+                                            }
+                                        }
+                                    }
+                                    //补充空后赋进去
+                                    if("up".equals(valNVL)){
+                                        tabBody.add(tabBodyStr);
+                                    }
+                                }else {
+                                    //没空直接赋值
                                     tabBody.add(tabBodyStr);
                                 }
-                            }else {
-                                tabBody.add(tabBodyStr);
                             }
                         }else {
+                            ///是初始直接赋数据即可
                             tabBody.add(tabBodyStr);
                         }
+                        //匹配后停止往下循环
+                        break;
                     }
-                    break;
+
                 }
             }else{
                 //表类型还未正式开启
@@ -749,7 +833,7 @@ public class FormPdf {
         //当前行数据
         String rowV=getRowSte(rows,index,initI);
         //测试
-        /*if(rowV.indexOf("Manual")!=-1){
+       /*if(rowV.indexOf("ENCE:")!=-1){
             System.out.println(rowV);
         }*/
         //值类型:单行 single ,多行 rowset ,复合 composite,区块对 sections,表 table
