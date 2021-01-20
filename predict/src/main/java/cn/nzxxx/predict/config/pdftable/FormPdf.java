@@ -112,10 +112,10 @@ public class FormPdf {
         ruleCRJ.add(mapRule1_2);
         Map<String, Object> mapRule2=new HashMap<String, Object>();
         mapRule2.put("tempKey","Rev");//对应模板值
-        mapRule2.put("matchT","Manual Rev:");//匹配开始的正则
+        mapRule2.put("matchT","(Manual Rev:)|(Manual Re v:)");//匹配开始的正则
         mapRule2.put("indexI",0);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
         mapRule2.put("valType","single");//值类型:单行 single ,多行 rowset ,复合 composite
-        mapRule2.put("matchI","Rev: ([0-9]+)");//被提取值正则匹配规则,具名组匹配提值
+        mapRule2.put("matchI","Rev: ([0-9]+)|Re v: ([0-9]+)");//被提取值正则匹配规则,具名组匹配提值
         ruleCRJ.add(mapRule2);
         Map<String, Object> mapRule3=new HashMap<String, Object>();
         mapRule3.put("tempKey","Amend");//对应模板值
@@ -262,6 +262,7 @@ public class FormPdf {
             templateList13.add(tempVal13_2);
         mapRule13.put("templateList",templateList13);
         ruleCRJ.add(mapRule13);
+        //valType 类型是table,未匹配表,且匹配结束标记,直接完结表规则
         crjMap.put("rule",ruleCRJ);
         //生成word 根据哪个模板值
         crjMap.put("saveNameTemN","TaskCardNumber");
@@ -720,7 +721,7 @@ public class FormPdf {
                         vallMap.put(tempKey,uuidS);
                     }
                 }else{
-                    //未匹配表,且匹配结束标记,直接完结表
+                    //未匹配表,且匹配结束标记,直接完结表规则
                     boolean rsEndMatch=isEndMatch(mapRule,rowsetV);
                     if(rsEndMatch){
                         if("true".equals(isChangeIndex)){
@@ -748,7 +749,7 @@ public class FormPdf {
         //当前行数据
         String rowV=getRowSte(rows,index,initI);
         //测试
-        /*if(rowV.indexOf("24-00-00-861-801")!=-1){
+        /*if(rowV.indexOf("Manual")!=-1){
             System.out.println(rowV);
         }*/
         //值类型:单行 single ,多行 rowset ,复合 composite,区块对 sections,表 table

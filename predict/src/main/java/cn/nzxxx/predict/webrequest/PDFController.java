@@ -191,8 +191,8 @@ public class PDFController {
             //提取值规则定义
             List<Map<String,Object>> ruleList=fpdf.getNewRule();
             //循环所有pdf页 -暂时先循环一次
-            for(int i=151;i<=pagenum;i++){ //测试-后期去掉
-            //for(int i=1;i<=pagenum;i++){
+            //for(int i=899;i<=pagenum;i++){ //测试-后期去掉
+            for(int i=1;i<=pagenum;i++){
                 Page page=fpdf.retPageC(oe,i);
                 //当前页的类型(1:word的首页;2:需解析的页面;)
                 int pageTypeN = fpdf.pageType(page);
@@ -200,9 +200,9 @@ public class PDFController {
                     continue;
                 }
                 //测试-后期去掉
-                if(i==157){
+                /*if(i==902){
                     i=pagenum;
-                }
+                }*/
                 if(pageTypeN==1){
                     //之前解析好的数据,生成word,入数据库
                     if(analyPdfM.size()!=0){
@@ -232,7 +232,9 @@ public class PDFController {
             }
             //关
             fpdf.closed(oe,document,input);
-            return Help.returnClass(200,"接口操作成功","生成个数:"+num);
+            Date edate=new Date();
+            String timedes=";执行时间;"+(edate.getTime()-sdate.getTime())/1000+"s";
+            return Help.returnClass(200,"接口操作成功","生成个数:"+num+timedes);
         }catch(Exception e){
             String strE=Helper.exceptionToString(e);
             logger.error(strE);
