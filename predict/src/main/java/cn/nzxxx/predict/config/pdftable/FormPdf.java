@@ -567,6 +567,7 @@ public class FormPdf {
         //改变i为当前行
         String isChangeIndex=(String) mapRule.get("isChangeIndex");
         //System.out.println("进入表匹配,开始行:"+index);
+        Map<Integer,String> map=new HashMap<Integer,String>();
         for (int i=index;i<rows.size();i++){
             //行数据
             String rowsetV=getRowSte(rows,i,initI);
@@ -623,7 +624,7 @@ public class FormPdf {
                 String valNVL=(String)tablem.get("valNVL");
                 //列与具名组匹配对应规则;
                 List<Integer> setMat=(List)tablem.get("setMat");
-                //匹配行数据
+                //当前行匹配数据;colMatch 是 匹配规则字符串的list集合
                 for(int c=0;c<colMatch.size();c++){
                     String matchh = colMatch.get(c);
                     Pattern pattern = Pattern.compile(matchh);
@@ -657,7 +658,9 @@ public class FormPdf {
                                 }
                             }
                         }
-
+                        if(isBlank){
+                            map.put(i,"true");
+                        }
                         int size = tabBody.size();
                         if(size>0){ //不是初始
                             //有"("在上一行数据
@@ -674,7 +677,7 @@ public class FormPdf {
                                     break;
                                 }
                             }
-                            if(isNotC){ //当前数据要合并
+                            if(isNotC){ //最新行数据有开括号(即 "(" ) ( (即其没有对应的关括号)
                                 for(int array=0;array<tabBodyStr.length;array++){
                                     //已存值
                                     String strP=presentStr[array];
@@ -683,28 +686,38 @@ public class FormPdf {
                                     //当前解析值
                                     String strN=tabBodyStr[array];
                                     int bracketMN = bracketM(strN);
-                                    //上无(,下有)
+                                    //上无(,下有) //当前列赋给已存行的下一列
                                     if(bracketMN<0&&bracketMP==0){
-                                        //赋给下一列好了
+                                        //防止下标超出
                                         int arrI=array+1;
                                         if(arrI>(presentStr.length-1)){
                                             arrI=presentStr.length-1;
                                         }
+                                        //已存行的下一列的值
                                         String strP1=presentStr[arrI];
                                         if(StringUtils.isNotBlank(strN)){
                                             if(StringUtils.isNotBlank(strP1)){
+                                                //累加
                                                 presentStr[arrI]=strP1+"\n"+strN;
                                             }else{
                                                 presentStr[arrI]=strN;
                                             }
                                         }
                                     }else{
-                                        //直接累加
-                                        if(StringUtils.isNotBlank(strN)){
-                                            if(StringUtils.isNotBlank(strP)){
-                                                presentStr[array]=strP+"\n"+strN;
-                                            }else{
-                                                presentStr[array]=strN;
+                                        int bi=i-1;
+                                        if(bi<0){
+                                            bi=0;
+                                        }
+                                        String s = map.get(bi);
+                                        if(!isBlank&&"true".equals(s)){ //当前行无空格,上行有空格,是新添数据
+                                            tabBody.add(tabBodyStr);
+                                        }else{ //最新行数据有 ( ,当前数据直接合并
+                                            if(StringUtils.isNotBlank(strN)){
+                                                if(StringUtils.isNotBlank(strP)){
+                                                    presentStr[array]=strP+"\n"+strN;
+                                                }else{
+                                                    presentStr[array]=strN;
+                                                }
                                             }
                                         }
                                     }
