@@ -1,5 +1,6 @@
 package cn.nzxxx.predict.webrequest;
 
+import cn.nzxxx.predict.config.pdftable.FormPdf;
 import org.jboss.logging.Logger;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -16,9 +17,11 @@ public class HelloController {
     private final Logger logger=Logger.getLogger(this.getClass());
     @RequestMapping(value="/test/aa")
     @ResponseBody
-    public List testBB(String str) throws Exception{
-        System.out.println(str+"xxxx");
-        List list=new ArrayList();
+    public String testBB(String str) throws Exception{
+        FormPdf fpdf=new FormPdf();
+        int abc = 0;
+        System.out.println(abc);
+        /*List list=new ArrayList();
         Map map=new HashMap();
         map.put("value","12");
         map.put("text","ggg");
@@ -26,8 +29,8 @@ public class HelloController {
         map2.put("value","2222");
         map2.put("text","uuuuu");
         list.add(map);
-        list.add(map2);
-        return list;
+        list.add(map2);*/
+        return "";
     }
     @RequestMapping("/hello")
     public String hello(ModelMap map) {

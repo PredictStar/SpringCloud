@@ -1,39 +1,22 @@
 package cn.nzxxx.predict.webrequest;
 
 import cn.nzxxx.predict.config.pdftable.FormPdf;
-import cn.nzxxx.predict.config.pdftable.ParsePdf;
+import cn.nzxxx.predict.config.pdftable.TablePdf;
 import cn.nzxxx.predict.toolitem.entity.Help;
 import cn.nzxxx.predict.toolitem.entity.ReturnClass;
 import cn.nzxxx.predict.toolitem.tool.Helper;
-import com.deepoove.poi.XWPFTemplate;
-import com.deepoove.poi.config.Configure;
-import com.deepoove.poi.data.*;
-import com.deepoove.poi.policy.ListRenderPolicy;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.entity.ContentType;
-import org.apache.pdfbox.jbig2.SegmentData;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.jboss.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.SpringApplication;
-import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.ModelMap;
-import org.springframework.util.ResourceUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 import technology.tabula.*;
-import technology.tabula.extractors.BasicExtractionAlgorithm;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.*;
 
 @RestController
@@ -43,7 +26,7 @@ public class PDFController {
 	@Autowired
     private JdbcTemplate jdbcTemplate;
     /**
-     *  http://localhost:8181/pdf/analysis?param=null
+     *  http://localhost:8081/pdf/analysis?param=null
      *  urll 文件地址 "C:/Users/18722/Desktop/tolg/CRJ/section2.pdf"
      *  fileName 文件名 "section2.pdf"
      * @return 状态说明
@@ -71,7 +54,7 @@ public class PDFController {
             InputStream input=new FileInputStream(file);
             //文件名要小写
             fileName=fileName.toLowerCase();
-            ParsePdf parPdf=new ParsePdf();
+            TablePdf parPdf=new TablePdf();
             PDDocument document=parPdf.returnPDDocument(input);
             ObjectExtractor oe  = new ObjectExtractor(document);
             //页面总数
@@ -144,36 +127,84 @@ public class PDFController {
 
     }
     /**
-     *  http://localhost:8181/pdf/pdfToWord?param=null
-     *  urll pdf存储地址 "C:/Users/18722/Desktop/tolg/CRJ/section2.pdf"
-     *  fileName 被解析pdf的文件名(不要.后缀)
-     *  fileType 文件类型,表适应哪种模板(现有 crj boeing)
+     * http://localhost:8081/pdf/executePDFForm
      * @return 状态说明
      * @throws Exception
      */
-    @RequestMapping("/pdfToWord")
-    public String pdfToWord(String param){
-        String resstr;
-        ReturnClass reC=Help.returnClassT(200,"接口操作成功","");
+    @RequestMapping("/executePDFForm")
+    public ReturnClass executePDFForm(){
+        ReturnClass reC=Help.returnClassT(200,"executePDFForm操作成功","");
+        //每次查多少个(最好少于450,in里达到459个的时候就不会用索引了)
+        int limitt=2;
+        List<Map<String, Object>> pdf = getPDF(limitt);
+        if(pdf.size()==0){
+            reC=Help.returnClassT(200,"文件表无查询结果","");
+        }else{
+            for(int i=0;i<pdf.size();i++){
+                Map<String, Object> object = pdf.get(i);
+                ReturnClass ReC = analysisPDFForm(object);
+                //System.out.println(ReC);
+                if(!ReC.getStatusCode().equals("200")){
+                    //报错回溯数据使 IS_EXECUTE=0
+                    update( pdf,i,0);
+                    return ReC;
+                }
+            }
+        }
+        return reC;
+    }
+    //查询需操作文件
+    public List<Map<String, Object>> getPDF(int limitt){
+        String sql="SELECT\n" +
+                "f.AMM_FILE_ID,\n" +
+                "f.FILENAME,\n" +
+                "f.FILETYPE,\n" +
+                "f.AMMPATH\n" +
+                "FROM\n" +
+                "amm_file AS f\n" +
+                "WHERE\n" +
+                "f.IS_EXECUTE = 0\n" +
+                "LIMIT "+limitt;
+        List<Map<String, Object>> re=jdbcTemplate.queryForList(sql);
+        if(re.size()>0){
+            //占数据,使 IS_EXECUTE=1
+            int updateN=update( re,0,1);
+            if(updateN!=re.size()){
+                System.out.println("数据争取存在!!!");
+            }
+        }
+        return re;
+    }
+    public int update(List<Map<String, Object>> re,int init,int IS_EXECUTE){
+        String strin="";
+        for(int i=init;i<re.size();i++){
+            Map<String, Object> object = re.get(i);
+            Integer key=(Integer) object.get("AMM_FILE_ID");
+            if(key==null){
+                key=0;
+            }
+            if(i==0){
+                strin=String.valueOf(key);
+            }else {
+                strin+=","+String.valueOf(key);
+            }
+        }
+        String updatesql="update amm_file set IS_EXECUTE="+IS_EXECUTE+" where AMM_FILE_ID in ("+strin+");";
+        int update = jdbcTemplate.update(updatesql);
+        return update;
+    }
+    public ReturnClass analysisPDFForm(Map pdfMap){
+        ReturnClass reC=Help.returnClassT(200,"analysisPDFForm操作成功","");
+        String urll=(String)pdfMap.get("AMMPATH");
+        //文件存储的上级文件夹名,这样就能通过文件夹指定工卡通过此pdf生成的,存的文件名是工卡表主键(如 CRJ_CARD BOEING_CARD)
+        String folderName=(String)pdfMap.get("FILENAME");
+        String fileType=(String)pdfMap.get("FILETYPE");
+        Integer AMM_FILE_ID=(Integer)pdfMap.get("AMM_FILE_ID");
+        ReturnClass reP=Help.return5003DescribeT(urll,folderName,fileType);
+        if(reP!=null){
+            return reP;
+        }
         try{
-            if(StringUtils.isBlank(param)){
-                resstr=Help.returnClass(500,"参数异常","param值为空");
-                return resstr;
-            }
-            Map map = Helper.stringJSONToMap(param);
-            String urll=(String)map.get("urll");
-            //测试-后期去掉
-            urll="C:/Users/18722/Desktop/tolg/taskcard/CRJ/CRJ7910MTCM-MAST-R57-V02.pdf";
-            String fileName=(String)map.get("fileName");
-            //测试-后期去掉
-            fileName="CRJ7910MTCM-MAST-R57-V02";
-            String fileType=(String)map.get("fileType");
-            //测试-后期去掉
-            fileType="crj";
-            resstr=Help.return5003Describe(urll,fileName,fileType);
-            if(resstr!=null){
-                return resstr;
-            }
             Date sdate=new Date();
             File file = new File(urll);
             InputStream input=new FileInputStream(file);
@@ -191,7 +222,7 @@ public class PDFController {
             //提取值规则定义
             List<Map<String,Object>> ruleList=fpdf.getNewRule();
             //循环所有pdf页 -暂时先循环一次
-            //for(int i=899;i<=pagenum;i++){ //测试-后期去掉
+            //for(int i=499;i<=pagenum;i++){ //测试-后期去掉   525
             for(int i=1;i<=pagenum;i++){
                 Page page=fpdf.retPageC(oe,i);
                 //当前页的类型(1:word的首页;2:需解析的页面;)
@@ -200,14 +231,14 @@ public class PDFController {
                     continue;
                 }
                 //测试-后期去掉
-                /*if(i==902){
+                /*if(i==518){ //   554
                     i=pagenum;
                 }*/
                 if(pageTypeN==1){
                     //之前解析好的数据,生成word,入数据库
                     if(analyPdfM.size()!=0){
                         //生成word,入数据库
-                        reC=fpdf.run(page,urll,fileName,analyPdfM);
+                        reC=fpdf.run(folderName,analyPdfM,AMM_FILE_ID,jdbcTemplate);
                         //清空analyPdfM
                         analyPdfM=new HashMap<String,Object>();
                         ruleList=fpdf.getNewRule();
@@ -219,7 +250,7 @@ public class PDFController {
                 if(i==pagenum){ //最后一页
                     if(analyPdfM.size()!=0){
                         //生成word,入数据库
-                        reC=fpdf.run(page,urll,fileName,analyPdfM);
+                        reC=fpdf.run(folderName,analyPdfM,AMM_FILE_ID,jdbcTemplate);
                         //清空analyPdfM
                         analyPdfM=new HashMap<String,Object>();
                         ruleList=fpdf.getNewRule();
@@ -227,21 +258,21 @@ public class PDFController {
                     }
                 }
                 if(!reC.getStatusCode().equals("200")){
-                    return Helper.pojoToStringJSON(reC);
+                    return reC;
                 }
             }
             //关
             fpdf.closed(oe,document,input);
             Date edate=new Date();
             String timedes=";执行时间;"+(edate.getTime()-sdate.getTime())/1000+"s";
-            return Help.returnClass(200,"接口操作成功","生成个数:"+num+timedes);
+            return Help.returnClassT(200,"解析"+folderName+"成功","生成个数:"+num+timedes);
         }catch(Exception e){
             String strE=Helper.exceptionToString(e);
             logger.error(strE);
             String strEInfo=strE.substring(0,500>strE.length()?strE.length():500);
             System.out.println(strEInfo);
-            resstr=Help.returnClass(500,"pdfToWord接口异常",strEInfo);
-            return resstr;
+            reC=Help.returnClassT(500,"解析"+folderName+"异常",strEInfo);
+            return reC;
         }
     }
 }

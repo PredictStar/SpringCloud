@@ -1,6 +1,5 @@
 package cn.nzxxx.predict.config.pdftable;
 
-import cn.nzxxx.predict.toolitem.tool.CookieUtils;
 import cn.nzxxx.predict.toolitem.tool.Helper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -10,15 +9,13 @@ import technology.tabula.*;
 import technology.tabula.extractors.BasicExtractionAlgorithm;
 import technology.tabula.extractors.SpreadsheetExtractionAlgorithm;
 
-import java.io.File;
 import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 //后期可直接指定表头列，如第一列是啥，进行优化(称为定制版(人为自定义表头),现在写的叫标准版(自动解析表头))
 //解析pdf,table数据
-public class ParsePdf {
+public class TablePdf {
     private Map<String,Map<String,Object>> mapp=new HashMap<String,Map<String,Object>>();
     private List<Map<String,String>> matchList=new ArrayList<Map<String,String>>();
     //上一次的 colXY 值,当此次表头不对,colXY值直接取此,有值就不覆盖了(即就赋一次)
@@ -26,7 +23,7 @@ public class ParsePdf {
     //根据文件名称(全小写)获取对应的表名
     //若此返回"" 则不会覆盖,初始的配置 mapHi.put("tabnam","BOEING_HI");//表名的
     //如上是为了防止一个paf 文件,需要存不同表
-    public ParsePdf() {
+    public TablePdf() {
         //页面会有未完待续,然后下个页面继续录入的情况,所以提取数据时要注意此情况
 
         //解析 SLOC.pdf -线
@@ -207,7 +204,7 @@ public class ParsePdf {
 
     }
 
-    protected static final Logger logger = Logger.getLogger(ParsePdf.class);
+    protected static final Logger logger = Logger.getLogger(TablePdf.class);
     //根据文件名获取表名
     private String getTN(String fileName){
         //表名-根据文件名去定义(全小写校验)

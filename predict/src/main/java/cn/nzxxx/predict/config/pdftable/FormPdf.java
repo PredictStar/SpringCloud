@@ -13,7 +13,9 @@ import org.apache.pdfbox.pdmodel.PDPageTree;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.jboss.logging.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedCaseInsensitiveMap;
 import org.springframework.util.ResourceUtils;
@@ -210,9 +212,11 @@ public class FormPdf {
         ruleCRJ.add(mapRule12);
         Map<String, Object> mapRule121=new HashMap<String, Object>();
         mapRule121.put("tempKey","Note");//对应模板值
-        mapRule121.put("matchT","NOTE: ");//匹配开始的正则
-        mapRule121.put("indexI",0);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
+        mapRule121.put("matchT","(MRM REFERENCE:)|(MRM REFERENCES:)");//匹配开始的正则
+        mapRule121.put("indexI",1);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
         mapRule121.put("valType","rowset");//值类型:单行 single ,多行 rowset ,复合 composite
+        //当多行时,一开始根据matchI,就没匹配到内容,直接结束此
+        mapRule121.put("noMatchOver","true");
         mapRule121.put("matchI","^NOTE: (.+)");//被提取值正则匹配规则,具名组匹配提值
         mapRule121.put("endMatch","^[0-9]\\. (.+)");//匹配结束
         mapRule121.put("isChangeIndex","true");//改变i为当前行
@@ -277,8 +281,8 @@ public class FormPdf {
         ruleCRJ.add(mapRule13);
         //valType 类型是table,未匹配表,且匹配结束标记,直接完结表规则
         crjMap.put("rule",ruleCRJ);
-        //生成word 根据哪个模板值
-        crjMap.put("saveNameTemN","TaskCardNumber");
+        //生成word 根据哪个模板值;//注:生成数据后,从数据库获取主键做文件名,所以就不用此了
+        //crjMap.put("saveNameTemN","TaskCardNumber");
         mapp.put("crj",crjMap);//对crj的整体定义
         //------------BOEING 开始--------------------
         Map<String,Object> boeingMap=new HashMap<String,Object>();
@@ -327,11 +331,13 @@ public class FormPdf {
     }
     /**
      * 生成word
+     * folderName pdf上传时的文件名,工卡数据放此名文件夹下
+     *  表是解析此pdf生成的工卡word
      * @author 子火
      * @Date 2021-01-07
      * @return  ReturnClass
      */
-    public ReturnClass cWordT(String urll,String fileName,String fileType,Map<String,Object> analyPdfM)throws Exception{
+    public ReturnClass cWordT(Map<String,Object> analyPdfM)throws Exception{
         ReturnClass reC=Help.returnClassT(200,"生成word成功","");
         String filePath = ResourceUtils.getURL("classpath:").getPath();//D:/SpringCloud/predict/target/classes/
         // 模板路径 //实际地址 target\classes\META-INF\resources\wordtemplate
@@ -365,11 +371,12 @@ public class FormPdf {
             }
         }
         // 图片赋值
-        List<byte[]> imagesB=(List)analyPdfM.get("imagesB");
+        List<String> imagesB=(List)analyPdfM.get("imagesB");//元素是base64
         if(imagesB.size()>0){
             List<Map> subData = new ArrayList<Map>();
             for(int i=0;i<imagesB.size();i++){
-                byte[] bytes = imagesB.get(i);
+                String base64 = imagesB.get(i);
+                byte[] bytes =Helper.base64ToByte(base64);
                 PictureRenderData pictureRenderData = Pictures.ofBytes(bytes, PictureType.PNG).size(imageW, imageH).create();
                 Map s1 = new HashMap();
                 s1.put("image", pictureRenderData);
@@ -386,19 +393,10 @@ public class FormPdf {
         }
         // 模板赋值
         template.render(params);
-        //配置文件值获取
-        ResourceBundle re = java.util.ResourceBundle.getBundle("application");//application.properties里值
-        String saveMain = re.getString("saveurl.main");
-        String saveExtend = re.getString("saveurl.taskcard.extend");
+        //保存所在文件夹
+        String saveUrl=(String) analyPdfM.get("saveUrl");
         //保存后文件名
         String saveName=(String) analyPdfM.get("saveName");
-        //保存后的文件夹位置(要事先存在)
-        String saveUrl=saveMain+saveExtend+fileName;
-        // 创建文件夹
-        File file = new File(saveUrl);
-        if (!file.exists()) {
-            file.mkdirs();
-        }
         template.writeToFile(saveUrl+"/"+saveName+".docx");
         template.close();
         return reC;
@@ -415,21 +413,183 @@ public class FormPdf {
         ImageIO.write(image, "png", os);
         byte[] bytes = os.toByteArray();
         os.close();
-        List<byte[]> imagesB=(List<byte[]>) analyPdfM.get("imagesB");
-        imagesB.add(bytes);
+        String base64 = Helper.byteToBase64(bytes);
+        List<String> imagesB=(List<String>) analyPdfM.get("imagesB");
+        imagesB.add(base64);
+        //System.out.println(Helper.listToStringJSON(imagesB));
     }
     /**
      * 关键数据入库
+     * folderName pdf上传时的文件名,工卡数据放此名文件夹下
      * @author 子火
      * @Date 2021-01-07
      * @return  ReturnClass
      */
-    public ReturnClass saveToDatabase(Map<String,Object> analyPdfM)throws Exception{
+    public ReturnClass saveToDatabase(Map<String,Object> analyPdfM,Integer AMM_FILE_ID,String folderName,JdbcTemplate jdbcTemplate)throws Exception{
         ReturnClass reC=Help.returnClassT(200,"数据入库成功","");
+        //crj_card 表主键
+        String CARD_ID="";
+        //配置文件值获取
+        ResourceBundle re = java.util.ResourceBundle.getBundle("application");//application.properties里值
+        String saveMain = re.getString("saveurl.main");
+        String saveExtend = re.getString("saveurl.taskcard.extend");
+        //保存后的文件夹位置(要事先存在)
+        String saveUrl=saveMain+saveExtend+folderName;
+        // 创建文件夹
+        File file = new File(saveUrl);
+        if (!file.exists()) {
+            file.mkdirs();
+        }
+        analyPdfM.put("saveUrl",saveUrl);
+        String uuidd = UUID.randomUUID().toString();
+        analyPdfM.put("UUID",uuidd);
+        if("crj".equals(fileType)){
+            // 普通文本赋值|table的赋值
+            Map<String,String> vallMap=(Map)analyPdfM.get("vall");
+            String crjCardSql ="insert into crj_card\n" +
+                    "(AMM_FILE_ID,UNIQUE_IDENTIFIER,WORD_PATH,AIRCRAFT_SERIES,\n" +
+                    "MANUAL_REV,AMENDMENT,TASK_CARD_NUMBER,TASK_TYPE,SKILL,\n" +
+                    "LABOR_HOURS,NBR_PERSONS,ZONES,AIRCRAFT_EFFECTIVITY,\n" +
+                    "TASK_DESCRIPTION,REFERENCE,MRM_REFERENCE,NOTE)\n" +
+                    "values ("+AMM_FILE_ID+",'"+uuidd+"','"+saveUrl+"','"+vallMap.get("AircraftSeries")+"'," +
+                    "'"+vallMap.get("Rev")+"','"+vallMap.get("Amend")+"','"+vallMap.get("TaskCardNumber")+"',\n" +
+                    "'"+vallMap.get("TaskType")+"','"+vallMap.get("Skill")+"','"+vallMap.get("LaborHours")+"',\n" +
+                    "'"+vallMap.get("NbrOfPersons")+"','"+vallMap.get("Zones")+"','"+vallMap.get("Effectivity")+"',\n" +
+                    "'"+vallMap.get("Description")+"','"+vallMap.get("Reference")+"','"+vallMap.get("MrmReference")+"','"+Helper.nvlString(vallMap.get("Note"))+"')";
+            //测试
+            //System.out.println(vallMap.get("Note")==null);
+            //System.out.println("null".equals(vallMap.get("Note")));
+            jdbcTemplate.update(crjCardSql);
+            //主键
+            CARD_ID = String.valueOf(getKey(uuidd,jdbcTemplate));
 
+            //当前表数据提取
+            Map<String,Map> tableMap=(Map)analyPdfM.get("tableMap");
+            //区块对赋值
+            Map<String,List> sectionsMap=(Map)analyPdfM.get("sections");
+            Map<String,String> umap=new HashMap();
+            getTableKey(umap,sectionsMap);
+            String toolStr = umap.get("toolStr");
+            String materialsStr = umap.get("materialsStr");
+            String referenceStr = umap.get("referenceStr");
+            if(StringUtils.isNotBlank(toolStr)){
+                //表描述:value是对表的说明,key是UUID,如 table_uuid值
+                Map<String,Object> tablem=tableMap.get(toolStr);
+                if(tablem!=null){
+                    //表主体
+                    List<String[]> tabBody=(List)tablem.get("tabBody");
+                    for(int i=0;i<tabBody.size();i++){
+                        String[] strings = tabBody.get(i);
+                        if(strings.length>0){
+                            String string0 = strings[0];
+                            String string1 ="";
+                            if(strings.length>1){
+                                string1 = strings[1];
+                            }
+                            String toolSql ="insert into crj_card_tool(CRJ_CARD_ID,REFERENCE,DESIGNATION) values ("+CARD_ID+",'"+string0+"','"+string1+"')";
+                            jdbcTemplate.update(toolSql);
+                        }
+
+
+                    }
+                }
+            }
+            if(StringUtils.isNotBlank(materialsStr)){
+                Map<String,Object> tablem=tableMap.get(materialsStr);
+                if(tablem!=null){
+                    List<String[]> tabBody=(List)tablem.get("tabBody");
+                    for(int i=0;i<tabBody.size();i++){
+                        String[] strings = tabBody.get(i);
+                        if(strings.length>0){
+                            String string0 = strings[0];
+                            String string1 ="";
+                            if(strings.length>1){
+                                string1 = strings[1];
+                            }
+                            String materialsSql ="insert into crj_card_materials(CRJ_CARD_ID,REFERENCE,DESIGNATION) values ("+CARD_ID+",'"+string0+"','"+string1+"')";
+                            jdbcTemplate.update(materialsSql);
+                        }
+                    }
+
+                }
+            }
+            if(StringUtils.isNotBlank(referenceStr)){
+                Map<String,Object> tablem=tableMap.get(referenceStr);
+                if(tablem!=null){
+                    List<String[]> tabBody=(List)tablem.get("tabBody");
+                    for(int i=0;i<tabBody.size();i++){
+                        String[] strings = tabBody.get(i);
+                        if(strings.length>0){
+                            String string0 = strings[0];
+                            String string1 ="";
+                            if(strings.length>1){
+                                string1 = strings[1];
+                            }
+                            String string2 ="";
+                            if(strings.length>2){
+                                string2 = strings[2];
+                            }
+                            String referenceSql ="insert into crj_card_reference(CRJ_CARD_ID,MANUAL_NO,REFERENCE,DESIGNATION) values ("+CARD_ID+",'"+string0+"','"+string1+"','"+string2+"')";
+                            jdbcTemplate.update(referenceSql);
+                        }
+                    }
+                }
+            }
+        }else if("boeing".equals(fileType)) {
+
+        }
+        //工卡主键做表名
+        analyPdfM.put("saveName",CARD_ID);
         return reC;
     }
-
+    public void getTableKey(Map<String,String> umap,Object obj){
+        if(obj instanceof Map){
+            Map<String,Object> map=(Map)obj;
+            for(Object value:map.values()){
+                if(value instanceof Map||(value instanceof List)){
+                    getTableKey(umap,value);
+                }
+            }
+            String startV = (String)map.get("startV");
+            if(StringUtils.isNoneBlank(startV)){
+                int toolI = startV.indexOf("Tools and Equipment");
+                int materialsI = startV.indexOf("Consumable Materials");
+                int informationI = startV.indexOf("Reference Information");
+                String tableeU = (String)map.get("tablee");
+                if(toolI!=-1&&StringUtils.isBlank(umap.get("toolStr"))){
+                    umap.put("toolStr",tableeU);
+                }else if(materialsI!=-1&&StringUtils.isBlank(umap.get("materialsStr"))){
+                    umap.put("materialsStr",tableeU);
+                }else if(informationI!=-1&&StringUtils.isBlank(umap.get("referenceStr"))){
+                    umap.put("referenceStr",tableeU);
+                }
+            }
+        }else if(obj instanceof List){
+            List list=(List)obj;
+            for(int i=0;i<list.size();i++){
+                Object value = list.get(i);
+                if((value instanceof Map)||(value instanceof List)){
+                    getTableKey(umap,value);
+                }
+            }
+        }
+    }
+    //根据唯一标识获取主键值
+    public int getKey(String uuid,JdbcTemplate jdbcTemplate){
+        Integer ki=0;
+        String getSql="SELECT\n" +
+                "f.CRJ_CARD_ID\n" +
+                "FROM\n" +
+                "crj_card AS f\n" +
+                "WHERE\n" +
+                "f.UNIQUE_IDENTIFIER = '"+uuid+"' ";
+        List<Map<String, Object>> re=jdbcTemplate.queryForList(getSql);
+        if(re.size()>0){
+            Map<String, Object> stringObjectMap = re.get(0);
+            ki=(Integer)stringObjectMap.get("CRJ_CARD_ID");
+        }
+        return ki;
+    }
     /**
      * 解析PDF
      * @author 子火
@@ -454,7 +614,7 @@ public class FormPdf {
         }
         if(pageTypeN==1){
             //初始赋值
-            List<byte[]> imagesB=new ArrayList<byte[]>();
+            List<String> imagesB=new ArrayList<String>();//元素是base64
             analyPdfM.put("imagesB",imagesB);
             Map<String,String> vallMap=new HashMap<>();
             analyPdfM.put("vall",vallMap);
@@ -497,14 +657,15 @@ public class FormPdf {
             matchRule(temporaryMap,ruleList,analyPdfM);
         }
         //System.out.println("-------------------------------");
-        if(pageTypeN==1){
+        //生成数据后,从数据库获取主键做文件名,所以就不用下了
+        /*if(pageTypeN==1){
             //文件夹依据哪个模板值
             Map<String,Object> mMap=mapp.get(fileType);
             String saveNameTemN=(String)mMap.get("saveNameTemN");// 返回例 TaskCardNumber
             Map<String,String> vallMap=(Map)analyPdfM.get("vall");
             String taskCardNumber=vallMap.get(saveNameTemN);
             analyPdfM.put("saveName",taskCardNumber);
-        }
+        }*/
     }
     //操作下标
     public void matchRule(Map temporaryMap,List<Map<String,Object>> ruleList,Map<String,Object> analyPdfM){
@@ -1033,6 +1194,15 @@ public class FormPdf {
                                         break;
                                     }
                                 }
+                            }else{
+                                String noMatchOver=(String) mapRule.get("noMatchOver");
+                                //当多行时,一开始根据matchI,就没匹配到内容,直接结束此
+                                if("true".equals(noMatchOver)){
+                                    //标记为结束
+                                    mapRule.put("alreadyOver","true");
+                                    mapRule.put("donotEnd","false");
+                                    break;
+                                }
                             }
                         }else{
                             //是否是尾的垃圾数据
@@ -1292,18 +1462,19 @@ public class FormPdf {
      * @Date 2021-01-08
      * @return
      */
-    public ReturnClass run(Page page,String urll,String fileName,Map<String,Object> analyPdfM)throws Exception{
+    public ReturnClass run(String folderName,Map<String,Object> analyPdfM,Integer AMM_FILE_ID,JdbcTemplate jdbcTemplate)throws Exception{
         ReturnClass reC;
-        //生成word
-        reC=cWordT(urll,fileName,fileType,analyPdfM);
-        if(!reC.getStatusCode().equals("200")){
-            return reC;
-        }
         //关键数据入库
-        reC=saveToDatabase(analyPdfM);
+        reC=saveToDatabase(analyPdfM,AMM_FILE_ID,folderName,jdbcTemplate);
         if(!reC.getStatusCode().equals("200")){
             return reC;
         }
+        //生成word
+        reC=cWordT(analyPdfM);
+        if(!reC.getStatusCode().equals("200")){
+            return reC;
+        }
+
         return reC;
     }
     /**
@@ -1340,120 +1511,6 @@ public class FormPdf {
         return page;
     }
 
-    /**
-     * 此是解析结构数据返回sq,过滤页面数据写此处
-     * 返回此页的插入sql
-     * @author 子火
-     * @Date 2020-12-23
-     * @return  页面插入sql(返回空表拦截了,直接 continue;)
-     */
-    public String retInSql(List<List<String>> newrows,Map conditionsMap)throws Exception{
-        //表头list获取,用于校验那个列缺失
-        List<String> tabTList = newrows.get(0);
-
-        String sql="";
-        StringBuilder zdB=new StringBuilder("");
-        String type=(String)conditionsMap.get("type");
-        String tabnam=(String)conditionsMap.get("tabnam");
-        List<String> tabcols=(List<String>)conditionsMap.get("tabcols");
-        for(int i=0;i<tabcols.size();i++){
-            String tabcol= "`"+tabcols.get(i)+"`";
-            if(i==0){
-                zdB.append(tabcol);
-            }else{
-                zdB.append(","+tabcol);
-            }
-        }
-        //sql要的list
-        List<List<String>> sqllist=new ArrayList<List<String>>();
-        //第一列有值,才认为是一条需要插入的数据,其它列有值但第一列无值则认为和上是同一条数据
-        //"b".equals(type)||"hi".equals(type) 现模板都需如下,所以直接写true
-        if(true){
-            for(int i=1;i<newrows.size();i++){ //循环行(正式数据从1开始,0是表头)
-                List<String> strings = newrows.get(i);
-                for(int ii=0;ii<strings.size();ii++){//循环列
-                    String s = strings.get(ii);
-                    if(StringUtils.isBlank(s)){ //此列无值continue
-                        continue;
-                    }else{
-                        s=s.replaceAll("'","‘");//单引号转为中文的单引号
-                    }
-                    //插入数据过滤
-                    if(("hi".equals(type))&&(ii==0)&&(s.indexOf("SECTION")!=-1)){
-                        break;//退出二重循环
-                    }if(("sloc".equals(type))&&(ii==0)&&(s.indexOf("(Continued)")!=-1)){
-                        s=s.replaceAll("\\(Continued\\)","");
-                    }
-                    if(ii==0){ //第一列有值,才认为是一条需要插入的数据
-                        List<String> col=new ArrayList<String>();
-                        //赋初始值
-                        for(int j=0;j<strings.size();j++){
-                            col.add("");
-                        }
-                        col.set(ii,s);
-                        sqllist.add(col);
-                    }else {
-                        int size = sqllist.size();
-                        if(size>0){
-                            //获取最后一个
-                            List<String> strings1 = sqllist.get(size - 1);
-                            //原有值,拼一起,换行符 表示换行
-                            String s1 = strings1.get(ii);
-                            if(StringUtils.isNotBlank(s1)){
-                                s1=s1+"\\r\\n"+s;
-                                strings1.set(ii,s1);
-                            }else{
-                                s1=s;
-                            }
-                            strings1.set(ii,s1);
-                        }
-                    }
-                }
-            }
-        }
-        for(int i=0;i<sqllist.size();i++){ //每一行
-            List<String> sqlrow = sqllist.get(i);
-            int sdiff=tabcols.size()-sqlrow.size();
-            if(sdiff>0){
-                //列补全计划
-                for(int c=0;c<tabcols.size();c++){
-                    String t = tabcols.get(c);
-                    if(c>=sqlrow.size()){
-                        sqlrow.add("");
-                        continue;
-                    }
-                    String s = tabTList.get(c).replaceAll(" ","_");
-                    if(t.indexOf(s)==-1){
-                        tabTList.add(c,"");
-                        sqlrow.add(c,"");
-                        sdiff=sdiff-1;
-                        if(sdiff==0){
-                            break;
-                        }
-                    }
-                }
-            }
-            String val="(";//(2,值)  此行对应的插入内容
-            for(int c=0;c<tabcols.size();c++){
-                String sval = sqlrow.get(c);
-                //特殊符修改防止入库为?
-                sval=sval.replaceAll("−","-");
-                String s = "'"+sval+"'";
-                if(c==0){
-                    val=val+s;
-                }else{
-                    val=val+","+s;
-                }
-            }
-            val=val+")";
-            if(i==0){
-                sql="insert into "+tabnam+"("+zdB.toString()+") values "+val;
-            }else{
-                sql=sql+","+val;
-            }
-        }
-        return sql;
-    }
     //是否是最后一行
     public boolean isEndrow(String rowStr) {//匹配值例 "CSP B−089 − MASTER"
         String reg = "(CSP .+ MASTER)|(EFFECTIVITY SOURCE( .+)?)";  //带不带^ $一样?都是严格按照正则,不能为例"/^[0-9]$/"
