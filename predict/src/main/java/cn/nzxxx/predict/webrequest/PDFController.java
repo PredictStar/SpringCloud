@@ -145,7 +145,7 @@ public class PDFController {
                 ReturnClass ReC = analysisPDFForm(object);
                 //System.out.println(ReC);
                 if(!ReC.getStatusCode().equals("200")){
-                    //报错回溯数据使 IS_EXECUTE=0
+                    //报错回滚数据:使 IS_EXECUTE=0
                     update( pdf,i,0);
                     return ReC;
                 }
@@ -222,8 +222,8 @@ public class PDFController {
             //提取值规则定义
             List<Map<String,Object>> ruleList=fpdf.getNewRule();
             //循环所有pdf页 -暂时先循环一次
-            //for(int i=499;i<=pagenum;i++){ //测试-后期去掉   525
-            for(int i=1;i<=pagenum;i++){
+            for(int i=19;i<=pagenum;i++){ //测试-后期去掉   525 499
+            //for(int i=1;i<=pagenum;i++){
                 Page page=fpdf.retPageC(oe,i);
                 //当前页的类型(1:word的首页;2:需解析的页面;)
                 int pageTypeN = fpdf.pageType(page);
@@ -231,9 +231,9 @@ public class PDFController {
                     continue;
                 }
                 //测试-后期去掉
-                /*if(i==518){ //   554
+                if(i==23){ //   554 518
                     i=pagenum;
-                }*/
+                }
                 if(pageTypeN==1){
                     //之前解析好的数据,生成word,入数据库
                     if(analyPdfM.size()!=0){
