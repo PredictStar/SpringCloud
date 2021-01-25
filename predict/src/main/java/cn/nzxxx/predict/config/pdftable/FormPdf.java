@@ -384,13 +384,89 @@ public class FormPdf {
         boRule10.put("colIndexWay","true");
         boRule10.put("colHeadMatch","ACCESS");
         ruleBoeing.add(boRule10);
+        Map<String, Object> boRule11=new HashMap<String, Object>();
+        boRule11.put("tempKey","ZONE");
+        boRule11.put("matchT","ACCESS ZONE");
+        boRule11.put("indexI",1);
+        boRule11.put("valType","rowset");
+        boRule11.put("matchI","(.+)");
+        boRule11.put("endMatch","[A-Z][a-zA-Z]+ ");
+        boRule11.put("colIndexWay","true");
+        boRule11.put("colHeadMatch","ZONE");
+        ruleBoeing.add(boRule11);
+        Map<String, Object> boRule12=new HashMap<String, Object>();
+        boRule12.put("tempKey","CONTENT");
+        boRule12.put("matchT","[A-Z][a-zA-Z]+ ");
+        boRule12.put("indexI",0);
+        boRule12.put("valType","rowset");
+        boRule12.put("matchI","(.+)");
+        boRule12.put("endMatch","A\\. ");
+        ruleBoeing.add(boRule12);
         //匹配规则绑定
         boeingMap.put("rule",ruleBoeing);
+        //表规则绑定
+        Map<String,Map> tableBoeing=new HashMap<String,Map>();
+        Map<String,Object> tableB1=new HashMap<String,Object>();
+        List<String> tableMB1=new ArrayList<String>();
+        tableMB1.add("(AMM \\S+ )?(.+)");
+        tableMB1.add("(FIM [0-9\\-]+ TASK [0-9]+ )?(.+)");
+        tableMB1.add("(SWPM \\S+ )?(.+)");
+        tableB1.put("colMatch",tableMB1);//列值获取方式
+        tableB1.put("valNVL","add");// //up 列无值时,取上行值; add 无值时和上行合并
+        tableBoeing.put("Reference Title",tableB1);//refer
+
+        Map<String,Object> tableB2=new HashMap<String,Object>();
+        List<String> tableMB2=new ArrayList<String>();
+        tableMB2.add("([0-9A-Z]+ )?((\\S[^A-Z ]*$|\\S[^A-Z ]* |\\S-\\S[^A-Z ]* ?|BMS ?|NSBT ?|GPL\\S+ ?|DC-\\S+ ?|MS\\S+ ?)+)([A-Z]{1}[0-9A-Z\\-]+.*)?");
+        List<Integer> setMatB2 = Arrays.asList(1, 2, 4);
+        tableB2.put("setMat",setMatB2);//列与具名组匹配对应规则;
+        tableB2.put("colMatch",tableMB2);//列值获取方式
+        tableB2.put("valNVL","add");// //up 列无值时,取上行值; add 无值时和上行合并
+        tableBoeing.put("Reference Description Specification",tableB2);//mater
+
+        Map<String,Object> tableB3=new HashMap<String,Object>();
+        List<String> tableMB3=new ArrayList<String>();
+        tableMB3.add("(\\S+)( .+)");
+        tableB3.put("colMatch",tableMB3);//列值获取方式
+        tableB3.put("valNVL","add");// //up 列无值时,取上行值; add 无值时和上行合并
+        tableBoeing.put("Reference Description",tableB3);//tool
+
+        Map<String,Object> tableB4=new HashMap<String,Object>();
+        List<String> tableMB4=new ArrayList<String>();
+        tableMB4.add("(\\S+)( .+)");
+        tableB4.put("colMatch",tableMB4);//列值获取方式
+        tableB4.put("valNVL","add");// //up 列无值时,取上行值; add 无值时和上行合并
+        tableBoeing.put("Number Name/Location",tableB4);
+
+        Map<String,Object> tableB5=new HashMap<String,Object>();
+        List<String> tableMB5=new ArrayList<String>();
+        tableMB5.add("(\\d+ )(.+)(\\S+-\\S+-\\S+-\\S+-\\S+ )(.+)");
+        tableMB5.add("()()(\\S+-\\S+-\\S+-\\S+-\\S+ )(.+)");
+        tableMB5.add("(\\d+ )([A-Z][a-z ]+)([A-Z][a-z ]+)()");
+        tableMB5.add("()()()(.+)");
+        tableB5.put("colMatch",tableMB5);//列值获取方式
+        tableB5.put("valNVL","add");// //up 列无值时,取上行值; add 无值时和上行合并(可根据逗号判断是否是同一个 AIPC Reference)
+        tableBoeing.put("AMM_Item Description AIPC_Reference AIPC_Effectivity",tableB5);
+
+        Map<String,Object> tableB6=new HashMap<String,Object>();
+        List<String> tableMB6=new ArrayList<String>();
+        tableMB6.add("(\\S+)( .+)");
+        tableB6.put("colMatch",tableMB6);//列值获取方式
+        tableB6.put("valNVL","add");// //up 列无值时,取上行值; add 无值时和上行合并
+        tableBoeing.put("Row Col Number Name",tableB6);
+
+        boeingMap.put("tableRule",tableBoeing);
         // END OF TASK 解析出来没带---;一个word会有多个 如 TASK 05-55-25-200-804  表其结束
         mapp.put("boeing",boeingMap);//对boeing的整体定义
 
 
-        /*规则汇总
+        /*
+        表规则
+            colMatch  //列值获取方式
+            valNVL //up 列无值时,取上行值; add 无值时和上行合并
+            setMat //列与具名组匹配对应规则;
+            .put("MANUAL_NO REFERENCE DESIGNATION",table3); //key是表列
+        规则汇总
            通用
                tempKey //对应模板值
                matchT   //匹配开始的正则
@@ -993,7 +1069,7 @@ public class FormPdf {
                                             bi=0;
                                         }
                                         String s = map.get(bi);
-                                        if(!isBlank&&"true".equals(s)){ //当前行无空格,上行有空格,是新添数据
+                                        if(!isBlank&&"true".equals(s)){ //当前行无空格,上行有空格,是新添数据!!!!!!认为是新数据这块逻辑代码直接搜 tabBody.add
                                             tabBody.add(tabBodyStr);
                                         }else{ //最新行数据有 ( ,当前数据直接合并
                                             if(StringUtils.isNotBlank(strN)){

@@ -7,6 +7,8 @@ import cn.nzxxx.predict.toolitem.tool.Helper;
 import cn.nzxxx.predict.webrequest.HelloController;
 
 
+import com.deepoove.poi.XWPFTemplate;
+import com.deepoove.poi.data.*;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -40,6 +42,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.util.ResourceUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.xmlunit.util.Convert;
 import sun.misc.BASE64Encoder;
@@ -102,36 +105,38 @@ public class PredictApplicationTests {
     private JdbcTemplate jdbcTemplate;
     @Test
     public void b()throws Exception{
-        /*String a="621BR Fixed Leading−Edge Skin CSP-B-001 AMM 57-41-05-400-802";
-        String aa="621BR Fixed Leading−Edge Skin";
-        String aaa="GVI OF HIRF/L SENSITIVE WIRE RUNS OUTSIDE 20010-01-01 ";
+        String a="3 O-ring 21-51-40-01-025 BEJ 001, 002, 004, 005,";
+        String aa="21-51-40-01-025 BEJ 001, 002, 004, 005,";
+        String aaa="BEJ 001, 002, 004, 005,";
+        String aaaa="D 5 C01673 PNEUMATIC PURGE VALVE R";
         List List=new ArrayList();
-        List.add("(.+)( \\d+-\\d+-\\d+-\\d+)");
-        List.add("(.+)()");
+        List.add("(\\S+ )(\\S+ )(\\S+ )(.+)");
         String pp=Helper.listToStringJSON(List);
         List list = Helper.stringJSONToList(pp);
         for(int i=0;i<list.size();i++){
             String s = (String)list.get(i);
             Pattern pattern = Pattern.compile(s);
-            Matcher matcher = pattern.matcher(aaa);
+            Matcher matcher = pattern.matcher(aaaa);
             if(matcher.find()){
-                System.out.println(matcher.group(0));
+                //System.out.println(matcher.group(0));
                 System.out.println(matcher.group(1));
                 System.out.println(matcher.group(2));
-                *//*System.out.println(matcher.group(3));
+                System.out.println(matcher.group(3));
+                System.out.println(matcher.group(4));
+                /*
                 System.out.println(matcher.group(4));
                 System.out.println(matcher.group(5));
                 System.out.println(matcher.group(6));
                 System.out.println(matcher.group(7));
-                System.out.println(matcher.group(8));*//*
+                System.out.println(matcher.group(8));*/
                 break;
             }
-        }*/
-        String a="YDALLTY";
-        String aa="LEFT WING 1.2 15000 FH 15010 FH 600A 700 880C ALL ALL";
+        }
+        /*String a="YDALLTY";
+        String aa="AMM 21-25-03-000-801 Recirculation Fan Check Valve Removal (P/B 401)";
         String aaa="ALL DA";
         String rowsetStr="";
-        Pattern pattern = Pattern.compile("(.+)");
+        Pattern pattern = Pattern.compile("(AMM \\S+)( .+)");
         Matcher matcherRowset = pattern.matcher(aa);
         //Matcher matcherRowset = pattern.matcher("LEFT WING 1.1 15000 FH 15010 FH ");
         int groupCount = matcherRowset.groupCount();
@@ -149,7 +154,7 @@ public class PredictApplicationTests {
             }
         }
         System.out.println(matcherRowset.group(0));
-        System.out.println(rowsetStr);//
+        System.out.println(rowsetStr);*/
 
     }
     //获取字符串括号没关个数
@@ -165,24 +170,60 @@ public class PredictApplicationTests {
         }
         return n;
     }
-    public void clearTag(Object obj){
-        if(obj instanceof Map){
-            Map<String,Object> map=(Map)obj;
-            for(Object value:map.values()){
-                if(value instanceof Map){
-                    clearTag(value);
-                }
+    @Test
+    public void opWord(){
+        try{
+            String templatePath = "D:/SpringCloud/predict/src/main/resources/META-INF/resources/wordtemplate/"+"fftReport.docx";
+            System.out.println( ResourceUtils.getURL("classpath:").getPath());
+            XWPFTemplate template = XWPFTemplate.compile(templatePath);//模板里占位符 {{@pics}}  {{abc}}
+
+            Map<String, Object> params = new HashMap<String, Object>();
+            //put的key可不存在于模板,不报错
+            params.put("abc", "xce\r\n   shix");  //会带值进(换行和多个空格生效)  {{abc}}
+
+
+            //{{#tablee}} 如下只是例子  A处
+            //表的模板名
+            String tempKey="tablea";
+            //表头值
+            String[] tabHead={"a","b","x"};
+            String[] b1={"1","2","3"};
+            String[] b2={"11","22","33"};
+            //表主体
+            List<String[]> tabBody=new ArrayList<>();
+            tabBody.add(b1);
+            tabBody.add(b2);
+            List<RowRenderData> talist=new ArrayList<RowRenderData>();
+            RowRenderData row0 = Rows.of(tabHead).textBold().bgColor("607D8B").center().create();//颜色即: #607D8B
+            talist.add(row0);
+            for(int i=0;i<tabBody.size();i++){
+                String[] strings = tabBody.get(i);
+                RowRenderData tablRrow = Rows.of(strings).create();
+                talist.add(tablRrow);
             }
-            map.put("alreadyOver",null);
-            map.put("donotEnd",null);
-        }else if(obj instanceof List){
-            List list=(List)obj;
-            for(int i=0;i<list.size();i++){
-                Object value = list.get(i);
-                if((value instanceof Map)||(value instanceof List)){
-                    clearTag(value);
-                }
-            }
+            //设置合并单元格(假如有一个表头,两行数据,i是行数0:表头行,1:第一行数据,为3(此时超出)保错;j是列数,0是第一列,超出也会报错)
+            //合并时,会覆盖值;如下 1,1会覆盖1,2的值
+            MergeCellRule rule = MergeCellRule.builder().map(MergeCellRule.Grid.of(1, 1), MergeCellRule.Grid.of(1, 2)).build();
+            //rule=null;//设置为null不影响
+            RowRenderData[] rowRenderData = talist.toArray(new RowRenderData[talist.size()]);
+            params.put(tempKey, Tables.of(rowRenderData).mergeRule(rule).create());
+
+            // 赋值
+            template.render(params);
+
+            //直接本地生成,就不用OutputStream了
+
+			//保存后的文件夹位置(要事先存在)
+			String saveUrl="C:/Users/18722/Desktop/tolg/cord/word/";
+			// 创建文件夹
+			File file = new File(saveUrl);
+			if (!file.exists()) {
+				file.mkdirs();
+			}
+			template.writeToFile(saveUrl+"测试.docx");
+            template.close();
+        }catch(Exception e){
+            e.printStackTrace();
         }
     }
      @Test
@@ -198,7 +239,7 @@ public class PredictApplicationTests {
          int pagenum=pages.getCount();
          ObjectExtractor oe  = new ObjectExtractor(document);
          //循环页面
-         Page page = oe.extract(19);//从1开始,表第一页  67
+         Page page = oe.extract(78);//从1开始,表第一页  67
 			/*
 			 //根据区域范围提取内容
 			 technology.tabula.Rectangle area = new technology.tabula.Rectangle(60, 20, 460,600);
