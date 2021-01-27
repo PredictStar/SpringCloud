@@ -359,7 +359,7 @@ public class FormPdf {
         boRule7.put("matchT","VERSION THRESHOLD REPEAT");//匹配开始的正则
         boRule7.put("indexI",1);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
         boRule7.put("valType","rowset");//值类型:单行 single ,多行 rowset ,复合 composite,区块对 sections,表table
-        boRule7.put("matchI","\\d+\\.\\d+ [A-Z0-9]+ [A-Z]+ ([A-Z0-9]+ [A-Z]+)");//被提取值正则匹配规则,具名组匹配提值,只提取第一个匹配的值
+        boRule7.put("matchI","\\d+\\.\\d+ [A-Z0-9]+ [A-Z]+( [A-Z0-9]+ [A-Z]+)");//被提取值正则匹配规则,具名组匹配提值,只提取第一个匹配的值
         boRule7.put("endMatch","ACCESS ZONE");//匹配结束
         boRule7.put("isAllMatch","true");//每一行值都从匹配规则中提取;//现多行类型是有此功能实现
         boRule7.put("colIndexWay","true");
@@ -371,9 +371,11 @@ public class FormPdf {
         boRule8.put("indexI",2);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
         boRule8.put("valType","rowset");//值类型:单行 single ,多行 rowset ,复合 composite,区块对 sections,表table
         //若不准,直接写根据飞机型号匹配
-        boRule8.put("matchI","(ALL) \\S+$|\\d+\\.\\d+ \\d+ [A-Z]+ \\d+ [A-Z]+ ((\\d+[A-Z]? ?)+)|((\\d+[A-Z]? ?)+)");//被提取值正则匹配规则,具名组匹配提值
+        boRule8.put("matchI","(ALL) \\S+$|((\\d+[A-Z]? ?)+)");//被提取值正则匹配规则,具名组匹配提值
         boRule8.put("isAllMatch","true");//每一行值都从匹配规则中提取;//现多行类型是有此功能实现
         boRule8.put("endMatch","ACCESS ZONE");//匹配结束
+        boRule8.put("colIndexWay","true");
+        boRule8.put("colHeadMatch","AIRPLANE ENGINE");
         ruleBoeing.add(boRule8);
         Map<String, Object> boRule9=new HashMap<String, Object>();
         boRule9.put("tempKey","ENGINE");//对应模板值
@@ -383,6 +385,8 @@ public class FormPdf {
         boRule9.put("matchI","ALL(( \\S+)+)$|\\d+[A-Z]?( \\S+)$|( ALL)$");//被提取值正则匹配规则,具名组匹配提值
         boRule9.put("isAllMatch","true");//每一行值都从匹配规则中提取;//现多行类型是有此功能实现
         boRule9.put("endMatch","ACCESS ZONE");//匹配结束
+        boRule9.put("colIndexWay","true");
+        boRule9.put("colHeadMatch","AIRPLANE ENGINE");
         ruleBoeing.add(boRule9);
         Map<String, Object> boRule10=new HashMap<String, Object>();
         boRule10.put("tempKey","ACCESS");
@@ -403,6 +407,7 @@ public class FormPdf {
         boRule11.put("endMatch","[A-Z][a-zA-Z]+ ");
         boRule11.put("colIndexWay","true");
         boRule11.put("colHeadMatch","ZONE");
+        boRule11.put("isChangeIndex","true");//改变i为当前行
         ruleBoeing.add(boRule11);
         Map<String, Object> boRule12=new HashMap<String, Object>();
         boRule12.put("tempKey","CONTENT");
@@ -415,7 +420,7 @@ public class FormPdf {
         Map<String, Object> boRule13=new HashMap<String, Object>();
         boRule13.put("tempKey","TABLETEMP");//对应模板值
         boRule13.put("matchT","^[A-Z]\\. [A-Z]");//匹配开始的正则
-        boRule13.put("endMatch","TASK \\S+-\\S+-\\S+-\\S+-\\S+");//模板匹配结束,遇到结束才允许删这条匹配规则(就因为有多个才用模板)
+        boRule13.put("endMatch","^TASK \\S+-\\S+-\\S+-\\S+-\\S+$|^EWIS$");//模板匹配结束,遇到结束才允许删这条匹配规则(就因为有多个才用模板)
         boRule13.put("valType","sections");//值类型:单行 single ,多行 rowset ,复合 composite,区块对 sections
         boRule13.put("isFirstS","true");//是否是首区块对
         List<Map> temListB13=new ArrayList<Map>();
@@ -424,8 +429,8 @@ public class FormPdf {
             tempMapB13_1.put("matchT","^[A-Z]\\. [A-Z]");
             tempMapB13_1.put("valType","rowset");;//值类型
             tempMapB13_1.put("indexI",0);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
-            tempMapB13_1.put("matchI","^(.+)");//匹配开始()里是要的值
-            tempMapB13_1.put("endMatch","^[A-Z]\\. [A-Z]|^TASK \\S+-\\S+-\\S+-\\S+-\\S+");//匹配结束
+            tempMapB13_1.put("matchI","(.+)");//匹配开始()里是要的值
+            tempMapB13_1.put("endMatch","^[A-Z]\\. [A-Z]|^TASK \\S+-\\S+-\\S+-\\S+-\\S+$|^EWIS$");//匹配结束
             tempMapB13_1.put("isChangeIndex","true");//改变i为当前行
             tempMapB13_1.put("matchEndTable","true");//结束标记是否匹配表头
             temListB13.add(tempMapB13_1);
@@ -433,46 +438,36 @@ public class FormPdf {
             tempMapB13_2.put("tempKey","TABLEE");//对应模板值
             tempMapB13_2.put("valType","table");//值类型:单行 single ,多行 rowset ,复合 composite,区块对 sections,表table
             tempMapB13_2.put("matchEndTable","true");//结束标记是否匹配表头
-            tempMapB13_2.put("endMatch","^[A-Z]\\. [A-Z]|^TASK \\S+-\\S+-\\S+-\\S+-\\S+");//匹配结束
+            tempMapB13_2.put("endMatch","^[A-Z]\\. [A-Z]|^TASK \\S+-\\S+-\\S+-\\S+-\\S+$|^EWIS$");//匹配结束
             tempMapB13_2.put("isChangeIndex","true");//改变i为当前行
             temListB13.add(tempMapB13_2);
         boRule13.put("templateList",temListB13);
-        ruleCRJ.add(boRule13);
+        ruleBoeing.add(boRule13);
         Map<String, Object> boRule14=new HashMap<String, Object>();
         boRule14.put("tempKey","TASKNTEMP");//对应模板值
-        boRule14.put("matchT","^TASK \\S+-\\S+-\\S+-\\S+-\\S+");//匹配开始的正则
+        boRule14.put("matchT","\\S");//匹配开始的正则
         boRule14.put("valType","sections");//值类型:单行 single ,多行 rowset ,复合 composite,区块对 sections
         boRule14.put("isFirstS","true");//是否是首区块对
         List<Map> temListB14=new ArrayList<Map>();
-        Map tempMapB14_1=new HashMap();
-        tempMapB14_1.put("tempKey","STAT");//对应模板值
-        tempMapB14_1.put("matchT","^TASK \\S+-\\S+-\\S+-\\S+-\\S+|^[A-Z]\\. [A-Z]");
-        tempMapB14_1.put("valType","rowset");;//值类型
-        tempMapB14_1.put("indexI",0);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
-        tempMapB14_1.put("matchI","^(.+)");//匹配开始()里是要的值
-        tempMapB14_1.put("endMatch","^TASK \\S+-\\S+-\\S+-\\S+-\\S+|END OF TASK");//匹配结束
-        tempMapB14_1.put("isChangeIndex","true");//改变i为当前行
-        tempMapB14_1.put("matchEndTable","true");//结束标记是否匹配表头
-        temListB14.add(tempMapB14_1);
-        Map tempMapB14_2=new HashMap();
-        tempMapB14_2.put("tempKey","TABLET");//对应模板值
-        tempMapB14_2.put("valType","table");//值类型:单行 single ,多行 rowset ,复合 composite,区块对 sections,表table
-        tempMapB14_2.put("matchEndTable","true");//结束标记是否匹配表头
-        tempMapB14_2.put("endMatch","^TASK \\S+-\\S+-\\S+-\\S+-\\S+|END OF TASK|^\\([a-z0-9]+\\)|^[A-Z]\\. ");//匹配结束
-        tempMapB14_2.put("isChangeIndex","true");//改变i为当前行
-        temListB14.add(tempMapB14_2);
-        Map tempMapB14_3=new HashMap();
-        tempMapB14_3.put("tempKey","ENDT");//对应模板值
-        tempMapB14_3.put("matchT","^[A-Z]\\. [A-Z]");
-        tempMapB14_3.put("valType","rowset");;//值VERSION 类型
-        tempMapB14_3.put("indexI",0);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
-        tempMapB14_3.put("matchI","^(.+)");//匹配开始()里是要的值
-        tempMapB14_3.put("endMatch","^TASK \\S+-\\S+-\\S+-\\S+-\\S+|END OF TASK");//匹配结束
-        tempMapB14_3.put("isChangeIndex","true");//改变i为当前行
-        tempMapB14_3.put("matchEndTable","true");//结束标记是否匹配表头
-        temListB14.add(tempMapB14_3);
+            Map tempMapB14_1=new HashMap();
+            tempMapB14_1.put("tempKey","STAT");//对应模板值
+            tempMapB14_1.put("matchT","\\S");
+            tempMapB14_1.put("valType","rowset");;//值类型
+            tempMapB14_1.put("indexI",0);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
+            tempMapB14_1.put("matchI","(.+)");//匹配开始()里是要的值
+            tempMapB14_1.put("isChangeIndex","true");//改变i为当前行
+            tempMapB14_1.put("matchEndTable","true");//结束标记是否匹配表头
+            tempMapB14_1.put("matchEndOver","true"); //匹配matchT后若直接匹配结束标记,是否直接结束
+            temListB14.add(tempMapB14_1);
+            Map tempMapB14_2=new HashMap();
+            tempMapB14_2.put("tempKey","TABLET");//对应模板值
+            tempMapB14_2.put("valType","table");//值类型:单行 single ,多行 rowset ,复合 composite,区块对 sections,表table
+            tempMapB14_2.put("matchEndTable","true");//结束标记是否匹配表头
+            tempMapB14_2.put("endMatch","^SUBTASK \\S+-\\S+-\\S+-\\S+-\\S+$|^TASK \\S+-\\S+-\\S+-\\S+-\\S+$|END OF TASK|^\\([a-z0-9]+\\)|^[A-Z]\\. |^EWIS$");//匹配结束
+            tempMapB14_2.put("isChangeIndex","true");//改变i为当前行
+            temListB14.add(tempMapB14_2);
         boRule14.put("templateList",temListB14);
-        ruleCRJ.add(boRule14);
+        ruleBoeing.add(boRule14);
 
         //匹配规则绑定
         boeingMap.put("rule",ruleBoeing);
@@ -483,6 +478,7 @@ public class FormPdf {
         tableMB1.add("(AMM \\S+ )?(.+)");
         tableMB1.add("(FIM [0-9\\-]+ TASK [0-9]+ )?(.+)");
         tableMB1.add("(SWPM \\S+ )?(.+)");
+        tableMB1.add("(WDM \\S+ )?(.+)");
         tableB1.put("colMatch",tableMB1);//列值获取方式
         tableB1.put("valNVL","add");// //up 列无值时,取上行值; add 无值时和上行合并
         tableBoeing.put("Reference Title",tableB1);//refer
@@ -498,7 +494,7 @@ public class FormPdf {
 
         Map<String,Object> tableB3=new HashMap<String,Object>();
         List<String> tableMB3=new ArrayList<String>();
-        tableMB3.add("(\\S+)( .+)");
+        tableMB3.add("([A-Z]+-[0-9]+ )?(.+)");
         tableB3.put("colMatch",tableMB3);//列值获取方式
         tableB3.put("valNVL","add");// //up 列无值时,取上行值; add 无值时和上行合并
         tableBoeing.put("Reference Description",tableB3);//tool
@@ -522,7 +518,7 @@ public class FormPdf {
 
         Map<String,Object> tableB6=new HashMap<String,Object>();
         List<String> tableMB6=new ArrayList<String>();
-        tableMB6.add("(\\S+)( .+)");
+        tableMB6.add("(\\S+ )(\\S+ )(\\S+ )(.+)");
         tableB6.put("colMatch",tableMB6);//列值获取方式
         tableB6.put("valNVL","add");// //up 列无值时,取上行值; add 无值时和上行合并
         tableBoeing.put("Row Col Number Name",tableB6);
@@ -558,7 +554,8 @@ public class FormPdf {
                     //现就多行如此:一开始根据matchI,就没匹配到内容,直接结束此;(此时:matchT一般设为其前必有元素;)
                     //noMatchTOver 是根据 matchT,就没匹配到内容,直接结束此(此还没实现过)
                 colIndexWay //现就多行实现此(要和 colHeadMatch 联用);值获取方式根据列去获取(即根据解析出的 rows行数据[下标]去提取值)
-                colHeadMatch    //如上用到此;为获取下标数;循环-rows某行的所有列,依据此值匹配
+                colHeadMatch    //如上用到此;根据空格获取数组,值与行的每一列比对,若在列有此下标记录在集合里,每次取值(默认整行数值)根据多下标提值并拼接返回
+                matchEndOver   //匹配matchT后若直接匹配结束标记,是否直接结束
            复合匹配
                 compositeList   //复合的规则
            table匹配
@@ -1110,7 +1107,7 @@ public class FormPdf {
         if(nowI==null){
             nowI=0;
         }
-        //实时更新行
+        //更新行下标
         if(index>nowI){//防止死循环
             temporaryMap.put("index",index);
         }
@@ -1412,7 +1409,7 @@ public class FormPdf {
         //当前行数据
         String rowV=getRowSte(rows,index,initI);
         //测试
-       /*if(rowV.indexOf("ENCE:")!=-1){
+        /*if(rowV.indexOf("(if")!=-1){
             System.out.println(rowV);
         }*/
         //值类型:单行 single ,多行 rowset ,复合 composite,区块对 sections,表 table
@@ -1487,10 +1484,9 @@ public class FormPdf {
                     System.out.println("-------list为0:"+list.size());
                 }
                 if(list.size()>0){//防止报错
-                    //是继续操作则,提取老数据操作
+                    //若是继续操作,则:提取老数据操作
                     sectionsMap=list.get(list.size()-1);
                 }
-
             }
             List<Map<String, Object>> templateList=(List) mapRule.get("templateList");//区块对匹配规则
             //System.out.println("当前行:"+temporaryMap.get("index"));
@@ -1577,6 +1573,24 @@ public class FormPdf {
                     //当前规则匹配的值
                     String rowsetStr="";
                     if(rs){ //初次匹配规则
+                        //匹配matchT后若直接匹配结束标记,是否直接结束
+                        String matchEndOver=(String) mapRule.get("matchEndOver");
+                        if("true".equals(matchEndOver)){
+                            //匹配结束标记
+                            boolean rsEndMatch=isEndMatch(mapRule,rowV);
+                            //结束标记是否匹配表头
+                            boolean matchEndT=matchTabH(matchEndTable,rowV,tableRule);
+                            if(rsEndMatch||matchEndT){
+                                //标记为结束
+                                mapRule.put("alreadyOver","true");
+                                mapRule.put("donotEnd","false");
+                                return resStr;
+                            }
+                        }
+                        //测试
+                        /*if(tempKey.equals("AAA")){
+                            System.out.println(tempKey);
+                        }*/
                         indexI=(Integer) mapRule.get("indexI"); //需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
                         if(indexI==null){
                             indexI=0;
@@ -1654,6 +1668,7 @@ public class FormPdf {
                                 continue;
                             }
                             String isAllMatch=(String) mapRule.get("isAllMatch");
+                            String vall="";
                             if("true".equals(isAllMatch)){
                                 //每一行值都从匹配规则中提取
                                 String matchI=(String) mapRule.get("matchI");//被提取值正则匹配规则,具名组匹配提值
@@ -1664,17 +1679,19 @@ public class FormPdf {
                                     for(int gc=1;gc<=groupCount;gc++){
                                         String group = matcherRowset.group(gc);
                                         if(StringUtils.isNotBlank(group)){
-                                            value=Helper.nvlString(group);
+                                            vall=Helper.nvlString(group);
                                             break;
                                         }
                                     }
                                 }
+                            }else{
+                                vall=value;
                             }
-                            if(StringUtils.isNotBlank(value)){
+                            if(StringUtils.isNotBlank(vall)){
                                 if(StringUtils.isBlank(rowsetStr)){
-                                    rowsetStr=value;
+                                    rowsetStr=vall;
                                 }else{
-                                    rowsetStr=rowsetStr+"\n"+value;
+                                    rowsetStr=rowsetStr+"\n"+vall;
                                 }
                             }
                         }
@@ -2020,14 +2037,27 @@ public class FormPdf {
             }
             //行数据
             String rowV=sb.toString().trim().replaceAll("−","-").replaceAll("\\s{2,}"," ");
-            //System.out.println(rowV);
-            //非首页情况,即默认
-            String p="(Task Card Number)|(BOEING CARD NO)";
-            int jumpN=2;
-            //首页
-            if(pageTypeN==1){
-                p="(MAINTENANCE TASK)|(TASK CARDS)";
-                jumpN=1;
+            //System.out.println(fileType);
+            String p;
+            int jumpN;
+            if("boeing".equals(fileType)){
+                //首页
+                if(pageTypeN==1){
+                    p="TASK CARDS";
+                    jumpN=1;
+                }else {
+                    p="BOEING CARD NO";
+                    jumpN=3;
+                }
+            }else{
+                //首页
+                if(pageTypeN==1){
+                    p="MAINTENANCE TASK";
+                    jumpN=1;
+                }else{
+                    p="Task Card Number";
+                    jumpN=2;
+                }
             }
             Pattern pattern = Pattern.compile(p);
             Matcher matcher = pattern.matcher(rowV);
