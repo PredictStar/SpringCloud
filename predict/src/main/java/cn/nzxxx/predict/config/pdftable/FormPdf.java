@@ -6,6 +6,7 @@ import cn.nzxxx.predict.toolitem.tool.Helper;
 import com.deepoove.poi.XWPFTemplate;
 import com.deepoove.poi.data.*;
 import com.deepoove.poi.data.style.TableStyle;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.pdfbox.jbig2.SegmentData;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -226,8 +227,7 @@ public class FormPdf {
         Map<String, Object> mapRule13=new HashMap<String, Object>();
         mapRule13.put("tempKey","jobSet");//对应模板值
         mapRule13.put("matchT","^[0-9]\\. (.+)");//匹配开始的正则
-        //mapRule13.put("endMatch","在word,此模板在最后所以就没设此");//模板匹配结束
-            //遇到结束才允许删这条匹配规则(就因为有多个才用模板)
+        //mapRule13.put("endMatch","在word,此模板在最后所以就没设此");//模板匹配结束,遇到结束才允许删这条匹配规则(就因为有多个才用模板)
         mapRule13.put("valType","sections");//值类型:单行 single ,多行 rowset ,复合 composite,区块对 sections
         mapRule13.put("isFirstS","true");//是否是首区块对
         List<Map> templateList13=new ArrayList<Map>();
@@ -291,8 +291,9 @@ public class FormPdf {
         boeingMap.put("imageH",960);//图片高
         //页面类型规则定义(1:word的首页;2:需解析的页面;剩余解析成图片(注意analyPdfM没值时图片数据先不赋进去))
         Map<String, Integer> pageTypeBM=new LinkedCaseInsensitiveMap();
-        pageTypeBM.put("AIRLINECARDNO",1);//先判断1,其包含2的判断依据
         pageTypeBM.put("MECHINSP",2);
+        pageTypeBM.put("TAILNUMBERWORKAREA",1);
+        //pageTypeBM.put("AIRLINECARDNO",0);//图片
         boeingMap.put("pageType",pageTypeBM);
 
         List<Map<String,Object>> ruleBoeing=new ArrayList<Map<String,Object>>();
@@ -325,35 +326,44 @@ public class FormPdf {
         boRule4.put("tempKey","WORKAREA");//对应模板值
         boRule4.put("matchT","WORK AREA");//匹配开始的正则
         boRule4.put("indexI",2);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
-        boRule4.put("valType","single");//值类型:单行 single ,多行 rowset ,复合 composite,区块对 sections,表table
+        boRule4.put("valType","rowset");//值类型:单行 single ,多行 rowset ,复合 composite,区块对 sections,表table
         boRule4.put("matchI","([A-Z ]+)");//被提取值正则匹配规则,具名组匹配提值
+        boRule4.put("endMatch","STATION SKILL");//匹配结束
+        boRule4.put("colIndexWay","true");
+        boRule4.put("colHeadMatch","WORK AREA");
         ruleBoeing.add(boRule4);
         Map<String, Object> boRule5=new HashMap<String, Object>();
         boRule5.put("tempKey","VERSION");//对应模板值
         boRule5.put("matchT","VERSION THRESHOLD REPEAT");//匹配开始的正则
         boRule5.put("indexI",1);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
         boRule5.put("valType","rowset");//值类型:单行 single ,多行 rowset ,复合 composite,区块对 sections,表table
-        boRule5.put("matchI","(\\d+\\.\\d+) \\d+ [A-Z]+ \\d+ [A-Z]+|(NOTE)");//被提取值正则匹配规则,具名组匹配提值,只提取第一个匹配的值
+        boRule5.put("matchI","(\\d+\\.\\d+) [A-Z0-9]+ [A-Z]+ [A-Z0-9]+ [A-Z]+|(NOTE)");//被提取值正则匹配规则,具名组匹配提值,只提取第一个匹配的值
         boRule5.put("endMatch","ACCESS ZONE");//匹配结束
         boRule5.put("isAllMatch","true");//每一行值都从匹配规则中提取;//现多行类型是有此功能实现
+        boRule5.put("colIndexWay","true");
+        boRule5.put("colHeadMatch","VERSION THRESHOLD REPEAT");
         ruleBoeing.add(boRule5);
         Map<String, Object> boRule6=new HashMap<String, Object>();
         boRule6.put("tempKey","THRESHOLD");//对应模板值
         boRule6.put("matchT","VERSION THRESHOLD REPEAT");//匹配开始的正则
         boRule6.put("indexI",1);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
         boRule6.put("valType","rowset");//值类型:单行 single ,多行 rowset ,复合 composite,区块对 sections,表table
-        boRule6.put("matchI","\\d+\\.\\d+( \\d+ [A-Z]+ )\\d+ [A-Z]+");//被提取值正则匹配规则,具名组匹配提值,只提取第一个匹配的值
+        boRule6.put("matchI","\\d+\\.\\d+( [A-Z0-9]+ [A-Z]+ )[A-Z0-9]+ [A-Z]+");//被提取值正则匹配规则,具名组匹配提值,只提取第一个匹配的值
         boRule6.put("endMatch","ACCESS ZONE");//匹配结束
         boRule6.put("isAllMatch","true");//每一行值都从匹配规则中提取;//现多行类型是有此功能实现
+        boRule6.put("colIndexWay","true");
+        boRule6.put("colHeadMatch","VERSION THRESHOLD REPEAT");
         ruleBoeing.add(boRule6);
         Map<String, Object> boRule7=new HashMap<String, Object>();
         boRule7.put("tempKey","REPEAT");//对应模板值
         boRule7.put("matchT","VERSION THRESHOLD REPEAT");//匹配开始的正则
         boRule7.put("indexI",1);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
         boRule7.put("valType","rowset");//值类型:单行 single ,多行 rowset ,复合 composite,区块对 sections,表table
-        boRule7.put("matchI","\\d+\\.\\d+ \\d+ [A-Z]+ (\\d+ [A-Z]+)");//被提取值正则匹配规则,具名组匹配提值,只提取第一个匹配的值
+        boRule7.put("matchI","\\d+\\.\\d+ [A-Z0-9]+ [A-Z]+ ([A-Z0-9]+ [A-Z]+)");//被提取值正则匹配规则,具名组匹配提值,只提取第一个匹配的值
         boRule7.put("endMatch","ACCESS ZONE");//匹配结束
         boRule7.put("isAllMatch","true");//每一行值都从匹配规则中提取;//现多行类型是有此功能实现
+        boRule7.put("colIndexWay","true");
+        boRule7.put("colHeadMatch","VERSION THRESHOLD REPEAT");
         ruleBoeing.add(boRule7);
         Map<String, Object> boRule8=new HashMap<String, Object>();
         boRule8.put("tempKey","AIRPLANE");//对应模板值
@@ -402,6 +412,68 @@ public class FormPdf {
         boRule12.put("matchI","(.+)");
         boRule12.put("endMatch","A\\. ");
         ruleBoeing.add(boRule12);
+        Map<String, Object> boRule13=new HashMap<String, Object>();
+        boRule13.put("tempKey","TABLETEMP");//对应模板值
+        boRule13.put("matchT","^[A-Z]\\. [A-Z]");//匹配开始的正则
+        boRule13.put("endMatch","TASK \\S+-\\S+-\\S+-\\S+-\\S+");//模板匹配结束,遇到结束才允许删这条匹配规则(就因为有多个才用模板)
+        boRule13.put("valType","sections");//值类型:单行 single ,多行 rowset ,复合 composite,区块对 sections
+        boRule13.put("isFirstS","true");//是否是首区块对
+        List<Map> temListB13=new ArrayList<Map>();
+            Map tempMapB13_1=new HashMap();
+            tempMapB13_1.put("tempKey","STARTV");//对应模板值
+            tempMapB13_1.put("matchT","^[A-Z]\\. [A-Z]");
+            tempMapB13_1.put("valType","rowset");;//值类型
+            tempMapB13_1.put("indexI",0);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
+            tempMapB13_1.put("matchI","^(.+)");//匹配开始()里是要的值
+            tempMapB13_1.put("endMatch","^[A-Z]\\. [A-Z]|^TASK \\S+-\\S+-\\S+-\\S+-\\S+");//匹配结束
+            tempMapB13_1.put("isChangeIndex","true");//改变i为当前行
+            tempMapB13_1.put("matchEndTable","true");//结束标记是否匹配表头
+            temListB13.add(tempMapB13_1);
+            Map tempMapB13_2=new HashMap();
+            tempMapB13_2.put("tempKey","TABLEE");//对应模板值
+            tempMapB13_2.put("valType","table");//值类型:单行 single ,多行 rowset ,复合 composite,区块对 sections,表table
+            tempMapB13_2.put("matchEndTable","true");//结束标记是否匹配表头
+            tempMapB13_2.put("endMatch","^[A-Z]\\. [A-Z]|^TASK \\S+-\\S+-\\S+-\\S+-\\S+");//匹配结束
+            tempMapB13_2.put("isChangeIndex","true");//改变i为当前行
+            temListB13.add(tempMapB13_2);
+        boRule13.put("templateList",temListB13);
+        ruleCRJ.add(boRule13);
+        Map<String, Object> boRule14=new HashMap<String, Object>();
+        boRule14.put("tempKey","TASKNTEMP");//对应模板值
+        boRule14.put("matchT","^TASK \\S+-\\S+-\\S+-\\S+-\\S+");//匹配开始的正则
+        boRule14.put("valType","sections");//值类型:单行 single ,多行 rowset ,复合 composite,区块对 sections
+        boRule14.put("isFirstS","true");//是否是首区块对
+        List<Map> temListB14=new ArrayList<Map>();
+        Map tempMapB14_1=new HashMap();
+        tempMapB14_1.put("tempKey","STAT");//对应模板值
+        tempMapB14_1.put("matchT","^TASK \\S+-\\S+-\\S+-\\S+-\\S+|^[A-Z]\\. [A-Z]");
+        tempMapB14_1.put("valType","rowset");;//值类型
+        tempMapB14_1.put("indexI",0);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
+        tempMapB14_1.put("matchI","^(.+)");//匹配开始()里是要的值
+        tempMapB14_1.put("endMatch","^TASK \\S+-\\S+-\\S+-\\S+-\\S+|END OF TASK");//匹配结束
+        tempMapB14_1.put("isChangeIndex","true");//改变i为当前行
+        tempMapB14_1.put("matchEndTable","true");//结束标记是否匹配表头
+        temListB14.add(tempMapB14_1);
+        Map tempMapB14_2=new HashMap();
+        tempMapB14_2.put("tempKey","TABLET");//对应模板值
+        tempMapB14_2.put("valType","table");//值类型:单行 single ,多行 rowset ,复合 composite,区块对 sections,表table
+        tempMapB14_2.put("matchEndTable","true");//结束标记是否匹配表头
+        tempMapB14_2.put("endMatch","^TASK \\S+-\\S+-\\S+-\\S+-\\S+|END OF TASK|^\\([a-z0-9]+\\)|^[A-Z]\\. ");//匹配结束
+        tempMapB14_2.put("isChangeIndex","true");//改变i为当前行
+        temListB14.add(tempMapB14_2);
+        Map tempMapB14_3=new HashMap();
+        tempMapB14_3.put("tempKey","ENDT");//对应模板值
+        tempMapB14_3.put("matchT","^[A-Z]\\. [A-Z]");
+        tempMapB14_3.put("valType","rowset");;//值VERSION 类型
+        tempMapB14_3.put("indexI",0);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
+        tempMapB14_3.put("matchI","^(.+)");//匹配开始()里是要的值
+        tempMapB14_3.put("endMatch","^TASK \\S+-\\S+-\\S+-\\S+-\\S+|END OF TASK");//匹配结束
+        tempMapB14_3.put("isChangeIndex","true");//改变i为当前行
+        tempMapB14_3.put("matchEndTable","true");//结束标记是否匹配表头
+        temListB14.add(tempMapB14_3);
+        boRule14.put("templateList",temListB14);
+        ruleCRJ.add(boRule14);
+
         //匹配规则绑定
         boeingMap.put("rule",ruleBoeing);
         //表规则绑定
@@ -665,14 +737,14 @@ public class FormPdf {
             //System.out.println("null".equals(vallMap.get("Note")));
             jdbcTemplate.update(crjCardSql);
             //主键
-            CARD_ID = String.valueOf(getKey(uuidd,jdbcTemplate));
+            CARD_ID = String.valueOf(getCRJKey(uuidd,jdbcTemplate));
 
             //当前表数据提取
             Map<String,Map> tableMap=(Map)analyPdfM.get("tableMap");
             //区块对赋值
             Map<String,List> sectionsMap=(Map)analyPdfM.get("sections");
             Map<String,String> umap=new HashMap();
-            getTableKey(umap,sectionsMap);
+            getCRJTableKey(umap,sectionsMap);
             String toolStr = umap.get("toolStr");
             String materialsStr = umap.get("materialsStr");
             String referenceStr = umap.get("referenceStr");
@@ -740,18 +812,104 @@ public class FormPdf {
                 }
             }
         }else if("boeing".equals(fileType)) {
+            Map<String,String> vallMap=(Map)analyPdfM.get("vall");
+            String cardSql ="insert into boeing_card " +
+                    "(AMM_FILE_ID,UNIQUE_IDENTIFIER,WORD_PATH," +
+                    "TITLE,CARDNUM,TASK,WORKAREA," +
+                    "VERSION,THRESHOLD,REPEAT_T," +
+                    "AIRPLANE,ENGINE_T,ACCESS,ZONE_T) " +
+                    "values("+AMM_FILE_ID+",'"+uuidd+"','"+saveUrl+"','"+
+                    vallMap.get("TITLE")+"','"+vallMap.get("CARDNUM")+"','"+vallMap.get("TASK")+"','"+vallMap.get("WORKAREA")+"','"+
+                    vallMap.get("VERSION")+"','"+vallMap.get("THRESHOLD")+"','"+vallMap.get("REPEAT")+"','"+
+                    vallMap.get("AIRPLANE")+"','"+vallMap.get("ENGINE")+"','"+Helper.nvlString(vallMap.get("ACCESS"))+"','"+
+                    vallMap.get("ZONE")+"')";
+            jdbcTemplate.update(cardSql);
+            //主键
+            CARD_ID = String.valueOf(getBOEINGKey(uuidd,jdbcTemplate));
+            //当前表数据提取
+            Map<String,Map> tableMap=(Map)analyPdfM.get("tableMap");
+            //区块对赋值
+            Map<String,List> sectionsMap=(Map)analyPdfM.get("sections");
+            Map<String,String> umap=new HashMap();
+            getBoeingTableKey(umap,sectionsMap);
+            String toolStr = umap.get("toolStr");
+            String materialsStr = umap.get("materialsStr");
+            String referenceStr = umap.get("referenceStr");
+            if(StringUtils.isNotBlank(toolStr)){
+                //表描述:value是对表的说明,key是UUID,如 table_uuid值
+                Map<String,Object> tablem=tableMap.get(toolStr);
+                if(tablem!=null){
+                    //表主体
+                    List<String[]> tabBody=(List)tablem.get("tabBody");
+                    for(int i=0;i<tabBody.size();i++){
+                        String[] strings = tabBody.get(i);
+                        if(strings.length>0){
+                            String string0 = strings[0];
+                            String string1 ="";
+                            if(strings.length>1){
+                                string1 = strings[1];
+                            }
+                            String toolSql ="insert into boeing_card_tool(BOEING_CARD_ID,REFERENCE,DESCRIPTION) values ("+CARD_ID+",'"+string0+"','"+string1+"')";
+                            jdbcTemplate.update(toolSql);
+                        }
+
+
+                    }
+                }
+            }
+            if(StringUtils.isNotBlank(materialsStr)){
+                Map<String,Object> tablem=tableMap.get(materialsStr);
+                if(tablem!=null){
+                    List<String[]> tabBody=(List)tablem.get("tabBody");
+                    for(int i=0;i<tabBody.size();i++){
+                        String[] strings = tabBody.get(i);
+                        if(strings.length>0){
+                            String string0 = strings[0];
+                            String string1 ="";
+                            String string2 ="";
+                            if(strings.length>1){
+                                string1 = strings[1];
+                            }
+                            if(strings.length>2){
+                                string2 = strings[2];
+                            }
+                            String materialsSql ="insert into boeing_card_materials(BOEING_CARD_ID,REFERENCE,DESCRIPTION,SPECIFICATION) values ("+CARD_ID+",'"+string0+"','"+string1+"','"+string2+"')";
+                            jdbcTemplate.update(materialsSql);
+                        }
+                    }
+
+                }
+            }
+            if(StringUtils.isNotBlank(referenceStr)){
+                Map<String,Object> tablem=tableMap.get(referenceStr);
+                if(tablem!=null){
+                    List<String[]> tabBody=(List)tablem.get("tabBody");
+                    for(int i=0;i<tabBody.size();i++){
+                        String[] strings = tabBody.get(i);
+                        if(strings.length>0){
+                            String string0 = strings[0];
+                            String string1 ="";
+                            if(strings.length>1){
+                                string1 = strings[1];
+                            }
+                            String referenceSql ="insert into boeing_card_reference(BOEING_CARD_ID,REFERENCE,TITLE) values ("+CARD_ID+",'"+string0+"','"+string1+"')";
+                            jdbcTemplate.update(referenceSql);
+                        }
+                    }
+                }
+            }
 
         }
         //工卡主键做表名
         analyPdfM.put("saveName",CARD_ID);
         return reC;
     }
-    public void getTableKey(Map<String,String> umap,Object obj){
+    public void getCRJTableKey(Map<String,String> umap,Object obj){
         if(obj instanceof Map){
             Map<String,Object> map=(Map)obj;
             for(Object value:map.values()){
                 if(value instanceof Map||(value instanceof List)){
-                    getTableKey(umap,value);
+                    getCRJTableKey(umap,value);
                 }
             }
             String startV = (String)map.get("startV");
@@ -773,13 +931,45 @@ public class FormPdf {
             for(int i=0;i<list.size();i++){
                 Object value = list.get(i);
                 if((value instanceof Map)||(value instanceof List)){
-                    getTableKey(umap,value);
+                    getCRJTableKey(umap,value);
+                }
+            }
+        }
+    }
+    public void getBoeingTableKey(Map<String,String> umap,Object obj){
+        if(obj instanceof Map){
+            Map<String,Object> map=(Map)obj;
+            for(Object value:map.values()){
+                if(value instanceof Map||(value instanceof List)){
+                    getBoeingTableKey(umap,value);
+                }
+            }
+            String startV = (String)map.get("STARTV");
+            if(StringUtils.isNoneBlank(startV)){
+                int toolI = startV.indexOf(". Tools/Equipment");
+                int materialsI = startV.indexOf(". Consumable Materials");
+                int informationI = startV.indexOf(". References");
+                String tableeU = (String)map.get("TABLEE");
+                if(toolI!=-1&&StringUtils.isBlank(umap.get("toolStr"))){
+                    umap.put("toolStr",tableeU);
+                }else if(materialsI!=-1&&StringUtils.isBlank(umap.get("materialsStr"))){
+                    umap.put("materialsStr",tableeU);
+                }else if(informationI!=-1&&StringUtils.isBlank(umap.get("referenceStr"))){
+                    umap.put("referenceStr",tableeU);
+                }
+            }
+        }else if(obj instanceof List){
+            List list=(List)obj;
+            for(int i=0;i<list.size();i++){
+                Object value = list.get(i);
+                if((value instanceof Map)||(value instanceof List)){
+                    getBoeingTableKey(umap,value);
                 }
             }
         }
     }
     //根据唯一标识获取主键值
-    public int getKey(String uuid,JdbcTemplate jdbcTemplate){
+    public int getCRJKey(String uuid,JdbcTemplate jdbcTemplate){
         Integer ki=0;
         String getSql="SELECT\n" +
                 "f.CRJ_CARD_ID\n" +
@@ -791,6 +981,22 @@ public class FormPdf {
         if(re.size()>0){
             Map<String, Object> stringObjectMap = re.get(0);
             ki=(Integer)stringObjectMap.get("CRJ_CARD_ID");
+        }
+        return ki;
+    }
+    //根据唯一标识获取主键值
+    public int getBOEINGKey(String uuid,JdbcTemplate jdbcTemplate){
+        Integer ki=0;
+        String getSql="SELECT\n" +
+                "f.BOEING_CARD_ID AS IDD\n" +
+                "FROM\n" +
+                "BOEING_CARD AS f\n" +
+                "WHERE\n" +
+                "f.UNIQUE_IDENTIFIER = '"+uuid+"' ";
+        List<Map<String, Object>> re=jdbcTemplate.queryForList(getSql);
+        if(re.size()>0){
+            Map<String, Object> stringObjectMap = re.get(0);
+            ki=(Integer)stringObjectMap.get("IDD");
         }
         return ki;
     }
@@ -1345,7 +1551,7 @@ public class FormPdf {
                         for(int i=1;i<=groupCount;i++){
                             String group = matcherSingle.group(i);
                             if(StringUtils.isNotBlank(group)){
-                                groupSingle=group;
+                                groupSingle=Helper.nvlString(group);
                                 break;
                             }
                         }
@@ -1378,7 +1584,7 @@ public class FormPdf {
                         if("true".equals(colIndexWay)){
                             //为获取列所在列数;依据此值匹配
                             String colHeadMatch=(String)mapRule.get("colHeadMatch");
-                            int colIndex=getColIndex(rows,index,colHeadMatch);
+                            LinkedHashSet<Integer> colIndex=getColIndexL(rows,index,colHeadMatch);
                             mapRule.put("colIndex",colIndex);
                         }
                     }
@@ -1386,10 +1592,7 @@ public class FormPdf {
                     for (int i=newIndex;i<rows.size();i++){
                         String value ="";
                         if("true".equals(colIndexWay)){
-                            Integer colIndex=(Integer) mapRule.get("colIndex");
-                            if(colIndex==null){
-                                colIndex=0;
-                            }
+                            LinkedHashSet<Integer> colIndex=(LinkedHashSet) mapRule.get("colIndex");
                             value= getColV(rows, i, colIndex);
                         }else{
                             //行数据
@@ -1404,7 +1607,7 @@ public class FormPdf {
                                 for(int gc=1;gc<=groupCount;gc++){
                                     String group = matcherRowset.group(gc);
                                     if(StringUtils.isNotBlank(group)){
-                                        rowsetStr=group;
+                                        rowsetStr=Helper.nvlString(group);
                                         break;
                                     }
                                 }
@@ -1427,7 +1630,7 @@ public class FormPdf {
                                 setIndex(temporaryMap,i);
                                 break;
                             }
-                            if(StringUtils.isBlank(value)){
+                            if(StringUtils.isBlank(rowsetV)){
                                 if("true".equals(isChangeIndex)){
                                     //更改当前下标
                                     setIndex(temporaryMap,i+1);
@@ -1443,6 +1646,13 @@ public class FormPdf {
                                 matchEnd(isChangeIndex,i,index,temporaryMap,mapRule);
                                 break;
                             }
+                            if(StringUtils.isBlank(value)){
+                                if("true".equals(isChangeIndex)){
+                                    //更改当前下标
+                                    setIndex(temporaryMap,i+1);
+                                }
+                                continue;
+                            }
                             String isAllMatch=(String) mapRule.get("isAllMatch");
                             if("true".equals(isAllMatch)){
                                 //每一行值都从匹配规则中提取
@@ -1454,7 +1664,7 @@ public class FormPdf {
                                     for(int gc=1;gc<=groupCount;gc++){
                                         String group = matcherRowset.group(gc);
                                         if(StringUtils.isNotBlank(group)){
-                                            value=group;
+                                            value=Helper.nvlString(group);
                                             break;
                                         }
                                     }
@@ -1634,20 +1844,39 @@ public class FormPdf {
         return rowV;
     }
     //返回单元格值;colI 列所在下标(从0开始);ind 所在行数
-    public String getColV(List<List<String>> rows,int ind,int colI){
+    public String getColV(List<List<String>> rows,int ind,LinkedHashSet<Integer> colIndex){
         //行数据获取
         List<String> rowscol=rows.get(ind);
         StringBuilder sb=new StringBuilder();
-        //防止超出下标
-        if(colI<rowscol.size()){
-            String str=rowscol.get(colI);
-            sb.append(str);
+        Iterator it=colIndex.iterator();
+        while(it.hasNext()){//返回true或false
+            int colI=(Integer) it.next();
+            //防止超出下标
+            if(colI<rowscol.size()){
+                String str=rowscol.get(colI);
+                sb.append(str+" ");
+            }
         }
         String rowV=sb.toString().trim().replaceAll("−","-").replaceAll("\\s{2,}"," ");
         return rowV;
     }
     //返回匹配列所在列数(从0开始)
-    public int getColIndex(List<List<String>> rows,int ind,String matchStr){
+    public LinkedHashSet<Integer> getColIndexL(List<List<String>> rows,int ind,String matchStr){
+        String[] split = matchStr.split(" ");
+        LinkedHashSet<Integer> dexList=new LinkedHashSet<>();
+        //行数据获取
+        List<String> rowscol=rows.get(ind);
+        for(String str:split){
+            for(int i=0;i<rowscol.size();i++){
+                String rowstr=rowscol.get(i);
+                if(rowstr.indexOf(str)!=-1){
+                    dexList.add(i);
+                }
+            }
+        }
+        return dexList;
+    }
+    /*public int getColIndex(List<List<String>> rows,int ind,String matchStr){
         int dex=0;
         //行数据获取
         List<String> rowscol=rows.get(ind);
@@ -1658,7 +1887,7 @@ public class FormPdf {
             }
         }
         return dex;
-    }
+    }*/
 
     /**
      * 解析PDF 返回,能直接用的数据
