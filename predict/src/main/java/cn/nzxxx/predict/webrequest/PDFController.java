@@ -226,8 +226,8 @@ public class PDFController {
             //提取值规则定义
             List<Map<String,Object>> ruleList=fpdf.getNewRule();
             //循环所有pdf页 -暂时先循环一次
-            for(int i=22;i<=pagenum;i++){ //测试-后期去掉   525 499 27
-            //for(int i=1;i<=pagenum;i++){
+            //for(int i=22;i<=pagenum;i++){ //测试-后期去掉   525 499 27
+            for(int i=1;i<=pagenum;i++){
                 Page page=fpdf.retPageC(oe,i);
                 //当前页的类型(1:word的首页;2:需解析的页面;)
                 int pageTypeN = fpdf.pageType(page);
@@ -235,9 +235,9 @@ public class PDFController {
                     continue;
                 }
                 //测试-后期去掉
-                if(i==27){ //   554 518 38
+                /*if(i==27){ //   554 518 38
                     i=pagenum;
-                }
+                }*/
                 if(pageTypeN==1){
                     //之前解析好的数据,生成word,入数据库
                     if(analyPdfM.size()!=0){
