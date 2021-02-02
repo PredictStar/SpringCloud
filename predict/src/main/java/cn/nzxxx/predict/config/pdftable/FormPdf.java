@@ -296,9 +296,11 @@ public class FormPdf {
         boeingMap.put("temp","taskCardBoeingT.docx");//模板名称
         boeingMap.put("imageW",660);//图片宽
         boeingMap.put("imageH",960);//图片高
-        //页面类型规则定义(1:word的首页;2:需解析的页面;剩余解析成图片(注意analyPdfM没值时图片数据先不赋进去))
+        //页面类型规则定义(1:word的首页;2:需解析的页面;剩余解析成图片(注意 analyPdfM 没值时图片数据先不赋进去))
+        //下根据 indexOf 去匹配的
         Map<String, Integer> pageTypeBM=new LinkedCaseInsensitiveMap();
         pageTypeBM.put("MECHINSP",2);
+        pageTypeBM.put("(Continued)",2);
         pageTypeBM.put("TAILNUMBERWORKAREA",1);
         //pageTypeBM.put("AIRLINECARDNO",0);//图片
         boeingMap.put("pageType",pageTypeBM);
@@ -473,6 +475,11 @@ public class FormPdf {
             tempMapB14_1.put("matchEndTable","true");//结束标记是否匹配表头
             tempMapB14_1.put("matchEndOver","true"); //匹配matchT后若直接匹配结束标记,是否直接结束
             tempMapB14_1.put("isCompSpace","true");
+            //实现替换功能
+            Map<String,String> repFirB14_1=new HashMap<String,String>();
+            repFirB14_1.put("^WARNING ","");
+            repFirB14_1.put("^CAUTION ","");
+            tempMapB14_1.put("replaceV",repFirB14_1);
             temListB14.add(tempMapB14_1);
             Map tempMapB14_2=new HashMap();
             tempMapB14_2.put("tempKey","TABLET");//对应模板值
@@ -486,16 +493,20 @@ public class FormPdf {
 
         //匹配规则绑定
         boeingMap.put("rule",ruleBoeing);
-        //表规则绑定
+        //表规则绑定(Boeing 解析table 时若遇到 (Continued) 跳过进行下一行的解析)
         Map<String,Map> tableBoeing=new HashMap<String,Map>();
         Map<String,Object> tableB1=new HashMap<String,Object>();
         List<String> tableMB1=new ArrayList<String>();
-        tableMB1.add("(AMM \\S+ )?(.+)");
-        tableMB1.add("(FIM [0-9\\-]+ TASK [0-9]+ )?(.+)");
-        tableMB1.add("(SWPM \\S+ )?(.+)");
-        tableMB1.add("(WDM \\S+ )?(.+)");
+        tableMB1.add("(AMM \\S+ )(.+)");
+        tableMB1.add("(FIM [0-9\\-]+ TASK [0-9]+ )(.+)");
+        tableMB1.add("(SWPM \\S+ \\d+ )(.+)");
+        tableMB1.add("(SWPM \\d+, Standard Wiring )(.+)");
+        tableMB1.add("(SWPM \\S+ )(.+)");
+        tableMB1.add("(WDM \\S+ )(.+)");
+        tableMB1.add("(\\S+)(.+)?");
         tableB1.put("colMatch",tableMB1);//列值获取方式
         tableB1.put("valNVL","add");// //up 列无值时,取上行值; add 无值时和上行合并(有第二列空的情况)
+        tableB1.put("continueVal", Arrays.asList("^\\(Continued\\)$"));
         tableBoeing.put("Reference Title",tableB1);//refer
 
         Map<String,Object> tableB2=new HashMap<String,Object>();
@@ -505,6 +516,7 @@ public class FormPdf {
         tableB2.put("setMat",setMatB2);//列与具名组匹配对应规则;
         tableB2.put("colMatch",tableMB2);//列值获取方式
         tableB2.put("valNVL","add");// //up 列无值时,取上行值; add 无值时和上行合并
+        tableB2.put("continueVal", Arrays.asList("^\\(Continued\\)$"));
         tableBoeing.put("Reference Description Specification",tableB2);//mater
 
         Map<String,Object> tableB3=new HashMap<String,Object>();
@@ -512,6 +524,7 @@ public class FormPdf {
         tableMB3.add("([A-Z]+-[0-9]+ )?(.+)");
         tableB3.put("colMatch",tableMB3);//列值获取方式
         tableB3.put("valNVL","add");// //up 列无值时,取上行值; add 无值时和上行合并
+        tableB3.put("continueVal", Arrays.asList("^\\(Continued\\)$"));
         tableBoeing.put("Reference Description",tableB3);//tool
 
         Map<String,Object> tableB4=new HashMap<String,Object>();
@@ -519,6 +532,7 @@ public class FormPdf {
         tableMB4.add("(\\S+)( .+)");
         tableB4.put("colMatch",tableMB4);//列值获取方式
         tableB4.put("valNVL","add");// //up 列无值时,取上行值; add 无值时和上行合并
+        tableB4.put("continueVal", Arrays.asList("^\\(Continued\\)$"));
         tableBoeing.put("Number Name/Location",tableB4);
 
         Map<String,Object> tableB5=new HashMap<String,Object>();
@@ -529,17 +543,29 @@ public class FormPdf {
         tableMB5.add("()()()(.+)");
         tableB5.put("colMatch",tableMB5);//列值获取方式
         tableB5.put("valNVL","add");// //up 列无值时,取上行值; add 无值时和上行合并(可根据逗号判断是否是同一个 AIPC Reference)
+        tableB5.put("continueVal", Arrays.asList("^\\(Continued\\)$"));
         tableBoeing.put("AMM_Item Description AIPC_Reference AIPC_Effectivity",tableB5);
 
         Map<String,Object> tableB6=new HashMap<String,Object>();
         List<String> tableMB6=new ArrayList<String>();
+        tableMB6.add("^(BEJ .+)()()()");  //后期最好改成合并单元格的写法
         tableMB6.add("(\\S+ )(\\S+ )(\\S+ )(.+)");
         tableB6.put("colMatch",tableMB6);//列值获取方式
-        tableB6.put("valNVL","add");// //up 列无值时,取上行值; add 无值时和上行合并
+        tableB6.put("valNVL","add");
+        tableB6.put("continueVal", Arrays.asList("^\\(Continued\\)$"));
         tableBoeing.put("Row Col Number Name",tableB6);
 
+        Map<String,Object> tableB7=new HashMap<String,Object>();
+        List<String> tableMB7=new ArrayList<String>();
+        tableMB7.add("([A-Z][A-Z0-9]+ )?([A-Z][A-Z0-9]+ )?([0-9\\- ,]+)?([A-Z].+)?");
+        tableB7.put("colMatch",tableMB7);//列值获取方式
+        tableB7.put("valNVL","add");
+        tableB7.put("indBlankAdd",0);
+        tableB7.put("continueVal", Arrays.asList("^\\(Continued\\)$"));
+        tableBoeing.put("WIRE_BUNDLE CONNECTOR WDM PNL_OR_MODULE",tableB7);
+
         boeingMap.put("tableRule",tableBoeing);
-        //用空格排版
+        //用空格排版(负数表当前行不变,下行再多空格)
         Map<String,Integer> spaceRuleBoeing=new HashMap<String,Integer>();
         spaceRuleBoeing.put("^\\d\\. ",0);
         spaceRuleBoeing.put("^[A-Z]\\. ",3);//两个空格
@@ -547,6 +573,7 @@ public class FormPdf {
         spaceRuleBoeing.put("^\\(\\d+\\) ",6);//五个空格
         spaceRuleBoeing.put("^SUBTASK \\S+-\\S+-\\S+-\\S+-\\S+$",6);
         spaceRuleBoeing.put("^\\([a-z]\\) ",9);//八个空格
+        spaceRuleBoeing.put("^(\\S+ )?NOTE: ",-3);
         boeingMap.put("spaceRule",spaceRuleBoeing);
 
         // END OF TASK 解析出来没带---;一个word会有多个 如 TASK 05-55-25-200-804  表其结束
@@ -580,6 +607,7 @@ public class FormPdf {
                 colHeadMatch    //如上用到此;根据空格获取数组,值与行的每一列比对,若在列有此下标记录在集合里,每次取值(默认整行数值)根据多下标提值并拼接返回
                 matchEndOver   //匹配matchT后若直接匹配结束标记,是否直接结束
                 isCompSpace	//是否校验排版规则,给前面赋值空格实现排版
+                replaceV //根据正则替换数值(拨乱反正),("replaceV",Map<String,String> map);
            复合匹配
                 compositeList   //复合的规则
            区块对
@@ -594,9 +622,14 @@ public class FormPdf {
         表规则
             colMatch  //列值获取方式
             valNVL //up 列无值时,取上行值; add 无值时和上行合并
-                没设 valNVL, 直接赋值
+                没设 valNVL, 直接赋值(猜:现默认是,列值都非空是新增数据)(后期可写匹配某成功直接新增)
             setMat //列与具名组匹配对应规则;
             .put("MANUAL_NO REFERENCE DESIGNATION",table3); //key是表列
+            continueVal //匹配则直接跳过此  ("continueVal",List<String> list);
+            indBlankAdd  ("indBlankAdd",0)//从0开始  --用于处理列垂直对齐获取数据不准确
+                //设置了indBlankAdd 表会去校验单元格是否有垂直对齐的方式,
+                    如上设置参是0,则会在校验第一条数据的0列是否是空,直至不是空,记录一下数a(赋给indBlankAddIndex)(是0则不是垂直对齐)
+                    当前行的下a条数据的0列有值,表当前数据是新增,否则是合并操作(即使当前行列都有值)
         * */
     }
 
@@ -1193,6 +1226,150 @@ public class FormPdf {
         }
         return n;
     }
+
+
+    /**
+     * 累加行数据
+     * @param presentStr 操作数组
+     * @param arrI  操作下标
+     * @param strP1 原值
+     * @param strN  累加值
+     */
+    public void addRowData(String[] presentStr,int arrI,String strP1,String strN){
+        if(StringUtils.isNotBlank(strN)){
+            if(StringUtils.isNotBlank(strP1)){
+                //累加
+                presentStr[arrI]=strP1+"\n"+strN;
+            }else{
+                presentStr[arrI]=strN;
+            }
+        }
+    }
+    //是否有"("在上一行数据,返回true表有
+    public boolean isNotC(String[] presentStr){
+        boolean isNotC=false;
+        for(int arr=0;arr<presentStr.length;arr++){
+            //已存值
+            String strP=Helper.nvlString(presentStr[arr]);
+            //a(b)c( 返回1
+            int bracketM = bracketM(strP);
+            if(bracketM>0){
+                isNotC=true;
+                break;
+            }
+        }
+        return isNotC;
+    }
+    //上无(,下有) //当前列赋给已存行的下一列
+    public boolean noOHaveC(int bracketMN,int bracketMP,int array,String[] presentStr,String strN){
+        boolean bol=false;
+        if(bracketMN<0&&bracketMP==0){
+            //防止下标超出
+            int arrI=array+1;
+            if(arrI>(presentStr.length-1)){
+                arrI=presentStr.length-1;
+            }
+            //已存行的下一列的值
+            String strP1=presentStr[arrI];
+            //累加数据
+            addRowData(presentStr,arrI,strP1,strN);
+            bol=true;
+        }
+        return bol;
+    }
+    //给 tabBodyStr 赋值,返回是否有空的情况
+    public boolean setTabBodyStr(String[] tabBodyStr,List<Integer> setMat,Matcher matcher,int colN) {
+        boolean isBlank=false;
+        if(setMat!=null&&setMat.size()!=0){
+            //直接根据自定义list获取列值
+            for(int array=0;array<setMat.size();array++){
+                Integer integer = setMat.get(array);
+                String group = Helper.nvlString(matcher.group(integer));
+                //赋值
+                tabBodyStr[array]=group;
+                //是否有空的情况
+                if(StringUtils.isBlank(group)){
+                    isBlank=true;
+                }
+            }
+        }else{
+            //直接根据列数获取列值
+            for(int array=0;array<colN;array++){
+                String group =Helper.nvlString(matcher.group(array+1));
+                //赋值
+                tabBodyStr[array]=group;
+                //是否有空的情况
+                if(StringUtils.isBlank(group)){
+                    isBlank=true;
+                }
+            }
+        }
+        return isBlank;
+    }
+
+    //上一行是否包括空
+    public String isInblank(int i,Map<Integer,String> map){
+        int bi=i-1;
+        if(bi<0){
+            bi=0;
+        }
+        String blank =map.get(bi);
+        return blank;
+    }
+    //非空表新增行数据,其余表合并
+    public boolean retType(boolean isBlank) {
+        if(isBlank){
+            return false;
+        }else{
+            return true;
+        }
+    }
+    //行数据转为表格数据
+    public  Map<String,Object> getCols(String rowset,List<String> colMatch,int colN,List<Integer> setMat){
+        Map<String,Object> reMap=new HashMap();
+        String[] tabBodyStr=null;
+        for(int s=0;s<colMatch.size();s++){
+            String match = colMatch.get(s);
+            Pattern pattern = Pattern.compile(match);
+            Matcher matcher = pattern.matcher(rowset);
+            if(matcher.find()){
+                //行数据
+                tabBodyStr=new String[colN];
+                //是否有空的情况
+                boolean isBlank=false;
+                if(setMat!=null&&setMat.size()!=0){
+                    //直接根据自定义list获取列值
+                    for(int array=0;array<setMat.size();array++){
+                        Integer integer = setMat.get(array);
+                        String group = Helper.nvlString(matcher.group(integer));
+                        //赋值
+                        tabBodyStr[array]=group;
+                        //是否有空的情况
+                        if(StringUtils.isBlank(group)){
+                            isBlank=true;
+                        }
+                    }
+                }else{
+                    //直接根据列数获取列值
+                    for(int array=0;array<colN;array++){
+                        String group =Helper.nvlString(matcher.group(array+1));
+                        //赋值
+                        tabBodyStr[array]=group;
+                        //是否有空的情况
+                        if(StringUtils.isBlank(group)){
+                            isBlank=true;
+                        }
+                    }
+                }
+                reMap.put("isBlank",isBlank);
+                reMap.put("tabBodyStr",tabBodyStr);
+                //匹配后停止往下循环
+                break;
+            }
+        }
+        return reMap;
+    }
+
     //table的匹配方法
     public void matchStrTable(Map<String, Object> mapRule,Map temporaryMap,Map<String,Object> analyPdfM,Map sectionsMapT,String matchEndTable,Map<String,Map> tableRule,int index,int initI,List<List<String>> rows,String donotEnd){
         //改变i为当前行
@@ -1225,6 +1402,22 @@ public class FormPdf {
                 Map<String,Object> tablem=tableMap.get(newTableUUID);
                 //表头行数据记录
                 String tabROWV=(String)tablem.get("tabROWV");
+                //若行匹配跳过的规则,直接跳过
+                List<String> continueVal=(List)tablem.get("continueVal");
+                if(continueVal!=null&&continueVal.size()>0){
+                    boolean bol=false;
+                    for(String val: continueVal){
+                        Pattern pattern = Pattern.compile(val);
+                        Matcher matcher = pattern.matcher(rowsetV);
+                        if(matcher.find()){
+                            bol=true;
+                            break;
+                        }
+                    }
+                    if(bol){
+                        continue;
+                    }
+                }
                 //如果内容同当前表的表头,内容紧接着当前表
                 if(tabROWV.equals(rowsetV)){
                     continue;
@@ -1255,147 +1448,125 @@ public class FormPdf {
                 String valNVL=(String)tablem.get("valNVL");
                 //列与具名组匹配对应规则;
                 List<Integer> setMat=(List)tablem.get("setMat");
-                //当前行数据循环匹配colMatch(List类型,元素是匹配规则字符串)
-                for(int c=0;c<colMatch.size();c++){
-                    String matchh = colMatch.get(c);
-                    Pattern pattern = Pattern.compile(matchh);
-                    Matcher matcher = pattern.matcher(rowsetV);
-                    if(matcher.find()){
-                        //行数据
-                        String[] tabBodyStr=new String[colN];
-                        //是否有空的情况
-                        boolean isBlank=false;
-                        if(setMat!=null&&setMat.size()!=0){
-                            //直接根据自定义list获取列值
-                            for(int array=0;array<setMat.size();array++){
-                                Integer integer = setMat.get(array);
-                                String group = Helper.nvlString(matcher.group(integer));
-                                //赋值
-                                tabBodyStr[array]=group;
-                                //是否有空的情况
-                                if(StringUtils.isBlank(group)){
-                                    isBlank=true;
-                                }
-                            }
-                        }else{
-                            //直接根据列数获取列值
-                            for(int array=0;array<colN;array++){
-                                String group =Helper.nvlString(matcher.group(array+1));
-                                //赋值
-                                tabBodyStr[array]=group;
-                                //是否有空的情况
-                                if(StringUtils.isBlank(group)){
-                                    isBlank=true;
-                                }
+                //用于处理列垂直对齐获取数据不准确
+                Integer indBlankAdd=(Integer)tablem.get("indBlankAdd"); //从0开始
+                Integer indBlankAddIndex=(Integer)tablem.get("indBlankAddIndex"); //从0开始(1表是当前行的下一行)
+                String endBlankAdd=(String)tablem.get("endBlankAdd");//为true表计算indBlankAddIndex结束
+                //行数据转为表格数据
+                Map<String,Object> reMap = getCols(rowsetV, colMatch, colN,setMat);
+                if(reMap.size()!=0){
+                    //行数据
+                    String[] tabBodyStr=(String[])reMap.get("tabBodyStr");
+                    //当前行是否有空列
+                    boolean isBlank=(boolean)reMap.get("isBlank");
+                    if(isBlank){map.put(i,"true");}
+                    int size = tabBody.size();
+                    //是否直接赋值
+                    Boolean directAdd=true;
+                    if(size>0){ //不是初始
+                        directAdd=false;//是初始直接赋数据,否则需如下处理
+                        //值校验是否有垂直对齐的情况,并统计差了多少行,就能补全缺失数据
+                        if(indBlankAdd!=null&&!"true".equals(endBlankAdd)){
+                            String[] tabBody0 = tabBody.get(0);//获取第一行数据
+                            String valIndex = tabBody0[indBlankAdd];
+                            if (StringUtils.isBlank(valIndex)){
+                                indBlankAddIndex++;
+                                tablem.put("indBlankAddIndex",indBlankAddIndex);
+                                tablem.put("endBlankAdd","true");
                             }
                         }
-                        if(isBlank){
-                            map.put(i,"true");
+                        //最新的一行数据
+                        String[] presentStr= tabBody.get(size - 1);
+                        //当前最新行数据有开括号即 "("
+                        boolean isNotC=isNotC(presentStr);
+                        if(isNotC){ //当前最新行数据有开括号即 "("
+                            //上一行是否包括空
+                            String blank=isInblank(i,map);
+                            if(!isBlank&&"true".equals(blank)){ //当前行无空格,上行有空格,是新添数据(防止上数据只有开括号就从来没关过,书写错误导致的无限合并)
+                                directAdd=true;//直接add进去,就不用循环列了  A处
+                            }
+                            //else{ 最新行数据有 "(" ,直接合并值 directAdd=false; }
                         }
-                        int size = tabBody.size();
-                        if(size>0){ //不是初始
-                            //有"("在上一行数据
-                            boolean isNotC=false;
-                            //最新的一行数据
-                            String[] presentStr= tabBody.get(size - 1);
-                            for(int arr=0;arr<presentStr.length;arr++){
+                        if(!directAdd){ //和上 A处 对应
+                            //循环当前行的每一列
+                            for(int array=0;array<tabBodyStr.length;array++){
+                                //是否直接赋值
+                                //Boolean directAddFor=directAdd;
                                 //已存值
-                                String strP=presentStr[arr];
-                                //a(b)c( 返回1
-                                int bracketM = bracketM(strP);
-                                if(bracketM>0){
-                                    isNotC=true;
-                                    break;
-                                }
-                            }
-                            if(isNotC){ //最新行数据有开括号(即 "(" ) ( (即其没有对应的关括号)
-                                for(int array=0;array<tabBodyStr.length;array++){
-                                    //已存值
-                                    String strP=presentStr[array];
-                                    //获取字符串括号没关个数:-2说明有两个)没匹配到(
-                                    int bracketMP = bracketM(strP);
-                                    //当前解析值
-                                    String strN=tabBodyStr[array];
-                                    int bracketMN = bracketM(strN);
-                                    //上无(,下有) //当前列赋给已存行的下一列
-                                    if(bracketMN<0&&bracketMP==0){
-                                        //防止下标超出
-                                        int arrI=array+1;
-                                        if(arrI>(presentStr.length-1)){
-                                            arrI=presentStr.length-1;
+                                String strP=presentStr[array];
+                                //当前解析列值
+                                String strN=tabBodyStr[array];
+                                if("up".equals(valNVL)){ //up 列无值时,取上行值
+                                    if(StringUtils.isBlank(strN)){
+                                        tabBodyStr[array]=strP;
+                                    }
+                                    directAdd=true;//循环列后直接add即可
+                                    continue;
+                                }else if("add".equals(valNVL)){ // add 无值时和上行合并
+                                    directAdd=false;
+                                    if(isNotC){ //当前最新行数据有开括号即 "("
+                                        //获取字符串,括号没关个数:-2说明有两个)没匹配到(
+                                        int bracketMP = bracketM(strP);
+                                        int bracketMN = bracketM(strN);
+                                        //上无(,下有) //当前列赋给已存行的下一列
+                                        boolean noOHaveC = noOHaveC(bracketMN, bracketMP, array, presentStr, strN);
+                                        if(noOHaveC){
+                                            continue; //上 noOHaveC 就已经累加过了就不往下走了
                                         }
-                                        //已存行的下一列的值
-                                        String strP1=presentStr[arrI];
-                                        if(StringUtils.isNotBlank(strN)){
-                                            if(StringUtils.isNotBlank(strP1)){
-                                                //累加
-                                                presentStr[arrI]=strP1+"\n"+strN;
-                                            }else{
-                                                presentStr[arrI]=strN;
-                                            }
-                                        }
-                                    }else{
-                                        int bi=i-1;
-                                        if(bi<0){
-                                            bi=0;
-                                        }
-                                        String s = map.get(bi);
-                                        if(!isBlank&&"true".equals(s)){ //当前行无空格,上行有空格,是新添数据!!!!!!认为是新数据这块逻辑代码直接搜 tabBody.add
-                                            tabBody.add(tabBodyStr);
-                                        }else{ //最新行数据有 ( ,当前数据直接合并
-                                            if(StringUtils.isNotBlank(strN)){
-                                                if(StringUtils.isNotBlank(strP)){
-                                                    presentStr[array]=strP+"\n"+strN;
+                                    }
+                                    // 设置了indBlankAdd 表会去校验单元格是否有垂直对齐的方式,
+                                    if(indBlankAdd!=null){
+                                        //未触发必有值行(只有第一次查落差行数,endBlankAdd才会为非true,则必是合并)
+                                        if(!"true".equals(endBlankAdd)){
+                                            directAdd=false;
+                                        }else{ //已经获取到落差行
+                                            //已获取因垂直对齐导致的落差行数
+                                            if(indBlankAddIndex>0){
+                                                Integer ai=i+indBlankAddIndex;
+                                                //落差行不能获取到
+                                                if(ai>=rows.size()){
+                                                    //当落差行所在,超出 rows 的下标,直接累加
+                                                    directAdd=false;
                                                 }else{
-                                                    presentStr[array]=strN;
+                                                    //获取落差行数据
+                                                    String rowsetA=getRowSte(rows,ai,initI);
+                                                    //根据行获取列值
+                                                    Map<String,Object> reMapc=getCols(rowsetA, colMatch, colN,setMat);
+                                                    String[] cols =(String[])reMapc.get("tabBodyStr");
+                                                    if(reMapc.size()>0&&cols!=null){
+                                                        String valIndex = cols[indBlankAdd];
+                                                        //当前行的下的落差行的关键列有值,
+                                                        //表当前数据是新增,否则是合并操作(即使当前行列都有值)
+                                                        if (StringUtils.isNotBlank(valIndex)){
+                                                            directAdd=true;
+                                                        }else {
+                                                            directAdd=false;
+                                                        }
+                                                    }
                                                 }
+                                            }else{ //没有落差行,非空表新增行数据,其余表合并
+                                                directAdd=retType(isBlank);//返回false表要累加,true表直接新增行数据
                                             }
                                         }
+                                    }else{//不校验单元格是否有垂直对齐
+                                        directAdd=retType(isBlank);
                                     }
+                                }else{
+                                    //没设valNVL,直接赋值
+                                    directAdd=true;
                                 }
-
-                            }else {
-                                if(isBlank){ //有空的情况
-                                    //up 列无值时,取上行值; add 无值时和上行合并
-                                    for(int array=0;array<tabBodyStr.length;array++){
-                                        //已存值
-                                        String strP=presentStr[array];
-                                        //当前解析值
-                                        String strN=tabBodyStr[array];
-                                        //valNVL 是从 tablem(即第一次匹配表后赋的表实体) 中提取出的
-                                        if("up".equals(valNVL)){ //up 列无值时,取上行值
-                                            if(StringUtils.isBlank(strN)){
-                                                tabBodyStr[array]=strP;
-                                            }
-                                        }else if("add".equals(valNVL)){ // add 无值时和上行合并
-                                            if(StringUtils.isNotBlank(strN)){
-                                                if(StringUtils.isNotBlank(strP)){
-                                                    presentStr[array]=strP+"\n"+strN;
-                                                }
-                                            }
-                                        }else{
-                                            //没设valNVL,直接赋值
-                                            tabBody.add(tabBodyStr);
-                                        }
-                                    }
-                                    //补充空后赋进去
-                                    if("up".equals(valNVL)){
-                                        tabBody.add(tabBodyStr);
-                                    }
-                                }else {
-                                    //没空直接赋值
-                                    tabBody.add(tabBodyStr);
+                                if(!directAdd){  //当前循环列值,累加到数据
+                                    addRowData(presentStr,array,strP,strN);
                                 }
-                            }
-                        }else {
-                            ///是初始直接赋数据即可
-                            tabBody.add(tabBodyStr);
-                        }
-                        //匹配后停止往下循环
-                        break;
+                            } //循环当前行的每一列结束
+                                // if(isBlank){ 有空的情况} else {没空直接赋值}
+                        }  //最新行数据有开括号即 "(" 结束
+                    } //不是初始结束
+                    if(directAdd){//默认是直接赋数据(如:是初始直接赋数据)
+                        tabBody.add(tabBodyStr);
                     }
-
                 }
+
             }else{
                 //表类型还未正式开启
                 Map<String,Object> tablerul=new HashMap<String,Object>();
@@ -1439,6 +1610,15 @@ public class FormPdf {
                     //up 列无值时,取上行值; add 无值时和上行合并
                     String valNVL=(String)tablerul.get("valNVL");
                     tablem.put("valNVL",valNVL);
+                    //若行匹配直接跳过
+                    List<String> continueVal=(List)tablerul.get("continueVal");
+                    tablem.put("continueVal",continueVal);
+                    //用于处理列垂直对齐获取数据不准确
+                    Integer indBlankAdd=(Integer)tablerul.get("indBlankAdd");
+                    tablem.put("indBlankAdd",indBlankAdd);
+                    if(indBlankAdd!=null){
+                        tablem.put("indBlankAddIndex",0);
+                    }
                     //列与具名组匹配对应规则;
                     List<Integer> setMat=(List)tablerul.get("setMat");
                     tablem.put("setMat",setMat);
@@ -1644,6 +1824,8 @@ public class FormPdf {
                     String colIndexWay=(String)mapRule.get("colIndexWay");
                     //是否校验排版规则,给前面赋值空格实现排版
                     String isCompSpace=(String) mapRule.get("isCompSpace");
+                    //是否有替换功能
+                    Map<String,String> replaceV=(Map) mapRule.get("replaceV");
                     //当前规则匹配的值
                     String rowsetStr="";
                     if(rs){ //初次匹配规则
@@ -1698,6 +1880,10 @@ public class FormPdf {
                                         rowsetStr=Helper.nvlString(group);
                                         break;
                                     }
+                                }
+                                //是否有替换功能
+                                if(replaceV!=null&&replaceV.size()>0){
+                                    rowsetStr=replaceM(replaceV,rowsetStr);
                                 }
                                 //是否校验排版规则,给前面赋值空格实现排版
                                 if("true".equals(isCompSpace)){
@@ -1766,6 +1952,10 @@ public class FormPdf {
                                 vall=value;
                             }
                             if(StringUtils.isNotBlank(vall)){//value必然有值,所以新设变量vall,这样未匹配时是空
+                                //是否有替换功能
+                                if(replaceV!=null&&replaceV.size()>0){
+                                    vall=replaceM(replaceV,vall);
+                                }
                                 //是否校验排版规则,给前面赋值空格实现排版
                                 if("true".equals(isCompSpace)){
                                     vall=setSpace(mMap,vall,mapRule);
@@ -1836,6 +2026,19 @@ public class FormPdf {
         }
         return resStr;
     }
+    //替换功能的实现
+    public String replaceM(Map<String,String>replaceV,String rowvl){
+        if(replaceV!=null&&replaceV.size()>0){
+            for(String key:replaceV.keySet()){
+                String val = replaceV.get(key);
+                if(StringUtils.isBlank(rowvl)){
+                     break;
+                }
+                rowvl=rowvl.replaceFirst(key,val);
+            }
+        }
+        return rowvl;
+    }
     //验排版规则,给前面赋值空格实现排版
     public String setSpace(Map mMap,String value,Map<String,Object> mapRule){
         Map<String,Integer> spaceRule=(Map)mMap.get("spaceRule");
@@ -1844,8 +2047,20 @@ public class FormPdf {
             Pattern pattern = Pattern.compile(key);
             Matcher matcher = pattern.matcher(value);
             if(matcher.find()){
+                Integer can=0;
                 Integer integer = spaceRule.get(key);
-                value=StringUtils.leftPad("",integer," ")+value;
+                if(integer>0){
+                    can=integer;
+                }else{
+                    //若是负数,当前行不变空格数.下一行空格数变
+                    Integer spaceN =(Integer) mapRule.get("spaceN");
+                    if(spaceN!=null){
+                        can=spaceN;
+                    }
+                    //负数转正数
+                    integer=spaceN-integer;
+                }
+                value=StringUtils.leftPad("",can," ")+value;
                 bol=false;
                 mapRule.put("spaceN",integer);
                 break;
@@ -1854,7 +2069,9 @@ public class FormPdf {
         if(bol){
             Integer integer =(Integer)mapRule.get("spaceN");
             if(integer!=null){
-                value=StringUtils.leftPad("",integer+2," ")+value;
+                //比存值多俩空格
+                integer=integer+2;
+                value=StringUtils.leftPad("",integer," ")+value;
             }
         }
         return value;
@@ -1938,8 +2155,8 @@ public class FormPdf {
                     clearTag(value);
                 }
             }
-            map.put("alreadyOver",null);
-            map.put("donotEnd",null);
+            map.remove("alreadyOver");
+            map.remove("donotEnd");
         }else if(obj instanceof List){
             List list=(List)obj;
             for(int i=0;i<list.size();i++){
