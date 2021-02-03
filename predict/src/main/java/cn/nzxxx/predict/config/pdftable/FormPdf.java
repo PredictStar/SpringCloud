@@ -6,6 +6,7 @@ import cn.nzxxx.predict.toolitem.tool.Helper;
 import com.deepoove.poi.XWPFTemplate;
 import com.deepoove.poi.data.*;
 import com.deepoove.poi.data.style.TableStyle;
+import com.sun.org.apache.regexp.internal.RE;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.pdfbox.jbig2.SegmentData;
@@ -40,6 +41,10 @@ import java.util.stream.Collectors;
 public class FormPdf {
     private Map<String,Map<String,Object>> mapp=new HashMap<String,Map<String,Object>>();
     private String fileType="";
+    private List<TextElement> pageTextT=new ArrayList<TextElement>();
+    public void setPageTextT(List<TextElement> pageTextT) {
+        this.pageTextT = pageTextT;
+    }
     public void setFileType(String fileType) {
         this.fileType = fileType;
     }
@@ -276,7 +281,6 @@ public class FormPdf {
                     tempVal13_2_3.put("endMatch","(^[A-Z]\\.)|(^\\([0-9]+\\))|(^[0-9]\\.)");//匹配结束
                     tempVal13_2_3.put("isChangeIndex","true");//改变i为当前行
                 templateList13_2.add(tempVal13_2_3);
-            //.put("continueMatch","true");//未匹配表跳过继续匹配下一个
             tempVal13_2.put("templateList",templateList13_2);
             templateList13.add(tempVal13_2);
         mapRule13.put("templateList",templateList13);
@@ -431,6 +435,7 @@ public class FormPdf {
         boRule12.put("valType","rowset");
         boRule12.put("matchI","(.+)");
         boRule12.put("endMatch","A\\. ");
+        boRule12.put("isCompSpace","true");
         ruleBoeing.add(boRule12);
         Map<String, Object> boRule13=new HashMap<String, Object>();
         boRule13.put("tempKey","TABLETEMP");//对应模板值
@@ -472,14 +477,14 @@ public class FormPdf {
             tempMapB14_1.put("indexI",0);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
             tempMapB14_1.put("matchI","(.+)");//匹配开始()里是要的值
             tempMapB14_1.put("isChangeIndex","true");//改变i为当前行
+            tempMapB14_1.put("endMatch","^Table \\d+|^\\(Continued\\)");//匹配结束
             tempMapB14_1.put("matchEndTable","true");//结束标记是否匹配表头
-            tempMapB14_1.put("matchEndOver","true"); //匹配matchT后若直接匹配结束标记,是否直接结束
-            tempMapB14_1.put("isCompSpace","true");
-            //实现替换功能
+            tempMapB14_1.put("matchEndOver","true"); //匹配matchT后,先不往下进行,此时匹配结束标记,匹配则直接结束
+            tempMapB14_1.put("isCompSpace","true");//空格控制缩进
             Map<String,String> repFirB14_1=new HashMap<String,String>();
             repFirB14_1.put("^WARNING ","");
             repFirB14_1.put("^CAUTION ","");
-            tempMapB14_1.put("replaceV",repFirB14_1);
+            tempMapB14_1.put("replaceV",repFirB14_1); //实现替换功能
             temListB14.add(tempMapB14_1);
             Map tempMapB14_2=new HashMap();
             tempMapB14_2.put("tempKey","TABLET");//对应模板值
@@ -487,7 +492,23 @@ public class FormPdf {
             tempMapB14_2.put("matchEndTable","true");//结束标记是否匹配表头
             tempMapB14_2.put("endMatch","^SUBTASK \\S+-\\S+-\\S+-\\S+-\\S+$|^TASK \\S+-\\S+-\\S+-\\S+-\\S+$|END OF TASK|^\\([a-z0-9]+\\)|^[A-Z]\\. |^EWIS$|^NOTE:");//匹配结束
             tempMapB14_2.put("isChangeIndex","true");//改变i为当前行
+            tempMapB14_2.put("continueMatch","true");//未匹配此跳过继续匹配下一个
             temListB14.add(tempMapB14_2);
+
+            Map tempMapB14_3=new HashMap();
+            tempMapB14_3.put("tempKey","IMAGET");//对应模板值
+            tempMapB14_3.put("matchT","^Table \\d+");
+            tempMapB14_3.put("superaddMatchT","^\\S+Table \\d+");
+            tempMapB14_3.put("superaddIndexI",-1);
+            tempMapB14_3.put("superaddType","add");
+            tempMapB14_3.put("indexI",0);//图片从行哪开始
+            tempMapB14_3.put("valType","image");//值类型:图片image
+            tempMapB14_3.put("matchEndTable","true");//结束标记是否匹配表头
+            tempMapB14_3.put("endMatch","^SUBTASK \\S+-\\S+-\\S+-\\S+-\\S+$|END OF TASK|^\\([a-z0-9]+\\)|^[A-Z]\\. |^EWIS$|^NOTE:");//匹配结束
+            tempMapB14_3.put("isChangeIndex","true");//改变i为当前行
+            tempMapB14_3.put("noMatchTOver","true");
+            temListB14.add(tempMapB14_3);
+
         boRule14.put("templateList",temListB14);
         ruleBoeing.add(boRule14);
 
@@ -555,25 +576,27 @@ public class FormPdf {
         tableB6.put("continueVal", Arrays.asList("^\\(Continued\\)$"));
         tableBoeing.put("Row Col Number Name",tableB6);
 
-        Map<String,Object> tableB7=new HashMap<String,Object>();
+        /*Map<String,Object> tableB7=new HashMap<String,Object>();
         List<String> tableMB7=new ArrayList<String>();
         tableMB7.add("([A-Z][A-Z0-9]+ )?([A-Z][A-Z0-9]+ )?([0-9\\- ,]+)?([A-Z].+)?");
         tableB7.put("colMatch",tableMB7);//列值获取方式
         tableB7.put("valNVL","add");
         tableB7.put("indBlankAdd",0);
         tableB7.put("continueVal", Arrays.asList("^\\(Continued\\)$"));
-        tableBoeing.put("WIRE_BUNDLE CONNECTOR WDM PNL_OR_MODULE",tableB7);
+        tableBoeing.put("WIRE_BUNDLE CONNECTOR WDM PNL_OR_MODULE",tableB7);*/
 
         boeingMap.put("tableRule",tableBoeing);
         //用空格排版(负数表当前行不变,下行再多空格)
+        //注意:会默认下一行加3个空格
         Map<String,Integer> spaceRuleBoeing=new HashMap<String,Integer>();
         spaceRuleBoeing.put("^\\d\\. ",0);
-        spaceRuleBoeing.put("^[A-Z]\\. ",3);//两个空格
+        spaceRuleBoeing.put("^[A-Z]\\. ",3);
         spaceRuleBoeing.put("^TASK \\S+-\\S+-\\S+-\\S+-[^\\.\\s]+$",2);
-        spaceRuleBoeing.put("^\\(\\d+\\) ",6);//五个空格
+        spaceRuleBoeing.put("^\\(\\d+\\) ",6);
         spaceRuleBoeing.put("^SUBTASK \\S+-\\S+-\\S+-\\S+-\\S+$",6);
-        spaceRuleBoeing.put("^\\([a-z]\\) ",9);//八个空格
-        spaceRuleBoeing.put("^(\\S+ )?NOTE: ",-3);
+        spaceRuleBoeing.put("^\\([a-z]\\) ",9);
+        spaceRuleBoeing.put("^\\[0-9]+\\)",12);
+        spaceRuleBoeing.put("^(\\S+ )?NOTE:",-3);
         boeingMap.put("spaceRule",spaceRuleBoeing);
 
         // END OF TASK 解析出来没带---;一个word会有多个 如 TASK 05-55-25-200-804  表其结束
@@ -584,12 +607,12 @@ public class FormPdf {
         规则汇总
             未实现功能
             autoAddOne //匹配后下标是否自动加1(此功能暂时未写)
-            noMatchTOver //是根据 matchT,就没匹配到内容,直接结束此(此还没实现过)
            通用
                tempKey //对应模板值
                matchT   //匹配开始的正则
                valType  //值类型:单行 single ,多行 rowset ,复合 composite,区块对 sections,表table
-               continueMatch    //未匹配表跳过继续匹配下一个(猜:仅限一级匹配规则)
+               continueMatch    //未匹配此,跳过继续匹配下一个(猜:仅限一级匹配规则和区块对里的多规则)
+               noMatchTOver  根据 matchT,就没匹配到内容,直接结束此
            单匹配
                indexI   //需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
                matchI   //被提取值正则匹配规则,具名组匹配提值
@@ -602,12 +625,19 @@ public class FormPdf {
                matchEndTable   //结束标记是否匹配表头
                noMatchIOver
                     //现就多行如此:一开始根据matchI,就没匹配到内容,直接结束此;(此时:matchT一般设为其前必有元素;)
-                    //noMatchTOver 是根据 matchT,就没匹配到内容,直接结束此(此还没实现过)
                 colIndexWay //现就多行实现此(要和 colHeadMatch 联用);值获取方式根据列去获取(即根据解析出的 rows行数据[下标]去提取值)
                 colHeadMatch    //如上用到此;根据空格获取数组,值与行的每一列比对,若在列有此下标记录在集合里,每次取值(默认整行数值)根据多下标提值并拼接返回
-                matchEndOver   //匹配matchT后若直接匹配结束标记,是否直接结束
+                matchEndOver   //匹配matchT后,先不往下进行,此时匹配结束标记,匹配则直接结束
                 isCompSpace	//是否校验排版规则,给前面赋值空格实现排版
                 replaceV //根据正则替换数值(拨乱反正),("replaceV",Map<String,String> map);
+           图片
+                indexI  //图片从行哪开始
+                matchEndTable
+                endMatch
+                isChangeIndex
+                superaddType 值:all superaddMatchT MatchT 都匹配方为匹配正确 ; add 当MatchT不匹配时的追加匹配
+                    superaddMatchT 辅助匹配规则存在,当MatchT不匹配时的二次匹配(配套指定如下)
+                    superaddIndexI 相较于当前行和哪行匹配(-1 表上一行)
            复合匹配
                 compositeList   //复合的规则
            区块对
@@ -625,7 +655,7 @@ public class FormPdf {
                 没设 valNVL, 直接赋值(猜:现默认是,列值都非空是新增数据)(后期可写匹配某成功直接新增)
             setMat //列与具名组匹配对应规则;
             .put("MANUAL_NO REFERENCE DESIGNATION",table3); //key是表列
-            continueVal //匹配则直接跳过此  ("continueVal",List<String> list);
+            continueVal //表匹配后,里内容则匹配此规则直接跳过此行  ("continueVal",List<String> list);
             indBlankAdd  ("indBlankAdd",0)//从0开始  --用于处理列垂直对齐获取数据不准确
                 //设置了indBlankAdd 表会去校验单元格是否有垂直对齐的方式,
                     如上设置参是0,则会在校验第一条数据的0列是否是空,直至不是空,记录一下数a(赋给indBlankAddIndex)(是0则不是垂直对齐)
@@ -687,11 +717,11 @@ public class FormPdf {
         //System.out.println(filePath);
         XWPFTemplate template = XWPFTemplate.compile(templatePath);
         Map<String, Object> params = new HashMap<String, Object>();
-        // 普通文本赋值|table的赋值
+        // 普通文本赋值|table|图片的赋值
         Map<String,String> vallMap=(Map)analyPdfM.get("vall");
         for(String key:vallMap.keySet()){
             String value = vallMap.get(key);
-            if(value.indexOf("table_")!=-1){
+            if("table_".equals(value.substring(0,6>value.length()?value.length():6))){
                 //说明是table表
                 Map<String,Map> tableMap=(Map)analyPdfM.get("tableMap");//value是对表的说明,key是UUID,如 table_uuid值
                 if(tableMap.containsKey(value)){
@@ -702,6 +732,10 @@ public class FormPdf {
                 }else{
                     params.put(key, value);
                 }
+            }else if("imageSingle_".equals(value.substring(0,12>value.length()?value.length():12))){
+                //说明是图片
+                //str值例 imageSingle_IMW:100IMH:200IMEND;图片值
+                strToImage(value,key,params);
             }else{
                 params.put(key, value);
             }
@@ -1083,7 +1117,7 @@ public class FormPdf {
      * @author 子火
      * @Date 2021-01-08
      */
-    public void analyPdf(Page page,Map<String,Object> analyPdfM,int pageTypeN,List<Map<String,Object>> ruleList){
+    public void analyPdf(Page page,Map<String,Object> analyPdfM,int pageTypeN,List<Map<String,Object>> ruleList,PDDocument document,int pageN){
         //根据流的方式去获取数据
         BasicExtractionAlgorithm sea = new BasicExtractionAlgorithm();
         List<Table> talist=sea.extract(page);
@@ -1166,12 +1200,12 @@ public class FormPdf {
             }
             //对数据的处理
             //System.out.println(rowV);
-            matchRule(temporaryMap,ruleList,analyPdfM);
+            matchRule(temporaryMap,ruleList,analyPdfM,document,pageN);
         }
         //System.out.println("-------------------------------");
     }
     //操作下标
-    public void matchRule(Map temporaryMap,List<Map<String,Object>> ruleList,Map<String,Object> analyPdfM){
+    public void matchRule(Map temporaryMap,List<Map<String,Object>> ruleList,Map<String,Object> analyPdfM,PDDocument document,int pageN){
         //现循环所在的行数
         int index=(int)temporaryMap.get("index");
         //下次循环的行数
@@ -1185,7 +1219,7 @@ public class FormPdf {
             //当前匹配完成则 mapRule.size() 会为0-会继续匹配下一个规则;
             // (未完,已完,已开始未完结)
             //匹配规则已开始未完结,则  mapRule.put("donotEnd","true");
-            matchStr(mapRule,temporaryMap,analyPdfM,null);
+            matchStr(document,pageN,mapRule,temporaryMap,analyPdfM,null);
             //完结当前规则时,当前行继续匹配下一个规则
             if("true".equals(mapRule.get("alreadyOver"))){
                 continue;
@@ -1646,11 +1680,51 @@ public class FormPdf {
                         break;
                     }
                 }
+                String continueMatch=(String)mapRule.get("continueMatch");
+                if("true".equals(continueMatch)){ //设置true 则当不匹配表时,终止当前循环行数据,继续匹配下一条规则
+                    break;
+                }
             }
         }
     }
+    public boolean superaddF(Map<String, Object> mapRule,List<List<String>> rows,int index,int initI){
+        boolean st;
+        int superaddIndexI=(int) mapRule.get("superaddIndexI");
+        String superaddMatchT=(String) mapRule.get("superaddMatchT");
+        String superaddRowV=getRowSte(rows,index+superaddIndexI,initI);
+        Pattern pat = Pattern.compile(superaddMatchT);
+        Matcher mat = pat.matcher(superaddRowV);
+        st = mat.find();
+        return st;
+    }
+    //匹配matchT的规则;superaddMatchT是追加匹配
+    public boolean matchT(String matchT,String rowV,Map<String, Object> mapRule,List<List<String>> rows,int index,int initI){
+        boolean mt;
+        Pattern pattern = Pattern.compile(matchT);
+        Matcher matcher = pattern.matcher(rowV);
+        mt = matcher.find();
+        String superaddType=(String) mapRule.get("superaddType");
+        if(StringUtils.isNotBlank(superaddType)){
+            if("all".equals(superaddType)){
+                if(mt){ // 都匹配方为匹配正确
+                    boolean b = superaddF(mapRule, rows, index, initI);
+                    if(!b){
+                        mt=false;
+                    }
+                }
+            }else if("add".equals(superaddType)){
+                boolean b = superaddF(mapRule, rows, index, initI);
+                if(!mt){ //当MatchT不匹配时,superaddMatchT匹配,认为是匹配的
+                    if(b){
+                        mt=true;
+                    }
+                }
+            }
+        }
+        return mt;
+    }
     //返回当前匹配的字符串
-    public String matchStr(Map<String, Object> mapRule,Map temporaryMap,Map<String,Object> analyPdfM,Map sectionsMapT){
+    public String matchStr(PDDocument document,int pageN,Map<String, Object> mapRule,Map temporaryMap,Map<String,Object> analyPdfM,Map sectionsMapT){
         String resStr="";
         //现行数
         int index=(int)temporaryMap.get("index");
@@ -1661,10 +1735,10 @@ public class FormPdf {
         //当前行数据
         String rowV=getRowSte(rows,index,initI);
         //测试
-        /*if(rowV.indexOf("(if")!=-1){
+        if(pageN==110){//rowV.indexOf("(if")!=-1){
             System.out.println(rowV);
-        }*/
-        //值类型:单行 single ,多行 rowset ,复合 composite,区块对 sections,表 table
+        }
+        //值类型:单行 single ,多行 rowset ,复合 composite,区块对 sections,表 table,图片
         String valType=(String) mapRule.get("valType");
         //结束标记是否匹配表头
         String matchEndTable=(String) mapRule.get("matchEndTable");
@@ -1675,18 +1749,29 @@ public class FormPdf {
         boolean rs =false;
         //上次的规则未完待续判断
         String donotEnd=(String) mapRule.get("donotEnd");
+        //是否匹配
+        String matchT=(String) mapRule.get("matchT");//匹配开始的正则
+        //是否是为尾垃圾数据
+        boolean isendrow = isEndrow(rowV);
+        //是否匹配的处理
+        if(!isendrow&&StringUtils.isNotBlank(matchT)){
+            rs=matchT(matchT,rowV,mapRule,rows,index,initI);
+            if(!rs){ //若不匹配
+                //rs为false表未匹配,noMatchTOver为true直接结束此
+                String noMatchTOver=(String) mapRule.get("noMatchTOver");
+                if("true".equals(noMatchTOver)){
+                    //标记为结束
+                    mapRule.put("alreadyOver","true");
+                    mapRule.put("donotEnd","false");
+                    return resStr;
+                }
+            }
+        }
         if("table".equals(valType)){
             //table的匹配方法
             matchStrTable(mapRule,temporaryMap,analyPdfM,sectionsMapT,matchEndTable,tableRule,index,initI,rows,donotEnd);
         }else if("sections".equals(valType)){   //区块对(只要没 alreadyOver ,此时重新又匹配到了就认为是个新的)
             String isFirstS=(String) mapRule.get("isFirstS");
-            String matchT=(String) mapRule.get("matchT");//匹配开始的正则
-            if(StringUtils.isBlank(matchT)){
-                return resStr;
-            }
-            Pattern pattern = Pattern.compile(matchT);
-            Matcher matcher = pattern.matcher(rowV);
-            rs = matcher.find();
             //又不匹配,又没开启
             if(!rs&&(!"true".equals(donotEnd))){
                 return resStr;
@@ -1695,7 +1780,7 @@ public class FormPdf {
             Map sectionsMap=new HashMap();
             String tempKey=(String) mapRule.get("tempKey");//对应模板值
             List<Map> list =new ArrayList<Map>();
-            if("true".equals(isFirstS)){//是首区块对
+            if("true".equals(isFirstS)){ //是首区块对
                 //是首提取对应的模板集合
                 Map<String,List<Map>> sections=(Map)analyPdfM.get("sections");//N个模板所放位置
                 list = sections.get(tempKey);//提取出叫"tempKey" 模板集合
@@ -1747,7 +1832,7 @@ public class FormPdf {
                 if("true".equals(tempValMap.get("alreadyOver"))){//失效的匹配规则过滤
                     continue;
                 }
-                matchStr(tempValMap, temporaryMap, analyPdfM,sectionsMap);
+                matchStr(document,pageN,tempValMap, temporaryMap, analyPdfM,sectionsMap);
                 if("true".equals(tempValMap.get("alreadyOver"))){
                     continue;
                 }else{
@@ -1762,13 +1847,6 @@ public class FormPdf {
             }
         }else{
             if(!"true".equals(donotEnd)){
-                String matchT=(String) mapRule.get("matchT");//匹配开始的正则
-                if(StringUtils.isBlank(matchT)){
-                    return resStr;
-                }
-                Pattern pattern = Pattern.compile(matchT);
-                Matcher matcher = pattern.matcher(rowV);
-                rs = matcher.find();
                 if(rs){
                     //此规则开启;
                     mapRule.put("donotEnd","true");
@@ -1816,7 +1894,55 @@ public class FormPdf {
                     //标记为结束
                     mapRule.put("alreadyOver","true");
                     mapRule.put("donotEnd","false");
-                }else if("rowset".equals(valType)){
+                }else if("image".equals(valType)){
+                    //图片是在这一页上应该是有始有终(就不应该有跨页问题,即使跨页也要多个图,图片不能跨页生成)
+                    Integer indexI=0;
+                    String rowsetStr="";
+                    //改变为当前行
+                    String isChangeIndex=(String) mapRule.get("isChangeIndex");
+                    indexI=(Integer) mapRule.get("indexI");
+                    int newIndex=index+indexI;
+                    int fontIndexTop=0;
+                    int fontIndexBottom=0;
+                    for (int i=newIndex;i<rows.size();i++){
+                        //行数据
+                        String rowsetV =getRowSte(rows,i,initI);
+                        if(i==newIndex){ //第一次匹配值
+                            fontIndexTop = getFontIndex(i, rows,"top");
+                        }
+                        if(StringUtils.isBlank(rowsetV)){
+                            if("true".equals(isChangeIndex)){
+                                //更改当前下标
+                                setIndex(temporaryMap,i+1);
+                            }
+                            continue;
+                        }
+                        //是否是尾的垃圾数据
+                        boolean endrow = isEndrow(rowsetV);
+                        //匹配结束标记
+                        boolean rsEndMatch=isEndMatch(mapRule,rowsetV);
+                        //结束标记是否匹配表头
+                        boolean matchEndT=matchTabH(matchEndTable,rowsetV,tableRule);
+                        if(rsEndMatch||matchEndT||endrow){
+                            //获取底
+                            fontIndexBottom = getFontIndex(i, rows,"bottom");
+                            matchEnd(isChangeIndex,i,index,temporaryMap,mapRule);//触发结束
+                            break;
+                        }
+                    }
+                    rowsetStr = getImageStr(document, pageN, fontIndexTop, fontIndexBottom);
+                    //此方法return出去的值
+                    resStr=rowsetStr;
+                    if(StringUtils.isNotBlank(tempKey)){
+                        if(sectionsMapT!=null){ //说明是从区块对传过来的
+                            sectionsMapT.put(tempKey,rowsetStr);
+                        }else{
+                            Map<String,String> vallMap=(Map)analyPdfM.get("vall");
+                            vallMap.put(tempKey,rowsetStr);
+                        }
+                    }
+                }
+                else if("rowset".equals(valType)){
                     Integer indexI=0;
                     //改变为当前行
                     String isChangeIndex=(String) mapRule.get("isChangeIndex");
@@ -1999,7 +2125,7 @@ public class FormPdf {
                             conN++;
                             continue;
                         }
-                        String s = matchStr(Effectivity, temporaryMap,analyPdfM,null);
+                        String s = matchStr(document,pageN,Effectivity, temporaryMap,analyPdfM,null);
                         if("true".equals(Effectivity.get("alreadyOver"))){
                             conN++;
                         }
@@ -2026,6 +2152,67 @@ public class FormPdf {
         }
         return resStr;
     }
+    public String getImageStr(PDDocument document,int pageN,int fontIndexTop, int fontIndexBottom){
+        String imageStr="";
+        try {
+            PDFRenderer renderer = new PDFRenderer(document);
+            BufferedImage image = renderer.renderImageWithDPI((pageN-1),73);
+            //image=image.getSubimage(99,34,100,100);
+            int w = image.getWidth();
+            int height = image.getHeight();
+            if(fontIndexBottom>height){ fontIndexBottom=height; }
+            int h=fontIndexBottom-fontIndexTop;
+            image=image.getSubimage(0,fontIndexTop,w,h);
+            ByteArrayOutputStream os = new ByteArrayOutputStream();
+            ImageIO.write(image, "png", os);
+            byte[] bytes = os.toByteArray();
+            os.close();
+            String base64 = Helper.byteToBase64(bytes);
+            //本地图片
+            //ImageIO.write(image, "PNG", new File("C:/Users/18722/Desktop/tolg/cord/word/"+pageN+"x"+fontIndexTop+"x"+fontIndexBottom+".png"));
+            //返回例 imageSingle_IMW:100IMH:200IMEND;图片值
+            if(StringUtils.isNotBlank(base64)){
+                imageStr="imageSingle_IMW:"+w+"IMH:"+h+"IMEND;"+base64;
+            }
+        }catch (Exception e){
+            String strE=Helper.exceptionToString(e);
+            logger.error(strE);
+            String strEInfo=strE.substring(0,500>strE.length()?strE.length():500);
+            System.out.println(strEInfo);
+        }
+        return imageStr;
+    }
+    //已知行,获取此行第一个字对应下标
+    public int getFontIndex(int ind,List<List<String>> rows,String tb){
+        //获取顶坐标
+        StringBuilder sb=new StringBuilder();
+        for (int r=0;r<ind;r++){ //循环行
+            List<String> rowscol=rows.get(r);
+            for(int rc=0;rc<rowscol.size();rc++){ //循环列
+                String str=rowscol.get(rc);
+                sb.append(str);
+            }
+        }
+        //此处没有 .replaceAll("−","-"),没必要
+        String rowStr=sb.toString().replaceAll(" ","");
+        int fontS=rowStr.length();
+        TextElement textElement = pageTextT.get(fontS);
+        /*StringBuilder sbe=new StringBuilder();
+        for (int r=0;r<pageTextT.size();r++){ //循环行
+            String val=pageTextT.get(r).getText();
+            sbe.append(val);
+        }*/
+
+        int n=0;
+        if("top".equals(tb)){
+            double y = textElement.getY();
+            n=(int)Math.floor(y);
+        }else {
+            double y = textElement.getBottom();
+            n=(int)Math.ceil(y);
+        }
+        return n;
+    }
     //替换功能的实现
     public String replaceM(Map<String,String>replaceV,String rowvl){
         if(replaceV!=null&&replaceV.size()>0){
@@ -2051,14 +2238,14 @@ public class FormPdf {
                 Integer integer = spaceRule.get(key);
                 if(integer>0){
                     can=integer;
-                }else{
+                }else if(integer!=null){
                     //若是负数,当前行不变空格数.下一行空格数变
                     Integer spaceN =(Integer) mapRule.get("spaceN");
                     if(spaceN!=null){
                         can=spaceN;
                     }
                     //负数转正数
-                    integer=spaceN-integer;
+                    integer=can-integer;
                 }
                 value=StringUtils.leftPad("",can," ")+value;
                 bol=false;
@@ -2069,8 +2256,8 @@ public class FormPdf {
         if(bol){
             Integer integer =(Integer)mapRule.get("spaceN");
             if(integer!=null){
-                //比存值多俩空格
-                integer=integer+2;
+                //比存值多三空格
+                integer=integer+3;
                 value=StringUtils.leftPad("",integer," ")+value;
             }
         }
@@ -2114,7 +2301,36 @@ public class FormPdf {
         boolean rsEndMatch = matcherEndMatch.find();
         return  rsEndMatch;
     }
-    //集合里包括表转为表数据(参1是List或Map此才生效)
+    public void strToImage(String str,String key,Map<String,Object> map){
+        int imageW=10;
+        int imageH=10;
+        String base64="";
+        String p="imageSingle_IMW:(\\d+)IMH:(\\d+)IMEND;([\\s\\S]+)";
+        Pattern pattern = Pattern.compile(p);
+        Matcher matcherRowset = pattern.matcher(str);
+        if(matcherRowset.find()){
+            String v1= matcherRowset.group(1);
+            String v2= matcherRowset.group(2);
+            String v3 = matcherRowset.group(3);
+            if(Helper.isInt(v1,false)){
+                imageW=Integer.parseInt(v1);
+            }
+            if(Helper.isInt(v2,false)){
+                imageH=Integer.parseInt(v2);
+            }
+            if(StringUtils.isNotBlank(v3)){
+                base64=v3;
+            }
+        }
+        if(StringUtils.isNotBlank(base64)){
+            byte[] bytes =Helper.base64ToByte(base64);
+            //不设宽高图会没有
+            System.out.println(base64.length());
+            PictureRenderData pictureRenderData = Pictures.ofBytes(bytes, PictureType.PNG).size(imageW, imageH).create();
+            map.put(key, pictureRenderData);
+        }
+    }
+    //集合里包括表|图片转为表数据,图数据(参1是List或Map此才生效)
     public void forListToTable(Object obj,Map<String,Object> analyPdfM){
         if(obj instanceof Map){
             Map<String,Object> map=(Map)obj;
@@ -2125,7 +2341,7 @@ public class FormPdf {
                 }else if(value instanceof String){
                     //校验value是否是表uuid,是则value替换为表TableRenderData类
                     String str=(String)value;
-                    if(str.indexOf("table_")!=-1){
+                    if("table_".equals(str.substring(0,6>str.length()?str.length():6))){
                         //说明是table表
                         Map<String,Map> tableMap=(Map)analyPdfM.get("tableMap");//value是对表的说明,key是UUID,如 table_uuid值
                         //根据uuid找对应的表解释数据
@@ -2133,6 +2349,10 @@ public class FormPdf {
                             Map tabMap = tableMap.get(str);
                             putTable(map,tabMap,key);
                         }
+                    }else if("imageSingle_".equals(str.substring(0,12>str.length()?str.length():12))){//这样是不是比 indexOf方式 更快
+                        //说明是图片
+                        //str值例 imageSingle_IMW:100IMH:200IMEND;图片值
+                        strToImage(str,key,map);
                     }
                 }
             }
@@ -2241,7 +2461,7 @@ public class FormPdf {
             //图数据保存
             saveImageData(analyPdfM,document,pageN);
         }else{
-            analyPdf(page,analyPdfM,pageTypeN,ruleList);
+            analyPdf(page,analyPdfM,pageTypeN,ruleList,document,pageN);
         }
         return bol;
     }
@@ -2264,6 +2484,8 @@ public class FormPdf {
             }
             return false;
         }).collect(Collectors.toList());
+        //赋值
+        setPageTextT(pageText);
         //取前260个字
         String str="";
         for(int i=0;i<pageText.size()&&i<260;i++){
