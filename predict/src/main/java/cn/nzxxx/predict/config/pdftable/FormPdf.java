@@ -695,7 +695,10 @@ public class FormPdf {
             talist.add(tablRrow);
         }
         RowRenderData[] rowRenderData = talist.toArray(new RowRenderData[talist.size()]);
-        setMap.put(key, Tables.create(rowRenderData));
+        TableRenderData tableRenderData = Tables.of(rowRenderData).mergeRule(null).create();
+        TableStyle tableStyle=new TableStyle();tableStyle.setWidth("98%");
+        tableRenderData.setTableStyle(tableStyle);
+        setMap.put(key, tableRenderData);
     }
     /**
      * 生成word
