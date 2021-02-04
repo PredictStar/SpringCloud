@@ -306,7 +306,8 @@ public class FormPdf {
         pageTypeBM.put("MECHINSP",2);
         pageTypeBM.put("(Continued)",2);
         pageTypeBM.put("TAILNUMBERWORKAREA",1);
-        //pageTypeBM.put("AIRLINECARDNO",0);//图片
+        pageTypeBM.put("\\d+-\\d+-\\d+-\\d+[A-Z]\\.",3);
+        //pageTypeBM.put("AIRLINECARDNO",9);//图片
         boeingMap.put("pageType",pageTypeBM);
 
         List<Map<String,Object>> ruleBoeing=new ArrayList<Map<String,Object>>();
@@ -524,6 +525,7 @@ public class FormPdf {
         tableMB1.add("(SWPM \\d+, Standard Wiring )(.+)");
         tableMB1.add("(SWPM \\S+ )(.+)");
         tableMB1.add("(WDM \\S+ )(.+)");
+        tableMB1.add("()(.*\\([^\\(\\)]+\\).*)");
         tableMB1.add("(\\S+)(.+)?");
         tableB1.put("colMatch",tableMB1);//列值获取方式
         tableB1.put("valNVL","add");// //up 列无值时,取上行值; add 无值时和上行合并(有第二列空的情况)
@@ -532,7 +534,7 @@ public class FormPdf {
 
         Map<String,Object> tableB2=new HashMap<String,Object>();
         List<String> tableMB2=new ArrayList<String>();
-        tableMB2.add("([0-9A-Z]+ )?((\\S[^A-Z ]*$|\\S[^A-Z ]* |\\S-\\S[^A-Z ]* ?|BMS ?|NSBT ?|GPL\\S+ ?|DC-\\S+ ?|MS\\S+ ?)+)([A-Z]{1}[0-9A-Z\\-]+.*)?");
+        tableMB2.add("([0-9A-Z]+ )?((\\S[^A-Z ]*$|\\S[^A-Z ]* |\\S-\\S[^A-Z ]* ?|BMS |NSBT ?|GPL\\S+ ?|DC-\\S+ ?|MS\\S+ ?)+)([A-Z]{1}[0-9A-Z\\-]+.*)?");
         List<Integer> setMatB2 = Arrays.asList(1, 2, 4);
         tableB2.put("setMat",setMatB2);//列与具名组匹配对应规则;
         tableB2.put("colMatch",tableMB2);//列值获取方式
@@ -837,9 +839,6 @@ public class FormPdf {
                     Helper.nvlString(vallMap.get("MrmReference"))+"','"+
                     Helper.nvlString(vallMap.get("Note"))+"','"+
                     analyPdfM.get("VERSION_DATE")+"')";
-            //测试
-            //System.out.println(vallMap.get("Note")==null);
-            //System.out.println("null".equals(vallMap.get("Note")));
             jdbcTemplate.update(crjCardSql);
             //主键
             CARD_ID = String.valueOf(getCRJKey(uuidd,jdbcTemplate));
@@ -867,7 +866,7 @@ public class FormPdf {
                             if(strings.length>1){
                                 string1 = strings[1];
                             }
-                            String toolSql ="insert into crj_card_tool(CRJ_CARD_ID,REFERENCE,DESIGNATION) values ("+CARD_ID+",'"+string0+"','"+string1+"')";
+                            String toolSql ="insert into crj_card_tool(CRJ_CARD_ID,REFERENCE,DESIGNATION) values ("+CARD_ID+",'"+string0.replaceAll("'","''")+"','"+string1.replaceAll("'","''")+"')";
                             jdbcTemplate.update(toolSql);
                         }
                     }
@@ -885,7 +884,7 @@ public class FormPdf {
                             if(strings.length>1){
                                 string1 = strings[1];
                             }
-                            String materialsSql ="insert into crj_card_materials(CRJ_CARD_ID,REFERENCE,DESIGNATION) values ("+CARD_ID+",'"+string0+"','"+string1+"')";
+                            String materialsSql ="insert into crj_card_materials(CRJ_CARD_ID,REFERENCE,DESIGNATION) values ("+CARD_ID+",'"+string0.replaceAll("'","''")+"','"+string1.replaceAll("'","''")+"')";
                             jdbcTemplate.update(materialsSql);
                         }
                     }
@@ -908,7 +907,7 @@ public class FormPdf {
                             if(strings.length>2){
                                 string2 = strings[2];
                             }
-                            String referenceSql ="insert into crj_card_reference(CRJ_CARD_ID,MANUAL_NO,REFERENCE,DESIGNATION) values ("+CARD_ID+",'"+string0+"','"+string1+"','"+string2+"')";
+                            String referenceSql ="insert into crj_card_reference(CRJ_CARD_ID,MANUAL_NO,REFERENCE,DESIGNATION) values ("+CARD_ID+",'"+string0.replaceAll("'","''")+"','"+string1.replaceAll("'","''")+"','"+string2.replaceAll("'","''")+"')";
                             jdbcTemplate.update(referenceSql);
                         }
                     }
@@ -961,7 +960,7 @@ public class FormPdf {
                             if(strings.length>1){
                                 string1 = strings[1];
                             }
-                            String toolSql ="insert into boeing_card_tool(BOEING_CARD_ID,REFERENCE,DESCRIPTION) values ("+CARD_ID+",'"+string0+"','"+string1+"')";
+                            String toolSql ="insert into boeing_card_tool(BOEING_CARD_ID,REFERENCE,DESCRIPTION) values ("+CARD_ID+",'"+string0.replaceAll("'","''")+"','"+string1.replaceAll("'","''")+"')";
                             jdbcTemplate.update(toolSql);
                         }
 
@@ -985,7 +984,7 @@ public class FormPdf {
                             if(strings.length>2){
                                 string2 = strings[2];
                             }
-                            String materialsSql ="insert into boeing_card_materials(BOEING_CARD_ID,REFERENCE,DESCRIPTION,SPECIFICATION) values ("+CARD_ID+",'"+string0+"','"+string1+"','"+string2+"')";
+                            String materialsSql ="insert into boeing_card_materials(BOEING_CARD_ID,REFERENCE,DESCRIPTION,SPECIFICATION) values ("+CARD_ID+",'"+string0.replaceAll("'","''")+"','"+string1.replaceAll("'","''")+"','"+string2.replaceAll("'","''")+"')";
                             jdbcTemplate.update(materialsSql);
                         }
                     }
@@ -1004,7 +1003,7 @@ public class FormPdf {
                             if(strings.length>1){
                                 string1 = strings[1];
                             }
-                            String referenceSql ="insert into boeing_card_reference(BOEING_CARD_ID,REFERENCE,TITLE) values ("+CARD_ID+",'"+string0+"','"+string1+"')";
+                            String referenceSql ="insert into boeing_card_reference(BOEING_CARD_ID,REFERENCE,TITLE) values ("+CARD_ID+",'"+string0.replaceAll("'","''")+"','"+string1.replaceAll("'","''")+"')";
                             jdbcTemplate.update(referenceSql);
                         }
                     }
@@ -1467,7 +1466,7 @@ public class FormPdf {
                     }
                 }
                 //测试
-                /*if(rowsetV.indexOf("VENDOR")!=-1){
+                /*if(rowsetV.indexOf("(2) Open this access panel:")!=-1){
                     System.out.println(rowsetV);
                 }*/
                 //表头值
@@ -1679,11 +1678,12 @@ public class FormPdf {
                         mapRule.put("donotEnd","false");
                         break;
                     }
+                    String continueMatch=(String)mapRule.get("continueMatch");
+                    if("true".equals(continueMatch)){ //设置true 则当不匹配表时,终止当前循环行数据,继续匹配下一条规则
+                        break;
+                    }
                 }
-                String continueMatch=(String)mapRule.get("continueMatch");
-                if("true".equals(continueMatch)){ //设置true 则当不匹配表时,终止当前循环行数据,继续匹配下一条规则
-                    break;
-                }
+
             }
         }
     }
@@ -1735,9 +1735,9 @@ public class FormPdf {
         //当前行数据
         String rowV=getRowSte(rows,index,initI);
         //测试
-        if(pageN==110){//rowV.indexOf("(if")!=-1){
+        /*if(pageN==13&&rowV.indexOf("Name/Location")!=-1){
             System.out.println(rowV);
-        }
+        }*/
         //值类型:单行 single ,多行 rowset ,复合 composite,区块对 sections,表 table,图片
         String valType=(String) mapRule.get("valType");
         //结束标记是否匹配表头
@@ -2492,19 +2492,25 @@ public class FormPdf {
             TextElement textElement = pageText.get(i);
             str+=textElement.getText();
         }
-        Map<String,Object> crjMap=mapp.get(fileType);
+        Map<String,Object> fileTypeMap=mapp.get(fileType);
         //页面类型匹配规则获取
-        Map<String, Integer> pageTypeM=(LinkedCaseInsensitiveMap)crjMap.get("pageType");
+        Map<String, Integer> pageTypeM=(LinkedCaseInsensitiveMap)fileTypeMap.get("pageType");
         if(str.indexOf("(7)(8)(9)(10)(11)")!=-1){//识别测试页;crj是如此-前260字包含其表是测试页面
             return typeN;
         }
         for(String key:pageTypeM.keySet()){
-            //int i="青春无悔".indexOf("春无");返回1;
+            Pattern pattern = Pattern.compile(key);
+            Matcher matcher = pattern.matcher(str);
+            if(matcher.find()){
+                typeN=pageTypeM.get(key);
+                return typeN;
+            }
+           /* //int i="青春无悔".indexOf("春无");返回1;
             int indexx = str.indexOf(key);
             if(indexx!=-1){
                 typeN=pageTypeM.get(key);
                 return typeN;
-            }
+            }*/
         }
         return typeN;
     }
@@ -2582,18 +2588,21 @@ public class FormPdf {
             //行数据
             String rowV=sb.toString().trim().replaceAll("−","-").replaceAll("\\s{2,}"," ");
             //System.out.println(fileType);
-            String p;
-            int jumpN;
+            String p="";
+            int jumpN=0;
             if("boeing".equals(fileType)){
                 //首页
                 if(pageTypeN==1){
                     p="TASK CARDS";
                     jumpN=1;
-                }else {
+                }else if(pageTypeN==2){
                     p="BOEING CARD NO";
                     jumpN=3;
+                }else if(pageTypeN==3){
+                    p="BOEING CARD NO";
+                    jumpN=2;
                 }
-            }else{
+            }else if("crj".equals(fileType)){
                 //首页
                 if(pageTypeN==1){
                     p="MAINTENANCE TASK";
