@@ -36,7 +36,7 @@
         <commons-io.version>1.3.2</commons-io.version>
         <commons-net.version>3.6</commons-net.version>
         <joda-time.version>2.10.1</joda-time.version>
-        <org.apache.poi>4.1.0</org.apache.poi>
+        <org.apache.poi>4.1.2</org.apache.poi>
         <commons-fileupload.version>1.4</commons-fileupload.version>
         <jedis.version>3.0.1</jedis.version>
         <com.aliyun.oss>3.4.2</com.aliyun.oss>
@@ -99,13 +99,13 @@
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>-->
         <!--结束-->
-        <!-- WORD 模板操作 -->
+        <!-- WORD 模板操作 原是1.7.2 -->
         <dependency>
             <groupId>com.deepoove</groupId>
             <artifactId>poi-tl</artifactId>
-            <version>1.7.2</version>
+            <version>1.9.1</version>
         </dependency>
-        <!-- pdf解析 -->
+        <!-- jsp-api.jar -->
         <dependency>
             <groupId>technology.tabula</groupId>
             <artifactId>tabula</artifactId>
