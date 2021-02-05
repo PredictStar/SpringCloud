@@ -534,7 +534,8 @@ public class FormPdf {
 
         Map<String,Object> tableB2=new HashMap<String,Object>();
         List<String> tableMB2=new ArrayList<String>();
-        tableMB2.add("([0-9A-Z]+ )?((\\S[^A-Z ]*$|\\S[^A-Z ]* |\\S-\\S[^A-Z ]* ?|BMS |NSBT ?|GPL\\S+ ?|DC-\\S+ ?|MS\\S+ ?)+)([A-Z]{1}[0-9A-Z\\-]+.*)?");
+        //B-2 可在列3
+        tableMB2.add("([0-9A-Z]+ )?((\\S[^A-Z \\-]*$|\\S[^A-Z \\-]* |\\S-\\S[^A-Z ]+ ?|[A-Z][a-z]+-[A-Z][a-z]+ ?|BMS |NSBT ?|GPL\\S+ ?|DC-\\S+ ?|MS\\S+ ?)+)([A-Z]{1}[0-9A-Z\\-]+.*)?");
         List<Integer> setMatB2 = Arrays.asList(1, 2, 4);
         tableB2.put("setMat",setMatB2);//列与具名组匹配对应规则;
         tableB2.put("colMatch",tableMB2);//列值获取方式
@@ -696,7 +697,7 @@ public class FormPdf {
         }
         RowRenderData[] rowRenderData = talist.toArray(new RowRenderData[talist.size()]);
         TableRenderData tableRenderData = Tables.of(rowRenderData).mergeRule(null).create();
-        TableStyle tableStyle=new TableStyle();tableStyle.setWidth("98%");
+        TableStyle tableStyle=new TableStyle();tableStyle.setWidth("100%");
         tableRenderData.setTableStyle(tableStyle);
         setMap.put(key, tableRenderData);
     }
