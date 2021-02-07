@@ -604,7 +604,7 @@ public class FormPdf {
         boeingMap.put("spaceRule",spaceRuleBoeing);
 
         //图片页面的头和底坐标
-        boeingMap.put("imageTBY",Arrays.asList(100,706));
+        boeingMap.put("imageTBY",Arrays.asList(200,1412));
         boeingMap.put("imageW",660);//图片宽
         boeingMap.put("imageH",920);//图片高
         // END OF TASK 解析出来没带---;一个word会有多个 如 TASK 05-55-25-200-804  表其结束
@@ -788,7 +788,7 @@ public class FormPdf {
     public void saveImageData(Map<String, Object> analyPdfM,PDDocument document,int pageN)throws Exception{
         PDFRenderer renderer = new PDFRenderer(document);
         //参1:页数(从0开始),参2:设800(也可为100等猜:影响图片的清晰度,越小越模糊体积越小)
-        BufferedImage image = renderer.renderImageWithDPI((pageN-1),72);
+        BufferedImage image = renderer.renderImageWithDPI((pageN-1),144);
         //截取图片页面
         Map<String,Object> mMap=mapp.get(fileType);
         List<Integer> imageTBY=(List)mMap.get("imageTBY");
