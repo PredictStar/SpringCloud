@@ -298,15 +298,15 @@ public class FormPdf {
         //------------BOEING 开始--------------------
         Map<String,Object> boeingMap=new HashMap<String,Object>();
         boeingMap.put("temp","taskCardBoeingT.docx");//模板名称
-        boeingMap.put("imageW",660);//图片宽
-        boeingMap.put("imageH",960);//图片高
+
         //页面类型规则定义(1:word的首页;2:需解析的页面;剩余解析成图片(注意 analyPdfM 没值时图片数据先不赋进去))
         //下根据 indexOf 去匹配的
         Map<String, Integer> pageTypeBM=new LinkedCaseInsensitiveMap();
         pageTypeBM.put("MECHINSP",2);
-        pageTypeBM.put("(Continued)",2);
+        pageTypeBM.put("(Continued)",2);//2表:匹配行的下第三行是正文
         pageTypeBM.put("TAILNUMBERWORKAREA",1);
-        pageTypeBM.put("\\d+-\\d+-\\d+-\\d+[A-Z]\\.",3);
+        pageTypeBM.put("\\d+-\\d+-\\d+-\\d+[A-Z]\\.",3);//3表:匹配行的下第二行是正文
+        pageTypeBM.put("\\d+-\\d+-\\d+-\\d+ReferenceDescription",3);
         //pageTypeBM.put("AIRLINECARDNO",9);//图片
         boeingMap.put("pageType",pageTypeBM);
 
@@ -599,9 +599,14 @@ public class FormPdf {
         spaceRuleBoeing.put("^SUBTASK \\S+-\\S+-\\S+-\\S+-\\S+$",6);
         spaceRuleBoeing.put("^\\([a-z]\\) ",9);
         spaceRuleBoeing.put("^\\[0-9]+\\)",12);
+        spaceRuleBoeing.put("^END OF TASK$",48);
         spaceRuleBoeing.put("^(\\S+ )?NOTE:",-3);
         boeingMap.put("spaceRule",spaceRuleBoeing);
 
+        //图片页面的头和底坐标
+        boeingMap.put("imageTBY",Arrays.asList(100,706));
+        boeingMap.put("imageW",660);//图片宽
+        boeingMap.put("imageH",920);//图片高
         // END OF TASK 解析出来没带---;一个word会有多个 如 TASK 05-55-25-200-804  表其结束
         mapp.put("boeing",boeingMap);//对boeing的整体定义
 
@@ -628,30 +633,30 @@ public class FormPdf {
                matchEndTable   //结束标记是否匹配表头
                noMatchIOver
                     //现就多行如此:一开始根据matchI,就没匹配到内容,直接结束此;(此时:matchT一般设为其前必有元素;)
-                colIndexWay //现就多行实现此(要和 colHeadMatch 联用);值获取方式根据列去获取(即根据解析出的 rows行数据[下标]去提取值)
-                colHeadMatch    //如上用到此;根据空格获取数组,值与行的每一列比对,若在列有此下标记录在集合里,每次取值(默认整行数值)根据多下标提值并拼接返回
-                matchEndOver   //匹配matchT后,先不往下进行,此时匹配结束标记,匹配则直接结束
-                isCompSpace	//是否校验排版规则,给前面赋值空格实现排版
-                replaceV //根据正则替换数值(拨乱反正),("replaceV",Map<String,String> map);
+               colIndexWay //现就多行实现此(要和 colHeadMatch 联用);值获取方式根据列去获取(即根据解析出的 rows行数据[下标]去提取值)
+               colHeadMatch    //如上用到此;根据空格获取数组,值与行的每一列比对,若在列有此下标记录在集合里,每次取值(默认整行数值)根据多下标提值并拼接返回
+               matchEndOver   //匹配matchT后,先不往下进行,此时匹配结束标记,匹配则直接结束
+               isCompSpace	//是否校验排版规则,给前面赋值空格实现排版
+               replaceV //根据正则替换数值(拨乱反正),("replaceV",Map<String,String> map);
            图片
-                indexI  //图片从行哪开始
-                matchEndTable
-                endMatch
-                isChangeIndex
-                superaddType 值:all superaddMatchT MatchT 都匹配方为匹配正确 ; add 当MatchT不匹配时的追加匹配
+               indexI  //图片从行哪开始
+               matchEndTable
+               endMatch
+               isChangeIndex
+               superaddType 值:all superaddMatchT MatchT 都匹配方为匹配正确 ; add 当MatchT不匹配时的追加匹配
                     superaddMatchT 辅助匹配规则存在,当MatchT不匹配时的二次匹配(配套指定如下)
                     superaddIndexI 相较于当前行和哪行匹配(-1 表上一行)
            复合匹配
-                compositeList   //复合的规则
+               compositeList   //复合的规则
            区块对
-                isFirstS    //是否是首区块对
-                templateList    //块的规则
-                matchEndTable
-                endMatch
+               isFirstS    //是否是首区块对
+               templateList    //块的规则
+               matchEndTable
+               endMatch
            table匹配
-                matchEndTable
-                isChangeIndex
-                endMatch
+               matchEndTable
+               isChangeIndex
+               endMatch
         表规则
             colMatch  //列值获取方式
             valNVL //up 列无值时,取上行值; add 无值时和上行合并
@@ -783,7 +788,26 @@ public class FormPdf {
     public void saveImageData(Map<String, Object> analyPdfM,PDDocument document,int pageN)throws Exception{
         PDFRenderer renderer = new PDFRenderer(document);
         //参1:页数(从0开始),参2:设800(也可为100等猜:影响图片的清晰度,越小越模糊体积越小)
-        BufferedImage image = renderer.renderImageWithDPI((pageN-1),200);
+        BufferedImage image = renderer.renderImageWithDPI((pageN-1),72);
+        //截取图片页面
+        Map<String,Object> mMap=mapp.get(fileType);
+        List<Integer> imageTBY=(List)mMap.get("imageTBY");
+        if(imageTBY!=null){
+            int w = image.getWidth();;
+            int h = image.getHeight();
+            System.out.println("宽:"+w+";高:"+h);
+            Integer imageTopY=imageTBY.get(0);
+            Integer imageBottomY=imageTBY.get(1);
+            if(imageTopY>h){
+                imageTopY=0;
+            }
+            int hi = h-imageTopY;
+            Integer iH=imageBottomY-imageTopY;
+            if(iH>hi){
+                iH=hi;
+            }
+            image=image.getSubimage(0,imageTopY,w,iH);
+        }
         //BufferedImage -> byte[]
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         ImageIO.write(image, "png", os);
@@ -2509,12 +2533,6 @@ public class FormPdf {
                 typeN=pageTypeM.get(key);
                 return typeN;
             }
-           /* //int i="青春无悔".indexOf("春无");返回1;
-            int indexx = str.indexOf(key);
-            if(indexx!=-1){
-                typeN=pageTypeM.get(key);
-                return typeN;
-            }*/
         }
         return typeN;
     }
