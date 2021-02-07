@@ -294,6 +294,8 @@ public class FormPdf {
         spaceRuleCRJ.put("^\\(\\d+\\) ",6);//五个空格
         spaceRuleCRJ.put("^\\([a-z]\\) ",9);//八个空格
         crjMap.put("spaceRule",spaceRuleCRJ);
+        //缩进空格数
+        crjMap.put("spaceNextNum",3);
         mapp.put("crj",crjMap);//对crj的整体定义
         //------------BOEING 开始--------------------
         Map<String,Object> boeingMap=new HashMap<String,Object>();
@@ -589,22 +591,25 @@ public class FormPdf {
         tableBoeing.put("WIRE_BUNDLE CONNECTOR WDM PNL_OR_MODULE",tableB7);*/
 
         boeingMap.put("tableRule",tableBoeing);
-        //用空格排版(负数表当前行不变,下行再多空格)
-        //注意:会默认下一行加3个空格
+        //用空格排版
+        // (负数表当前行空不变,下行再多空格,注意:会默认下一行再加spaceNextNum个空格,即值为3,下行为6个空)
         Map<String,Integer> spaceRuleBoeing=new HashMap<String,Integer>();
         spaceRuleBoeing.put("^\\d\\. ",0);
+        spaceRuleBoeing.put("^EWIS$",0);
         spaceRuleBoeing.put("^[A-Z]\\. ",3);
         spaceRuleBoeing.put("^TASK \\S+-\\S+-\\S+-\\S+-[^\\.\\s]+$",2);
         spaceRuleBoeing.put("^\\(\\d+\\) ",6);
         spaceRuleBoeing.put("^SUBTASK \\S+-\\S+-\\S+-\\S+-\\S+$",6);
         spaceRuleBoeing.put("^\\([a-z]\\) ",9);
-        spaceRuleBoeing.put("^\\[0-9]+\\)",12);
+        spaceRuleBoeing.put("^[0-9]+\\)",12);
+        spaceRuleBoeing.put("^[a-z]\\)",15);
         spaceRuleBoeing.put("^END OF TASK$",48);
         spaceRuleBoeing.put("^(\\S+ )?NOTE:",-3);
         boeingMap.put("spaceRule",spaceRuleBoeing);
-
+        //缩进空格数
+        boeingMap.put("spaceNextNum",3);
         //图片页面的头和底坐标
-        boeingMap.put("imageTBY",Arrays.asList(200,1412));
+        boeingMap.put("imageTBY",Arrays.asList(210,1400));//原是(200,1412)
         boeingMap.put("imageW",660);//图片宽
         boeingMap.put("imageH",920);//图片高
         // END OF TASK 解析出来没带---;一个word会有多个 如 TASK 05-55-25-200-804  表其结束
@@ -795,7 +800,7 @@ public class FormPdf {
         if(imageTBY!=null){
             int w = image.getWidth();;
             int h = image.getHeight();
-            System.out.println("宽:"+w+";高:"+h);
+            //System.out.println("宽:"+w+";高:"+h);
             Integer imageTopY=imageTBY.get(0);
             Integer imageBottomY=imageTBY.get(1);
             if(imageTopY>h){
@@ -2184,8 +2189,10 @@ public class FormPdf {
         String imageStr="";
         try {
             PDFRenderer renderer = new PDFRenderer(document);
-            BufferedImage image = renderer.renderImageWithDPI((pageN-1),73);
-            //image=image.getSubimage(99,34,100,100);
+            BufferedImage image = renderer.renderImageWithDPI((pageN-1),144);
+            //下的10,18是微调
+            fontIndexTop=fontIndexTop*2-10;
+            fontIndexBottom=fontIndexBottom*2-18;
             int w = image.getWidth();
             int height = image.getHeight();
             if(fontIndexBottom>height){ fontIndexBottom=height; }
@@ -2198,6 +2205,8 @@ public class FormPdf {
             String base64 = Helper.byteToBase64(bytes);
             //本地图片
             //ImageIO.write(image, "PNG", new File("C:/Users/18722/Desktop/tolg/cord/word/"+pageN+"x"+fontIndexTop+"x"+fontIndexBottom+".png"));
+            w=w/2;
+            h=h/2;
             //返回例 imageSingle_IMW:100IMH:200IMEND;图片值
             if(StringUtils.isNotBlank(base64)){
                 imageStr="imageSingle_IMW:"+w+"IMH:"+h+"IMEND;"+base64;
@@ -2256,7 +2265,12 @@ public class FormPdf {
     }
     //验排版规则,给前面赋值空格实现排版
     public String setSpace(Map mMap,String value,Map<String,Object> mapRule){
+        //测试
+        /*if(value.indexOf("EWIS")!=-1){
+            System.out.println(value);
+        }*/
         Map<String,Integer> spaceRule=(Map)mMap.get("spaceRule");
+        Integer spaceNextNum=(Integer)mMap.get("spaceNextNum");
         boolean bol=true;
         for(String key:spaceRule.keySet()){
             Pattern pattern = Pattern.compile(key);
@@ -2264,13 +2278,16 @@ public class FormPdf {
             if(matcher.find()){
                 Integer can=0;
                 Integer integer = spaceRule.get(key);
-                if(integer>0){
+                if(integer==null){
+                    integer=0;
+                }
+                if(integer>=0){
                     can=integer;
-                }else if(integer!=null){
+                }else {
                     //若是负数,当前行不变空格数.下一行空格数变
                     Integer spaceN =(Integer) mapRule.get("spaceN");
                     if(spaceN!=null){
-                        can=spaceN;
+                        can=spaceN+spaceNextNum;
                     }
                     //负数转正数
                     integer=can-integer;
@@ -2284,8 +2301,8 @@ public class FormPdf {
         if(bol){
             Integer integer =(Integer)mapRule.get("spaceN");
             if(integer!=null){
-                //比存值多三空格
-                integer=integer+3;
+                //spaceNextNum比存值多的空格数
+                integer=integer+spaceNextNum;
                 value=StringUtils.leftPad("",integer," ")+value;
             }
         }
