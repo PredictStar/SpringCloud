@@ -42,9 +42,11 @@ public class PDFController {
             }
             Map map = Helper.stringJSONToMap(param);
             String urll=(String)map.get("urll");
-            //urll="C:/Users/18722/Desktop/tolg/BOEING/HI___100.PDF";//"C:/Users/18722/Desktop/tolg/CRJ/SLOC.pdf";
+            //测试
+            urll="C:/Users/18722/Desktop/tolg/CRJ/section9.pdf";
             String fileName=(String)map.get("fileName");
-            //fileName="hi___100.pdf";//"sloc.pdf";
+            //测试
+            fileName="section9.pdf";//"sloc.pdf";
             resstr=Help.return5002Describe(urll,fileName);
             if(resstr!=null){
                 return resstr;
@@ -54,6 +56,7 @@ public class PDFController {
             InputStream input=new FileInputStream(file);
             //文件名要小写
             fileName=fileName.toLowerCase();
+            String uuid = UUID.randomUUID().toString().replaceAll("-", "");
             TablePdf parPdf=new TablePdf();
             PDDocument document=parPdf.returnPDDocument(input);
             ObjectExtractor oe  = new ObjectExtractor(document);
@@ -63,7 +66,7 @@ public class PDFController {
             int cou=0;//sql执行条数
             //有效页面记录-测试用
             //String yxym="";
-            for(int i=1;i<=pagenum;i++){
+            /*for(int i=1;i<=pagenum;i++){
                 Map conditionsMap=new HashMap();
                 List<List<String>> newrows=new ArrayList<List<String>>();
                 //如果是 sloc.pdf 文件 通过原生表线方式去获取
@@ -79,7 +82,7 @@ public class PDFController {
                     }
                     newrows= parPdf.parsePdf(conditionsMap);
                 }
-                String sql=parPdf.retInSql(newrows,conditionsMap);
+                String sql=parPdf.retInSql(newrows,conditionsMap,uuid,fileName);
                 if(StringUtils.isBlank(sql)){
                     continue;
                 }
@@ -87,9 +90,9 @@ public class PDFController {
                 //页面会有未完待续,然后下个页面继续录入的情况,所以提取数据时要注意此情况
                 int update = jdbcTemplate.update(sql);
                 cou+=update;
-            }
+            }*/
             //单独测试某页(测试时一般开启 "数据输出" )
-            /*int testpage=83;//s1-46 68  39  s2-24     sloc-5 4 12 649
+            int testpage=3;//从1开始
             Map conditionsMap=new HashMap();
             List<List<String>> newrows=new ArrayList<List<String>>();
             //如果是 sloc.pdf 文件 通过原生表线方式去获取
@@ -105,14 +108,15 @@ public class PDFController {
                 }
                 newrows= parPdf.parsePdf(conditionsMap);
             }
-            String sql=parPdf.retInSql(newrows,conditionsMap);
+            String sql=parPdf.retInSql(newrows,conditionsMap,uuid,fileName);
             System.out.println(sql);
             int update = jdbcTemplate.update(sql);
-            cou+=update;*/
+            cou+=update;
 
             Date edate=new Date();
             String timedes="执行完成;执行时间;"+(edate.getTime()-sdate.getTime())/1000+"s";
-            resstr=Help.returnClass(200,timedes,"插入"+cou+"条");
+            String couS=";插入"+cou+"条;同一批次号:"+uuid;
+            resstr=Help.returnClass(200,timedes+couS,uuid);
             //关
             parPdf.closed(oe,document,input);
 

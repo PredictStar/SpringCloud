@@ -13,6 +13,8 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.sun.org.apache.xml.internal.security.keys.keyresolver.KeyResolver.length;
+
 //后期可直接指定表头列，如第一列是啥，进行优化(称为定制版(人为自定义表头),现在写的叫标准版(自动解析表头))
 //解析pdf,table数据
 public class TablePdf {
@@ -43,10 +45,10 @@ public class TablePdf {
         mapSloc.put("fCloN",0);
         //被校验列的值
         mapSloc.put("fCloV","MPDTASKNUMBER");
-        //mapSloc.put("tabnam","CRJ_SLOC");//表名
+        //mapSloc.put("tabnam","CRJ_SLOC");//表名(此是旧写法,现根据文件名找表 getTN 方法)
         mapp.put(typeSloc,mapSloc);
 
-        //解析 section1.pdf,section2.pdf,section3.pdf -流
+        //解析 section1.pdf,section2.pdf,section3.pdf -流 (此被舍弃)
         Map mapCrjS=new HashMap();
         String typeCrjS="crjs";
         mapCrjS.put("titn",4);//表头所占行数,从1开始
@@ -60,7 +62,7 @@ public class TablePdf {
         listCrjS.add("INTERVAL");
         listCrjS.add("SSTGS");
         mapCrjS.put("tabcols",listCrjS);
-        //mapCrjS.put("tabnam","CRJ_S1");//表名
+        //mapCrjS.put("tabnam","CRJ_S1");//表名(此是旧写法,现根据文件名找表 getTN 方法)
         //当表头列结束的位置后还有字符串属于此列,需如下配置
         //表头列的结束位置修正(值是double 会 加长此列的结束位置,字符串left 表:当字符串处于列A列B的夹角,值放列A)
         Map<Integer,Object> matcollrmap=new HashMap<Integer,Object>();
@@ -74,7 +76,7 @@ public class TablePdf {
         offsetcol.add("DESCRIPTION");
         mapCrjS.put("offsetcol",offsetcol);
         mapp.put(typeCrjS,mapCrjS);
-        //根据流解析获取数据才用到,用于判断是否是要解析的表(匹配内容要为表头要的部分,最好从第一列开始)
+        //根据流解析获取数据才用到,用于判断是否是要解析的表
         //适用 section1.pdf section3.pdf
         Map<String,String> matchmapS13= new HashMap<String,String>();
         matchmapS13.put("tag",typeCrjS);
@@ -97,9 +99,9 @@ public class TablePdf {
         listHi.add("LOCATION_OF_CHANGE");
         listHi.add("DESCRIPTION_OF_CHANGE");
         mapHi.put("tabcols",listHi);
-        //mapHi.put("tabnam","BOEING_HI");//表名
+        //mapHi.put("tabnam","BOEING_HI");//表名(此是旧写法,现根据文件名找表 getTN 方法)
         mapp.put(typeHi,mapHi);
-        //根据流解析获取数据才用到,用于判断是否是要解析的表(匹配内容要为表头要的部分,最好从第一列开始).适用 HI___100.pdf
+        //根据流解析获取数据才用到,用于判断是否是要解析的表
         Map<String,String> matchmapHi= new HashMap<String,String>();
         matchmapHi.put("tag",typeHi);
         matchmapHi.put("val","LOCATIONOFCHANGEDESCRIPTIONOFCHANGE");
@@ -136,11 +138,11 @@ public class TablePdf {
         colIB1.put("HOURS",11);
         colIB1.put("TASKDESCRIPTION",12);
         mapb1.put("colI",colIB1);
-        //mapa.put("tabnam","BOEING_01");//表名
+        //mapa.put("tabnam","BOEING_01");//表名(此是旧写法,现根据文件名找表 getTN 方法)
         //赋colXY时,其不被后覆盖(即下表头值不会被后影响) List<String>
         //mapb1.put("offsetcol",offsetcol);
         mapp.put(typeB1,mapb1);
-        //根据流解析获取数据才用到,用于判断是否是要解析的表(匹配内容要为表头要的部分,最好从第一列开始).适用 BOEING_02.pdf
+        //根据流解析获取数据才用到,用于判断是否是要解析的表
         Map<String,String> matchmapb1= new HashMap<String,String>();
         matchmapb1.put("tag",typeB1);
         matchmapb1.put("val","MPDCAITEMAMMASMAN");
@@ -153,7 +155,7 @@ public class TablePdf {
         mapb2.put("intervalMinX",10.0);
         mapb2.put("delrow",2);//表头前垃圾行数,从1开始
         mapb2.put("type",typeB2);//对应下 mapp.put(typea,mapa);
-        List<String> listb2=new ArrayList<String>();//列定义
+        List<String> listb2=new ArrayList<String>();//表列定义
         listb2.add("MPD_ITEM_NUMBER");
         listb2.add("AMM_REFERENCE");
         listb2.add("PGM");
@@ -166,9 +168,9 @@ public class TablePdf {
         listb2.add("MAN_HOURS");
         listb2.add("TASK_DESCRIPTION");
         mapb2.put("tabcols",listb2);
-        //mapa.put("tabnam","BOEING_02");//表名
+        //mapa.put("tabnam","BOEING_02");//表名(此是旧写法,现根据文件名找表 getTN 方法)
         mapp.put(typeB2,mapb2);
-        //根据流解析获取数据才用到,用于判断是否是要解析的表(匹配内容要为表头要的部分,最好从第一列开始).适用 BOEING_02.pdf
+        //根据流解析获取数据才用到,用于判断是否是要解析的表
         Map<String,String> matchmapb2= new HashMap<String,String>();
         matchmapb2.put("tag",typeB2);
         matchmapb2.put("val","MPDPINTERVALAPPLICABILITY");
@@ -182,7 +184,7 @@ public class TablePdf {
         mapb3.put("intervalMinX",10.0);
         mapb3.put("delrow",2);//表头前垃圾行数,从1开始
         mapb3.put("type",typeB3);//对应下 mapp.put(typea,mapa);
-        List<String> listB3=new ArrayList<String>();//列定义
+        List<String> listB3=new ArrayList<String>();//表列定义
         listB3.add("MPD_ITEM_NUMBER");
         listB3.add("AMM_REFERENCE");
         listB3.add("ZONE");
@@ -194,13 +196,143 @@ public class TablePdf {
         listB3.add("MAN_HOURS");
         listB3.add("TASK_DESCRIPTION");
         mapb3.put("tabcols",listB3);
-        //mapa.put("tabnam","BOEING_03");//表名
+        //mapa.put("tabnam","BOEING_03");//表名(此是旧写法,现根据文件名找表 getTN 方法)
         mapp.put(typeB3,mapb3);
-        //根据流解析获取数据才用到,用于判断是否是要解析的表(匹配内容要为表头要的部分,最好从第一列开始).适用 BOEING_02.pdf
+        //根据流解析获取数据才用到,用于判断是否是要解析的表
         Map<String,String> matchmapb3= new HashMap<String,String>();
         matchmapb3.put("tag",typeB3);
         matchmapb3.put("val","MPDINTERVALAPPLICABILITY");
         matchList.add(matchmapb3);
+
+        //解析 CRJ -section3.pdf(同7,9)  -流
+        String typeST3="CRJ_ST3";
+        Map mapST3=new HashMap();
+        mapST3.put("titn",2);//表头所占行数,从1开始
+        mapST3.put("intervalMinX",10.0);
+        mapST3.put("delrow",4);//表头前垃圾行数,从1开始
+        mapST3.put("type",typeST3);//对应下 mapp.put(typea,mapa);
+        List<String> listST3=new ArrayList<String>();//表列定义
+        listST3.add("task_card_number");
+        listST3.add("task_number");
+        listST3.add("amm_amtoss_reference");
+        listST3.add("task_card_title");
+        listST3.add("interval_crj");
+        listST3.add("access");
+        listST3.add("task_type");
+        listST3.add("skill");
+        listST3.add("mhr");
+        mapST3.put("tabcols",listST3);
+        //新增特殊列的处理
+        mapST3.put("uuid","unique_identifier");
+        mapST3.put("havaFileNa","file_name");
+        Map<String,Integer> colIST3=new HashMap<String,Integer>();
+        colIST3.put("TASKCARDTITLE",4);
+        colIST3.put("INTERVAL",5);
+        colIST3.put("ACCESS",6);
+        colIST3.put("TYPE",7);
+        colIST3.put("SKILL",8);
+        colIST3.put("MHR",9);
+        mapST3.put("colI",colIST3);
+        Map<Integer,Object> matcolST3=new HashMap<Integer,Object>();
+        matcolST3.put(3,"left");//key从0开始
+        mapST3.put("endcols",matcolST3);
+        mapp.put(typeST3,mapST3);
+        //根据流解析获取数据才用到,用于判断是否是要解析的表
+        Map<String,String> matchMapST3= new HashMap<String,String>();
+        matchMapST3.put("tag",typeST3);
+        matchMapST3.put("val","TASKCARDTASKAMMAMTOSSTASK");
+        matchList.add(matchMapST3);
+        //解析 CRJ -section4.pdf(同6) section5.pdf-流
+        String typeST4="CRJ_ST4";
+        Map mapST4=new HashMap();
+        mapST4.put("titn",2);//表头所占行数,从1开始
+        mapST4.put("intervalMinX",10.0);
+        mapST4.put("delrow",4);//表头前垃圾行数,从1开始
+        mapST4.put("type",typeST4);//对应下 mapp.put(typea,mapa);
+        List<String> listST4=new ArrayList<String>();//表列定义
+        listST4.add("task_card_number");
+        listST4.add("task_number");
+        listST4.add("task_card_title");
+        listST4.add("interval_crj");
+        listST4.add("access");
+        listST4.add("task_type");
+        listST4.add("work_area");
+        listST4.add("skill");
+        listST4.add("mhr");
+        mapST4.put("tabcols",listST4);
+        //新增特殊列的处理
+        mapST4.put("uuid","unique_identifier");
+        mapST4.put("havaFileNa","file_name");
+        Map<String,Integer> colIST4=new HashMap<String,Integer>(); //(从1开始)
+        colIST4.put("TASKCARDTITLE",3);
+        colIST4.put("INTERVAL",4);
+        colIST4.put("ACCESS",5);
+        colIST4.put("TYPE",6);
+        colIST4.put("AREA",7);
+        colIST4.put("SKILL",8);
+        colIST4.put("MHRS",9); //section4的是此
+        colIST4.put("MNHRS",9);//5的是此,两者差异仅如此
+        mapST4.put("colI",colIST4);
+        Map<Integer,Object> matcolST4=new HashMap<Integer,Object>();
+        matcolST4.put(2,30.0);//key从0开始
+        mapST4.put("endcols",matcolST4);
+        mapp.put(typeST4,mapST4);
+        //根据流解析获取数据才用到,用于判断是否是要解析的表
+        Map<String,String> matchMapST4= new HashMap<String,String>();
+        matchMapST4.put("tag",typeST4);
+        matchMapST4.put("val","TASKCARDTASKTASKWORK");
+        matchList.add(matchMapST4);
+
+
+        /*流解析
+            titn    //表头所占行数,从1开始
+            intervalMinX //列最小间距
+            delrow  //表头前垃圾行数,从1开始
+            type    //匹配标记
+            tabcols //表列
+            uuid 若表中列是uuid,其列名叫什么
+            offsetcol
+                //赋colXY时,其不被后覆盖(即下表头值不会被后影响)  List<String>
+                //解决如 section2.pdf 表头,表头列往右跑(即"原数据输出"应该在第三列,却和第四列内容在一起)
+                值示例
+                    List<String> offsetcol=new ArrayList<String>();
+                    offsetcol.add("DESCRIPTION");
+            colI
+                //解析的表头中,此值应该在第几个(从1开始),下表头值直接赋值到某(从1开始)
+                //一般设置如第七列是某(解析后多个单词都做表头,去掉空格)8,9,10...也去设置
+                //猜 后会覆盖前,用offsetcol 试试(一般情况下如8位置的单词本来要覆盖7,但其直接被指定到8了就没有覆盖了)
+                值示例
+                    Map<String,Integer> colIB1=new HashMap<String,Integer>();
+                    colIB1.put("ZONE",7);
+                    colIB1.put("ACCESS",8);
+                    colIB1.put("APL",9);
+                    colIB1.put("ENG",10);
+                    colIB1.put("HOURS",11);
+                    colIB1.put("TASKDESCRIPTION",12);
+            endcols
+                //当表头列结束的位置后还有字符串属于此列,需如下配置
+                //表头列的结束位置修正(值是double 会 加长此列的结束位置,字符串left 表:当字符串处于列A列B的夹角,值放列A)
+                值示例
+                    Map<Integer,Object> matcolST4=new HashMap<Integer,Object>();
+                    matcolST4.put(1,30.0);//key从0开始
+                    matcolST4.put(2,46.0);
+                    matcolST4.put(3,"left");//不写默认是右
+
+            匹配,用于确定 匹配标记
+                val 匹配值     tag 值同 上 type
+          线
+			type
+			tabcols
+			fCloN,fCloV用于校验功能
+			fCloN
+				//当根据线去(即原生)获取初始数据,判断这个表是否就是想要的
+				//校验第一行的第几列(从0开始)
+			fCloV
+				//被校验列的值
+
+		  现根据文件名去找表名 getTN 方法
+		  结束匹配 参考 isEndrow 方法
+         */
 
     }
 
@@ -223,10 +355,15 @@ public class TablePdf {
             tabN="CRJ_S1";
         }else if("section2.pdf".equals(fileName)){
             tabN="CRJ_S2";
-        }else if("section3.pdf".equals(fileName)){
-            tabN="CRJ_S3";
-        }else if("sloc.pdf".equals(fileName)){
+        }/*else if("section3.pdf".equals(fileName)){ tabN="CRJ_S3";}*/
+        else if("sloc.pdf".equals(fileName)){
             tabN="CRJ_SLOC";
+        }else if("section3.pdf".equals(fileName)||"section7.pdf".equals(fileName)||"section9.pdf".equals(fileName)){
+            tabN="crj_st1";
+        }else if("section4.pdf".equals(fileName)||"section5.pdf".equals(fileName)||"section6.pdf".equals(fileName)){
+            tabN="crj_st2";
+        }else if("section10.pdf".equals(fileName)){
+            tabN="crj_st3";
         }
         return tabN;
     }
@@ -262,7 +399,7 @@ public class TablePdf {
      * @Date 2020-12-23
      * @return  页面插入sql(返回空表拦截了,直接 continue;)
      */
-    public String retInSql(List<List<String>> newrows,Map conditionsMap)throws Exception{
+    public String retInSql(List<List<String>> newrows,Map conditionsMap,String uuid,String fileName)throws Exception{
         //表头list获取,用于校验那个列缺失
         List<String> tabTList = newrows.get(0);
 
@@ -270,6 +407,8 @@ public class TablePdf {
         StringBuilder zdB=new StringBuilder("");
         String type=(String)conditionsMap.get("type");
         String tabnam=(String)conditionsMap.get("tabnam");
+        String uuidC=(String)conditionsMap.get("uuid");
+        String havaFileNa=(String)conditionsMap.get("havaFileNa");
         List<String> tabcols=(List<String>)conditionsMap.get("tabcols");
         for(int i=0;i<tabcols.size();i++){
             String tabcol= "`"+tabcols.get(i)+"`";
@@ -278,6 +417,12 @@ public class TablePdf {
             }else{
                 zdB.append(","+tabcol);
             }
+        }
+        if(StringUtils.isNotBlank(uuidC)){
+            zdB.append(",`"+uuidC+"`");
+        }
+        if(StringUtils.isNotBlank(havaFileNa)){
+            zdB.append(",`"+havaFileNa+"`");
         }
         //sql要的list
         List<List<String>> sqllist=new ArrayList<List<String>>();
@@ -359,6 +504,12 @@ public class TablePdf {
                 }else{
                     val=val+","+s;
                 }
+            }
+            if(StringUtils.isNotBlank(uuidC)){
+                val=val+",'"+uuid+"'";
+            }
+            if(StringUtils.isNotBlank(havaFileNa)){
+                val=val+",'"+fileName+"'";
             }
             val=val+")";
             if(i==0){
@@ -477,23 +628,19 @@ public class TablePdf {
                 //System.out.println("拦截XX-XXX-XX");
                 return conditionsMap;
             }
-            int indexx=0;
             boolean bol=true;
             String tag="";
             for(Map<String,String> mapp: matchList){
                 String strMatch=mapp.get("val");
                 //int i="青春无悔".indexOf("春无");返回1;
-                indexx = str.indexOf(strMatch);
-                if(indexx!=-1){
+                int ind = str.indexOf(strMatch);
+                if(ind!=-1){
                     bol=false;
                     tag=mapp.get("tag");
                     break;
                 }
             }
             if(!bol){
-                for(int i=0;i<indexx;i++){
-                    text2.remove(0);
-                }
                 Map<String,Object> m=mapp.get(tag);
                 for(String k:m.keySet()){
                     Object v=m.get(k);
@@ -571,6 +718,18 @@ public class TablePdf {
         //获取页面数据结构,元素是行数据
         List<List<String>> rows=new ArrayList<List<String>>();
         List<List<RectangularTextContainer>> tableRows = table.getRows();
+        int indexx=0;
+        //被排除的字体个数
+        for(int i=0;i<delrow;i++){
+            List<RectangularTextContainer> rectangularTextContainers = tableRows.get(i);
+            for (int rec = 0; rec < rectangularTextContainers.size(); rec++) {
+                String text = rectangularTextContainers.get(rec).getText().replaceAll("\\s", "");
+                indexx+=text.length();
+            }
+        }
+        for(int i=0;i<indexx;i++){
+            textList.remove(0);
+        }
         for(int i=0;i<delrow;i++){
             tableRows.remove(0);
         }
@@ -599,7 +758,7 @@ public class TablePdf {
         //扩展表数据获取(即添加多少列给原数据)
         extendTable(rows,textList,colmap,newrows);
         //解析后的数据输出
-        /*for(int ii=0;ii<newrows.size();ii++){
+        for(int ii=0;ii<newrows.size();ii++){
             List<String> rowscol=newrows.get(ii);
             for(int iii=0;iii<rowscol.size();iii++){
                 String str=rowscol.get(iii);
@@ -609,7 +768,7 @@ public class TablePdf {
             }
             //当前行结尾,后期注释掉
             System.out.println("*");
-        }*/
+        }
         //主动清数据
         textList.clear();
         return newrows;
@@ -915,6 +1074,8 @@ public class TablePdf {
             boolean isEndrow=false;
             if("crjs".equals(type)){
                 isEndrow=isEndrowCrjS(rowscol);
+            }else if(type.indexOf("CRJ_ST")!=-1){
+                isEndrow=isEndrowCrjST(rowscol);
             }else {
                 isEndrow=isEndrow(rowscol);
             }
@@ -1064,6 +1225,17 @@ public class TablePdf {
         boolean bol=false;
         String s=list.get(0);//匹配值例 "CSP B−136 −  Maintenance Planning Document"
         String reg = "^CSP .+ Maintenance Planning Document$";  //带不带^ $一样?都是严格按照正则,不能为例"/^[0-9]$/"
+        boolean rs =s.matches(reg);
+        if(rs){
+            bol=true;
+        }
+        return bol;
+    }
+    //是否是最后一行
+    public boolean isEndrowCrjST(List<String> list) {
+        boolean bol=false;
+        String s=list.get(0);//匹配值例 "Maintenance Planning Manual"
+        String reg = "^Maintenance Planning Manual$";  //带不带^ $一样?都是严格按照正则,不能为例"/^[0-9]$/"
         boolean rs =s.matches(reg);
         if(rs){
             bol=true;
