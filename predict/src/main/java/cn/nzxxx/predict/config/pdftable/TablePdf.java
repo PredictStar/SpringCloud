@@ -138,9 +138,6 @@ public class TablePdf {
         colIB1.put("HOURS",11);
         colIB1.put("TASKDESCRIPTION",12);
         mapb1.put("colI",colIB1);
-        //mapa.put("tabnam","BOEING_01");//表名(此是旧写法,现根据文件名找表 getTN 方法)
-        //赋colXY时,其不被后覆盖(即下表头值不会被后影响) List<String>
-        //mapb1.put("offsetcol",offsetcol);
         mapp.put(typeB1,mapb1);
         //根据流解析获取数据才用到,用于判断是否是要解析的表
         Map<String,String> matchmapb1= new HashMap<String,String>();
@@ -204,7 +201,7 @@ public class TablePdf {
         matchmapb3.put("val","MPDINTERVALAPPLICABILITY");
         matchList.add(matchmapb3);
 
-        //解析 CRJ -section3.pdf(同7,9)  -流
+        //解析 CRJ -section3.pdf(同7,9,11,12)  -流
         String typeST3="CRJ_ST3";
         Map mapST3=new HashMap();
         mapST3.put("titn",2);//表头所占行数,从1开始
@@ -242,6 +239,7 @@ public class TablePdf {
         matchMapST3.put("tag",typeST3);
         matchMapST3.put("val","TASKCARDTASKAMMAMTOSSTASK");
         matchList.add(matchMapST3);
+
         //解析 CRJ -section4.pdf(同6) section5.pdf-流
         String typeST4="CRJ_ST4";
         Map mapST4=new HashMap();
@@ -283,11 +281,88 @@ public class TablePdf {
         matchMapST4.put("val","TASKCARDTASKTASKWORK");
         matchList.add(matchMapST4);
 
+        //解析 CRJ -section10.pdf -流
+        String typeST10="CRJ_ST10";
+        Map mapST10=new HashMap();
+        mapST10.put("titn",2);//表头所占行数,从1开始
+        mapST10.put("intervalMinX",10.0);
+        mapST10.put("delrow",5);//表头前垃圾行数,从1开始
+        mapST10.put("type",typeST10);//对应下 mapp.put(typea,mapa);
+        List<String> listST10=new ArrayList<String>();//表列定义
+        listST10.add("task_number");
+        listST10.add("task_description");
+        listST10.add("task_number_p");
+        listST10.add("task_card_number_p");
+        listST10.add("task_interval_p");
+        mapST10.put("tabcols",listST10);
+        //新增特殊列的处理
+        mapST10.put("uuid","unique_identifier");
+        mapST10.put("havaFileNa","file_name");
+        Map<Integer,Object> matcolST10=new HashMap<Integer,Object>();
+        matcolST10.put(1,"left");//key从0开始
+        mapST10.put("endcols",matcolST10);
+        mapp.put(typeST10,mapST10);
+        //根据流解析获取数据才用到,用于判断是否是要解析的表
+        Map<String,String> matchMapST10= new HashMap<String,String>();
+        matchMapST10.put("tag",typeST10);
+        matchMapST10.put("val","PRECLUDEDBYZONALINSPECTIONPROGRAM");
+        matchList.add(matchMapST10);
+
+        //解析 CRJ -section8.pdf-流
+        String typeST8="CRJ_ST8";
+        Map mapST8=new HashMap();
+        mapST8.put("titn",4);//表头所占行数,从1开始
+        mapST8.put("intervalMinX",10.0);
+        mapST8.put("delrow",5);//表头前垃圾行数,从1开始
+        mapST8.put("delrowOffset", Arrays.asList(0,-1));
+        mapST8.put("type",typeST8);//对应下 mapp.put(typea,mapa);
+        List<String> listST8=new ArrayList<String>();//表列定义
+        listST8.add("task_card_number");
+        listST8.add("task_number");
+        listST8.add("task_card_title");
+        listST8.add("task_type");
+        listST8.add("skill");
+        listST8.add("threshold");
+        listST8.add("repeat");
+        listST8.add("manhrs");
+        mapST8.put("tabcols",listST8);
+        //新增特殊列的处理
+        mapST8.put("uuid","unique_identifier");
+        mapST8.put("havaFileNa","file_name");
+        Map<String,Object> colIST8=new HashMap<String,Object>(); //(从1开始)
+        colIST8.put("TASKCARDTITLE",3);
+        colIST8.put("TYPE",4);
+        colIST8.put("SKILL",5);
+        List list_F_ST8=new ArrayList();//当列名相同如下设置;个数要和匹配时对应,不做处理可设置为0
+        list_F_ST8.add(6);list_F_ST8.add(7);
+        colIST8.put("(FLTCYCLES)",list_F_ST8);
+        colIST8.put("HRS",8);
+        mapST8.put("colI",colIST8);
+        Map<Integer,Object> matcolST8=new HashMap<Integer,Object>();
+        matcolST8.put(2,"left");//key从0开始
+        mapST8.put("endcols",matcolST8);
+        List<String> offsetcolST8=new ArrayList<String>();
+        offsetcolST8.add("TYPE");
+        offsetcolST8.add("SKILL");
+        mapST8.put("offsetcol",offsetcolST8);
+        mapp.put(typeST8,mapST8);
+        //根据流解析获取数据才用到,用于判断是否是要解析的表
+        Map<String,String> matchMapST8= new HashMap<String,String>();
+        matchMapST8.put("tag",typeST8);
+        matchMapST8.put("val","TASKCARDTITLESKILL51000lbMTOWMAN,TASKCARDTASKTASK51000lbMTOWMAN");
+        matchList.add(matchMapST8);
+
+
 
         /*流解析
             titn    //表头所占行数,从1开始
             intervalMinX //列最小间距
             delrow  //表头前垃圾行数,从1开始
+            delrowOffset
+                当 val 设多匹配如 "A,B,C"
+                匹配A和B时,delrow值不同,此时需要偏移纠正时,设此
+                mapST8.put("delrowOffset", Arrays.asList(0,-1,1));
+                值是List,如左:B的delrow值是:原值-1;C的delrow值是:原值+1
             type    //匹配标记
             tabcols //表列
             uuid 若表中列是uuid,其列名叫什么
@@ -299,16 +374,16 @@ public class TablePdf {
                     offsetcol.add("DESCRIPTION");
             colI
                 //解析的表头中,此值应该在第几个(从1开始),下表头值直接赋值到某(从1开始)
-                //一般设置如第七列是某(解析后多个单词都做表头,去掉空格)8,9,10...也去设置
-                //猜 后会覆盖前,用offsetcol 试试(一般情况下如8位置的单词本来要覆盖7,但其直接被指定到8了就没有覆盖了)
+                //一般设置如第七列是某8,9,10...也去设置
+                //猜 后会覆盖前,用 offsetcol 解决(一般情况下如8位置的单词本来要覆盖7,但其直接被指定到8了就没有覆盖了)
+                注意若是多个单词做表头,设置时值不能有空格!!!
                 值示例
                     Map<String,Integer> colIB1=new HashMap<String,Integer>();
                     colIB1.put("ZONE",7);
                     colIB1.put("ACCESS",8);
-                    colIB1.put("APL",9);
-                    colIB1.put("ENG",10);
-                    colIB1.put("HOURS",11);
-                    colIB1.put("TASKDESCRIPTION",12);
+                    List list_F_ST8=new ArrayList();//当列名相同如下设置;个数要和匹配时对应,不做处理可设置为0
+                    list_F_ST8.add(6);list_F_ST8.add(7);
+                    colIB1.put("(FLTCYCLES)",list_F_ST8);
             endcols
                 //当表头列结束的位置后还有字符串属于此列,需如下配置
                 //表头列的结束位置修正(值是double 会 加长此列的结束位置,字符串left 表:当字符串处于列A列B的夹角,值放列A)
@@ -319,7 +394,7 @@ public class TablePdf {
                     matcolST4.put(3,"left");//不写默认是右
 
             匹配,用于确定 匹配标记
-                val 匹配值     tag 值同 上 type
+                val 匹配值(多匹配写为 "A,B";匹配是根据 indexOf)     tag 值同 上 type
           线
 			type
 			tabcols
@@ -358,12 +433,14 @@ public class TablePdf {
         }/*else if("section3.pdf".equals(fileName)){ tabN="CRJ_S3";}*/
         else if("sloc.pdf".equals(fileName)){
             tabN="CRJ_SLOC";
-        }else if("section3.pdf".equals(fileName)||"section7.pdf".equals(fileName)||"section9.pdf".equals(fileName)){
+        }else if("section3.pdf".equals(fileName)||"section7.pdf".equals(fileName)||"section9.pdf".equals(fileName)||"section11.pdf".equals(fileName)||"section12.pdf".equals(fileName)){
             tabN="crj_st1";
         }else if("section4.pdf".equals(fileName)||"section5.pdf".equals(fileName)||"section6.pdf".equals(fileName)){
             tabN="crj_st2";
         }else if("section10.pdf".equals(fileName)){
             tabN="crj_st3";
+        }else if("section8.pdf".equals(fileName)){
+            tabN="crj_st4";
         }
         return tabN;
     }
@@ -627,20 +704,31 @@ public class TablePdf {
             if(str.indexOf("XX-XXX-XX")!=-1){
                 //System.out.println("拦截XX-XXX-XX");
                 return conditionsMap;
+            }else if(str.indexOf("ABCDE")!=-1){//(section10,12.pdf里的演示样例)
+                return conditionsMap;
             }
             boolean bol=true;
             String tag="";
             for(Map<String,String> mapp: matchList){
-                String strMatch=mapp.get("val");
-                //int i="青春无悔".indexOf("春无");返回1;
-                int ind = str.indexOf(strMatch);
-                if(ind!=-1){
-                    bol=false;
-                    tag=mapp.get("tag");
-                    break;
+                String strMatchO=mapp.get("val");
+                String[] split = strMatchO.split(",");
+                for(int i=0;i<split.length;i++){
+                    String strMatch=split[i];
+                    //int i="青春无悔".indexOf("春无");返回1;
+                    int ind = str.indexOf(strMatch);
+                    if(ind!=-1){
+                        bol=false;
+                        tag=mapp.get("tag");
+                        conditionsMap.put("delrowOffsetIndex",i);
+                        break;//停止二重循环
+                    }
+                }
+                if(!bol){
+                    break;//停止一重循环
                 }
             }
             if(!bol){
+                //数值赋给新map,防止值传递
                 Map<String,Object> m=mapp.get(tag);
                 for(String k:m.keySet()){
                     Object v=m.get(k);
@@ -700,9 +788,9 @@ public class TablePdf {
         }
         colmap.put("offsetcol", offsetcol);
         //作用见上  mapb1.put("colI",colIB1);
-        Map<String,Integer> colI=(Map<String,Integer>)conditionsMap.get("colI");
+        Map<String,Object> colI=(Map<String,Object>)conditionsMap.get("colI");
         if(colI==null){
-            colI=new HashMap<String,Integer>();
+            colI=new HashMap<String,Object>();
         }
         colmap.put("colI", colI);
         //表头列的结束位置修正(即加长了此列的位置)
@@ -710,6 +798,18 @@ public class TablePdf {
         List<TextElement> textList=(List<TextElement>)conditionsMap.get("textList");
         Page page=(Page)conditionsMap.get("page");
         Integer delrow=(Integer)conditionsMap.get("delrow");//表头前(垃圾数据)所占行数
+        if(delrow==null){
+            delrow=0;
+        }
+        List<Integer> delrowOffset=(List)conditionsMap.get("delrowOffset");
+        if(delrowOffset!=null&&delrowOffset.size()>0){
+            Integer delrowOffsetIndex=(Integer)conditionsMap.get("delrowOffsetIndex");
+            if(delrowOffsetIndex!=null){
+                Integer integer = delrowOffset.get(delrowOffsetIndex);
+                //纠正 delrow 值
+                delrow=delrow+integer;
+            }
+        }
         //根据流的方式去获取数据
         BasicExtractionAlgorithm sea = new BasicExtractionAlgorithm();
         List<Table> talist=sea.extract(page);
@@ -741,6 +841,9 @@ public class TablePdf {
             }
             rows.add(rowscol);
         }
+        //对 rows 纠正 使和 List<TextElement> textList 字顺序统一
+
+
         //原数据输出
         /*for(int ii=0;ii<rows.size();ii++){
             List<String> rowscol=rows.get(ii);
@@ -873,7 +976,7 @@ public class TablePdf {
         int titn=(int)colmap.get("titn"); // titn 表头所在行数,从1开始
         double intervalMinX=(double)colmap.get("intervalMinX");
         List<String> offsetcol=(List<String>)colmap.get("offsetcol");
-        Map<String,Integer> colI=( Map<String,Integer>)colmap.get("colI");
+        Map<String,Object> colI=( Map<String,Object>)colmap.get("colI");
         //每一列表头的具体说明,如定位等
         List<Map> colXY=new ArrayList<Map>();
         int fontindex=0;
@@ -971,7 +1074,7 @@ public class TablePdf {
                 }
                 //表头值直接赋值到某(从1开始)
                 boolean toIndex = isToIndex(colI, colXY,colXYE);//此需赋到指定处返回false
-                if(toIndex){//colXYEleT已指定赋到某就不参合下了
+                if(toIndex){ //colXYEleT已指定赋到某就不参合下了
                     //colXY原ii有值,且设置不能被后覆盖.下返回false
                     boolean overflow = isOverflow(offsetcol, colXY, ii);//注意还有一个此方法
                     if(overflow){
@@ -1019,11 +1122,30 @@ public class TablePdf {
         }
         return boloffset;
     }
-    public boolean isToIndex(Map<String,Integer> colI,List<Map> colXY,Map colXYEle){
+    public boolean isToIndex(Map<String,Object> colI,List<Map> colXY,Map colXYEle){
         boolean toIndex=true;
-        String str=((String)colXYEle.get("T")).replaceAll("\\s+","");;
+        String str=((String)colXYEle.get("T")).replaceAll("\\s+","");
+        //测试
+        /*if(str.equals("(FLTCYCLES)")){
+            System.out.println(str);
+        }*/
         if(colI.size()>0&&colI.containsKey(str)){
-            Integer intt= colI.get(str);
+            Object o = colI.get(str);
+            Integer intt=0;
+            if(o instanceof List){
+                List<Integer> list=(List)o;
+                if(list.size()>0){
+                    intt=list.get(0);
+                    list.remove(0);//每次只取一次,取后就失效
+                }
+            }else if(o instanceof Integer){
+                intt=(Integer) o;
+            }else {
+                return toIndex;
+            }
+            if(intt==0){
+                return toIndex;
+            }
             int intI=intt-colXY.size();
             //扩展colXY 用于set
             for (int k =intI; k >0; k--){
@@ -1235,7 +1357,7 @@ public class TablePdf {
     public boolean isEndrowCrjST(List<String> list) {
         boolean bol=false;
         String s=list.get(0);//匹配值例 "Maintenance Planning Manual"
-        String reg = "^Maintenance Planning Manual$";  //带不带^ $一样?都是严格按照正则,不能为例"/^[0-9]$/"
+        String reg = "^Maintenance Planning Manual$|^Mainitenance Planning Manual$";  //带不带^ $一样?都是严格按照正则,不能为例"/^[0-9]$/"
         boolean rs =s.matches(reg);
         if(rs){
             bol=true;
