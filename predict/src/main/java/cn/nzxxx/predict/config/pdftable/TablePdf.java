@@ -342,6 +342,7 @@ public class TablePdf {
         matcolST8.put(2,"left");//key从0开始
         mapST8.put("endcols",matcolST8);
         List<String> offsetcolST8=new ArrayList<String>();
+        offsetcolST8.add("TASKCARDTITLE");
         offsetcolST8.add("TYPE");
         offsetcolST8.add("SKILL");
         mapST8.put("offsetcol",offsetcolST8);
@@ -349,7 +350,7 @@ public class TablePdf {
         //根据流解析获取数据才用到,用于判断是否是要解析的表
         Map<String,String> matchMapST8= new HashMap<String,String>();
         matchMapST8.put("tag",typeST8);
-        matchMapST8.put("val","TASKCARDTITLESKILL51000lbMTOWMAN,TASKCARDTASKTASK51000lbMTOWMAN");
+        matchMapST8.put("val","TASKCARDTITLESKILL51000lbMTOW,TASKCARDTASKTASK51000lbMTOWMAN");
         matchList.add(matchMapST8);
 
 
@@ -371,7 +372,7 @@ public class TablePdf {
                 //解决如 section2.pdf 表头,表头列往右跑(即"原数据输出"应该在第三列,却和第四列内容在一起)
                 值示例
                     List<String> offsetcol=new ArrayList<String>();
-                    offsetcol.add("DESCRIPTION");
+                    offsetcol.add("DESCRIPTION"); //多个单词时值不能有空格!!!
             colI
                 //解析的表头中,此值应该在第几个(从1开始),下表头值直接赋值到某(从1开始)
                 //一般设置如第七列是某8,9,10...也去设置
@@ -736,8 +737,9 @@ public class TablePdf {
                 }
                 conditionsMap.put("textList",text2);
                 conditionsMap.put("page",page);
+                conditionsMap.put("fileName",fileName);
             }
-        }else{
+        }/*else{
             //已知此页就是符合标准的可type值直接指定标准,一般方便测试用
             Map<String,Object> m=mapp.get(type);
             for(String k:m.keySet()){
@@ -746,7 +748,8 @@ public class TablePdf {
             }
             conditionsMap.put("textList",text2);
             conditionsMap.put("page",page);
-        }
+            conditionsMap.put("fileName",fileName);
+        } */
         String tabnam=getTN(fileName);
         if(conditionsMap.size()!=0){
             conditionsMap.put("tabnam",tabnam);
@@ -842,6 +845,7 @@ public class TablePdf {
             rows.add(rowscol);
         }
         //对 rows 纠正 使和 List<TextElement> textList 字顺序统一
+        redressRows(conditionsMap,rows);
 
 
         //原数据输出
@@ -876,6 +880,30 @@ public class TablePdf {
         textList.clear();
         return newrows;
 
+    }
+    //纠正 rows 使和 List<TextElement> textList 字顺序统一
+    public void redressRows(Map conditionsMap,List<List<String>> rows){
+        String fileName=(String)conditionsMap.get("fileName");
+        if("section8.pdf".equals(fileName)){
+            if(rows.size()>0){
+                List<String> strings = rows.get(0);
+                StringBuilder sb=new StringBuilder();
+                strings.forEach(s -> sb.append(s));
+                String ss=sb.toString().replaceAll("\\s","");
+                if("TASKCARDTASKTASKCARDTITLETASKSKILL51000lbMTOWMAN".equals(ss)){
+                    /*List<String> strnew=new ArrayList<String>();
+                    strnew.add("TASK CARD TASK TASK");strnew.add("");strnew.add("51000 lb MTOW MAN");
+                    rows.set(0,strnew);
+                    List<String> strnew2=new ArrayList<String>();
+                    strnew2.add("TASK CARD TITLE");strnew2.add("SKILL");strnew2.add("");
+                    rows.add(1,strnew2);*/
+                    //如上时表头行多1,需要改 titn 值,所以如下
+                    List<String> strnew=new ArrayList<String>();
+                    strnew.add("TASK CARD TASK TASK");strnew.add("51000 lb MTOW MAN");strnew.add("TASK CARD TITLE SKILL");
+                    rows.set(0,strnew);
+                }
+            }
+        }
     }
     /** 扩展表数据获取(即添加多少列给原数据)
      * list 需要解析的数据
@@ -1115,6 +1143,7 @@ public class TablePdf {
             //左侧未定义colXY值
             if(map!=null&&map.size()>0){
                 String t=(String)map.get("T");
+                t=t.replaceAll("\\s+","");
                 if(offsetcol.contains(t)){
                     boloffset=false;
                 }
