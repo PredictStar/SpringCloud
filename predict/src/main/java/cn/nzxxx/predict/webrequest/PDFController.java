@@ -43,10 +43,10 @@ public class PDFController {
             Map map = Helper.stringJSONToMap(param);
             String urll=(String)map.get("urll");
             //测试
-            urll="C:/Users/18722/Desktop/tolg/CRJ/section9.pdf";
+            //urll="C:/Users/18722/Desktop/tolg/CRJ/section9.pdf";
             String fileName=(String)map.get("fileName");
             //测试
-            fileName="section9.pdf";//"sloc.pdf";
+            //fileName="section9.pdf";//"sloc.pdf";
             resstr=Help.return5002Describe(urll,fileName);
             if(resstr!=null){
                 return resstr;
@@ -66,7 +66,7 @@ public class PDFController {
             int cou=0;//sql执行条数
             //有效页面记录-测试用
             //String yxym="";
-            /*for(int i=1;i<=pagenum;i++){
+            for(int i=1;i<=pagenum;i++){
                 Map conditionsMap=new HashMap();
                 List<List<String>> newrows=new ArrayList<List<String>>();
                 //如果是 sloc.pdf 文件 通过原生表线方式去获取
@@ -82,7 +82,10 @@ public class PDFController {
                     }
                     newrows= parPdf.parsePdf(conditionsMap);
                 }
-                String sql=parPdf.retInSql(newrows,conditionsMap,uuid,fileName);
+                Map<String,Object> paramMap=new HashMap<String,Object>();
+                paramMap.put("uuid",uuid);
+                paramMap.put("fileName",fileName);
+                String sql=parPdf.retInSql(newrows,conditionsMap,paramMap);
                 if(StringUtils.isBlank(sql)){
                     continue;
                 }
@@ -90,9 +93,9 @@ public class PDFController {
                 //页面会有未完待续,然后下个页面继续录入的情况,所以提取数据时要注意此情况
                 int update = jdbcTemplate.update(sql);
                 cou+=update;
-            }*/
+            }
             //单独测试某页(测试时一般开启 "数据输出" )
-            int testpage=3;//从1开始
+            /*int testpage=14;//从1开始
             Map conditionsMap=new HashMap();
             List<List<String>> newrows=new ArrayList<List<String>>();
             //如果是 sloc.pdf 文件 通过原生表线方式去获取
@@ -108,10 +111,13 @@ public class PDFController {
                 }
                 newrows= parPdf.parsePdf(conditionsMap);
             }
-            String sql=parPdf.retInSql(newrows,conditionsMap,uuid,fileName);
+            Map<String,Object> paramMap=new HashMap<String,Object>();
+            paramMap.put("uuid",uuid);
+            paramMap.put("fileName",fileName);
+            String sql=parPdf.retInSql(newrows,conditionsMap,paramMap);
             System.out.println(sql);
             int update = jdbcTemplate.update(sql);
-            cou+=update;
+            cou+=update;*/
 
             Date edate=new Date();
             String timedes="执行完成;执行时间;"+(edate.getTime()-sdate.getTime())/1000+"s";

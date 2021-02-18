@@ -11,6 +11,8 @@ import technology.tabula.extractors.SpreadsheetExtractionAlgorithm;
 
 import java.io.InputStream;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.sun.org.apache.xml.internal.security.keys.keyresolver.KeyResolver.length;
@@ -329,6 +331,9 @@ public class TablePdf {
         //新增特殊列的处理
         mapST8.put("uuid","unique_identifier");
         mapST8.put("havaFileNa","file_name");
+        List<String> specialColList=new ArrayList<String>();
+        specialColList.add("remark");
+        mapST8.put("specialColList",specialColList);
         Map<String,Object> colIST8=new HashMap<String,Object>(); //(从1开始)
         colIST8.put("TASKCARDTITLE",3);
         colIST8.put("TYPE",4);
@@ -477,7 +482,7 @@ public class TablePdf {
      * @Date 2020-12-23
      * @return  页面插入sql(返回空表拦截了,直接 continue;)
      */
-    public String retInSql(List<List<String>> newrows,Map conditionsMap,String uuid,String fileName)throws Exception{
+    public String retInSql(List<List<String>> newrows,Map conditionsMap,Map<String,Object> paramMap)throws Exception{
         //表头list获取,用于校验那个列缺失
         List<String> tabTList = newrows.get(0);
 
@@ -487,7 +492,10 @@ public class TablePdf {
         String tabnam=(String)conditionsMap.get("tabnam");
         String uuidC=(String)conditionsMap.get("uuid");
         String havaFileNa=(String)conditionsMap.get("havaFileNa");
+        List<String> specialColList=(List<String>) conditionsMap.get("specialColList");
         List<String> tabcols=(List<String>)conditionsMap.get("tabcols");
+        String uuid=(String)paramMap.get("uuid");
+        String fileName=(String)paramMap.get("fileName");
         for(int i=0;i<tabcols.size();i++){
             String tabcol= "`"+tabcols.get(i)+"`";
             if(i==0){
@@ -502,14 +510,24 @@ public class TablePdf {
         if(StringUtils.isNotBlank(havaFileNa)){
             zdB.append(",`"+havaFileNa+"`");
         }
+        if(specialColList!=null&&specialColList.size()>0){
+            for(String strr: specialColList){
+                zdB.append(",`"+strr+"`");
+            }
+        }
         //sql要的list
         List<List<String>> sqllist=new ArrayList<List<String>>();
+        Map<Integer,Map<String,String>> specialColMap=new HashMap<>();
         //第一列有值,才认为是一条需要插入的数据,其它列有值但第一列无值则认为和上是同一条数据
         //"b".equals(type)||"hi".equals(type) 现模板都需如下,所以直接写true
         if(true){
+            //行数
+            int rowN=0;
+            boolean boll=false;
+            Integer specialColMapKey=null;
             for(int i=1;i<newrows.size();i++){ //循环行(正式数据从1开始,0是表头)
                 List<String> strings = newrows.get(i);
-                for(int ii=0;ii<strings.size();ii++){//循环列
+                for(int ii=0;ii<strings.size();ii++){ //循环列
                     String s = strings.get(ii);
                     if(StringUtils.isBlank(s)){ //此列无值continue
                         continue;
@@ -519,8 +537,50 @@ public class TablePdf {
                     //插入数据过滤
                     if(("hi".equals(type))&&(ii==0)&&(s.indexOf("SECTION")!=-1)){
                         break;//退出二重循环
-                    }if(("sloc".equals(type))&&(ii==0)&&(s.indexOf("(Continued)")!=-1)){
+                    }else if(("sloc".equals(type))&&(ii==0)&&(s.indexOf("(Continued)")!=-1)){
                         s=s.replaceAll("\\(Continued\\)","");
+                    }else if("CRJ_ST8".equals(type)){   //此有合并单元格的情况,这种直接放进某列里
+                        if(ii==1){
+                            String pp="^[A-Z]\\S+:$";
+                            Pattern pattern = Pattern.compile(pp);
+                            Matcher matcher = pattern.matcher(s);
+                            if(matcher.find()){
+                                //匹配上了
+                                boll=true;
+                                rowN=i;
+                                int size = sqllist.size();
+                                if(size>0){
+                                    specialColMapKey=size-1;
+                                    Map<String, String> stringStringMap =new HashMap<>();
+                                    specialColMap.put(specialColMapKey,stringStringMap);
+                                }
+                            }else{
+                                pp="^[0-9\\-]+$";
+                                pattern = Pattern.compile(pp);
+                                matcher = pattern.matcher(s);
+                                if(matcher.find()){
+                                    boll=false;
+                                }
+                            }
+                        }
+                        if(boll){
+                            if(specialColMapKey!=null){
+                                Map<String, String> stringStringMap = specialColMap.get(specialColMapKey);
+                                String remark = stringStringMap.get("remark");
+                                if(StringUtils.isNotBlank(remark)){
+                                    String ta=" ";
+                                    if(i!=rowN){
+                                        ta="\\r\\n";
+                                        rowN=i;
+                                    }
+                                    stringStringMap.put("remark",remark+ta+s);
+                                }else {
+                                    stringStringMap.put("remark",s);
+                                }
+
+                            }
+                            continue; //继续循环下一个列
+                        }
                     }
                     if(ii==0){ //第一列有值,才认为是一条需要插入的数据
                         List<String> col=new ArrayList<String>();
@@ -589,6 +649,17 @@ public class TablePdf {
             if(StringUtils.isNotBlank(havaFileNa)){
                 val=val+",'"+fileName+"'";
             }
+            if(specialColList!=null&&specialColList.size()>0){
+                Map<String, String> stringStringMap = specialColMap.get(i);
+                if(stringStringMap==null){
+                    val=val+",''";
+                }else{
+                    for(String strr: specialColList){
+                        val=val+",'"+stringStringMap.get(strr)+"'";
+                    }
+                }
+
+            }
             val=val+")";
             if(i==0){
                 sql="insert into "+tabnam+"("+zdB.toString()+") values "+val;
@@ -650,7 +721,7 @@ public class TablePdf {
                     if(StringUtils.isNotBlank(s)){
                         s=s.replaceAll("\\s", "");
                         if(s.equals(fCloV)){
-                            //表格数据方式获取的提取数据输出
+                            //测试-表格数据方式获取的提取数据输出
                             /*for(int ii=0;ii<rows.size();ii++){
                                 List<String> rowscol=rows.get(ii);
                                 for(int iii=0;iii<rowscol.size();iii++){
@@ -848,7 +919,7 @@ public class TablePdf {
         redressRows(conditionsMap,rows);
 
 
-        //原数据输出
+        //测试-原数据输出
         /*for(int ii=0;ii<rows.size();ii++){
             List<String> rowscol=rows.get(ii);
             for(int iii=0;iii<rowscol.size();iii++){
@@ -864,8 +935,8 @@ public class TablePdf {
         List<List<String>> newrows=new ArrayList<List<String>>();
         //扩展表数据获取(即添加多少列给原数据)
         extendTable(rows,textList,colmap,newrows);
-        //解析后的数据输出
-        for(int ii=0;ii<newrows.size();ii++){
+        //测试-解析后的数据输出
+        /*for(int ii=0;ii<newrows.size();ii++){
             List<String> rowscol=newrows.get(ii);
             for(int iii=0;iii<rowscol.size();iii++){
                 String str=rowscol.get(iii);
@@ -875,7 +946,7 @@ public class TablePdf {
             }
             //当前行结尾,后期注释掉
             System.out.println("*");
-        }
+        }*/
         //主动清数据
         textList.clear();
         return newrows;
@@ -897,7 +968,7 @@ public class TablePdf {
                     List<String> strnew2=new ArrayList<String>();
                     strnew2.add("TASK CARD TITLE");strnew2.add("SKILL");strnew2.add("");
                     rows.add(1,strnew2);*/
-                    //如上时表头行多1,需要改 titn 值,所以如下
+                    //如上代码时,表头行会多1,需要改 titn 值,所以弃用用如下代码
                     List<String> strnew=new ArrayList<String>();
                     strnew.add("TASK CARD TASK TASK");strnew.add("51000 lb MTOW MAN");strnew.add("TASK CARD TITLE SKILL");
                     rows.set(0,strnew);
