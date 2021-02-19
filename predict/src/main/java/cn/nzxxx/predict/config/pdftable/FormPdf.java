@@ -199,15 +199,15 @@ public class FormPdf {
         mapRule10.put("indexI",0);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
         mapRule10.put("valType","rowset");//值类型:单行 single ,多行 rowset ,复合 composite
         mapRule10.put("matchI","DESCRIPTION: (.+)");//匹配开始()里是要的值
-        mapRule10.put("endMatch","REFERENCE:");//匹配结束
+        mapRule10.put("endMatch","REFERENCE:|REFERENCES:");//匹配结束
         mapRule10.put("isChangeIndex","true");//改变i为当前行
         ruleCRJ.add(mapRule10);
         Map<String, Object> mapRule11=new HashMap<String, Object>();
         mapRule11.put("tempKey","Reference");//对应模板值
-        mapRule11.put("matchT","REFERENCE:");//匹配开始的正则
+        mapRule11.put("matchT","REFERENCE:|REFERENCES:");//匹配开始的正则
         mapRule11.put("indexI",0);//需提取值开始提取时,相对于触发依据所在行位置"-1"即在上一行
         mapRule11.put("valType","single");//值类型:单行 single ,多行 rowset ,复合 composite
-        mapRule11.put("matchI","^REFERENCE: (.+)");//被提取值正则匹配规则,具名组匹配提值
+        mapRule11.put("matchI","^REFERENCE: (.+)|^REFERENCES: (.+)");//被提取值正则匹配规则,具名组匹配提值
         ruleCRJ.add(mapRule11);
         Map<String, Object> mapRule12=new HashMap<String, Object>();
         mapRule12.put("tempKey","MrmReference");//对应模板值
@@ -855,7 +855,7 @@ public class FormPdf {
                     "(AMM_FILE_ID,UNIQUE_IDENTIFIER,WORD_PATH,AIRCRAFT_SERIES,\n" +
                     "MANUAL_REV,AMENDMENT,TASK_CARD_NUMBER,TASK_TYPE,SKILL,\n" +
                     "LABOR_HOURS,NBR_PERSONS,ZONES,AIRCRAFT_EFFECTIVITY,\n" +
-                    "TASK_DESCRIPTION,REFERENCE,MRM_REFERENCE,NOTE,VERSION_DATE)\n" +
+                    "TASK_DESCRIPTION,REFERENCE,MRM_REFERENCE,NOTE,VERSION_DATE,ANALY_PDF_DATA)\n" +
                     "values ("+AMM_FILE_ID+",'"+uuidd+"','"+saveUrl+"','"+
                     Helper.nvlString(vallMap.get("AircraftSeries"))+"','"+
                     Helper.nvlString(vallMap.get("Rev"))+"','"+
@@ -871,7 +871,9 @@ public class FormPdf {
                     Helper.nvlString(vallMap.get("Reference"))+"','"+
                     Helper.nvlString(vallMap.get("MrmReference"))+"','"+
                     Helper.nvlString(vallMap.get("Note"))+"','"+
-                    analyPdfM.get("VERSION_DATE")+"')";
+                    analyPdfM.get("VERSION_DATE")+"','"+
+                    Helper.mapToStringJSON(analyPdfM)+"')";
+            //System.out.println(Helper.mapToStringJSON(analyPdfM).length());
             jdbcTemplate.update(crjCardSql);
             //主键
             CARD_ID = String.valueOf(getCRJKey(uuidd,jdbcTemplate));
@@ -952,7 +954,7 @@ public class FormPdf {
                     "(AMM_FILE_ID,UNIQUE_IDENTIFIER,WORD_PATH," +
                     "TITLE,CARDNUM,TASK,WORKAREA," +
                     "VERSION,THRESHOLD,REPEAT_T," +
-                    "AIRPLANE,ENGINE_T,ACCESS,ZONE_T,VERSION_DATE,SKILL) " +
+                    "AIRPLANE,ENGINE_T,ACCESS,ZONE_T,VERSION_DATE,SKILL,ANALY_PDF_DATA) " +
                     "values("+AMM_FILE_ID+",'"+uuidd+"','"+saveUrl+"','"+
                     Helper.nvlString(vallMap.get("TITLE"))+"','"+
                     Helper.nvlString(vallMap.get("CARDNUM"))+"','"+
@@ -966,7 +968,8 @@ public class FormPdf {
                     Helper.nvlString(vallMap.get("ACCESS"))+"','"+
                     Helper.nvlString(vallMap.get("ZONE"))+"','"+
                     analyPdfM.get("VERSION_DATE")+"','"+
-                    Helper.nvlString(vallMap.get("SKILL"))+"')";
+                    Helper.nvlString(vallMap.get("SKILL"))+"','"+
+                    Helper.mapToStringJSON(analyPdfM)+"')";
             jdbcTemplate.update(cardSql);
             //主键
             CARD_ID = String.valueOf(getBOEINGKey(uuidd,jdbcTemplate));

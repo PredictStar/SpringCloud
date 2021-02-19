@@ -1,10 +1,12 @@
-package cn.nzxxx.predict.webrequest;
+package cn.nzxxx.predict.webrequest.controller;
 
 import cn.nzxxx.predict.config.pdftable.FormPdf;
 import cn.nzxxx.predict.config.pdftable.TablePdf;
 import cn.nzxxx.predict.toolitem.entity.Help;
 import cn.nzxxx.predict.toolitem.entity.ReturnClass;
+import cn.nzxxx.predict.toolitem.service.TestPageServiceI;
 import cn.nzxxx.predict.toolitem.tool.Helper;
+import cn.nzxxx.predict.webrequest.service.PdfServiceI;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.jboss.logging.Logger;
@@ -14,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import technology.tabula.*;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -23,6 +27,8 @@ import java.util.*;
 @RequestMapping("/pdf")
 public class PDFController {
     private final Logger logger=Logger.getLogger(this.getClass());
+    @Autowired
+    private PdfServiceI pdfSer;
 	@Autowired
     private JdbcTemplate jdbcTemplate;
     /**
@@ -140,6 +146,7 @@ public class PDFController {
      * http://localhost:8081/pdf/executePDFForm
      * @return 状态说明
      * @throws Exception
+     * 使用: 从 amm_file 提取标记是是0的,进行解析
      */
     @RequestMapping("/executePDFForm")
     public ReturnClass executePDFForm(){
@@ -236,11 +243,11 @@ public class PDFController {
             //提取值规则定义
             List<Map<String,Object>> ruleList=fpdf.getNewRule();
             //循环所有pdf页 -暂时先循环一次
-            //for(int i=42;i<=pagenum;i++){ //测试-后期去掉
+            //for(int i=737;i<=pagenum;i++){ //测试-后期去掉
             for(int i=1;i<=pagenum;i++){
                 Page page=fpdf.retPageC(oe,i);
                 //测试-后期去掉
-                /*if(i==54){
+                /*if(i==744){
                     i=pagenum;
                 }*/
                 //当前页的类型(1:word的首页;2:需解析的页面;)
@@ -287,6 +294,27 @@ public class PDFController {
             System.out.println(strEInfo);
             reC=Help.returnClassT(500,"解析"+folderName+"异常",strEInfo);
             return reC;
+        }
+    }
+    /**
+     *  下载翻译后的pdf
+     *  http://localhost:8081/pdf/translateTaskCard?idd=588
+     *  fileName 文件名 "section2.pdf"
+     * @throws Exception
+     */
+    @RequestMapping(value="/translateTaskCard")
+    public void translateTaskCard(String idd, HttpServletRequest request, HttpServletResponse response){
+        try{
+            String analyPdfData=pdfSer.getAnalyPdfData(idd);
+            if(StringUtils.isBlank(analyPdfData)){
+                return;
+            }
+            pdfSer.translateTaskCard(analyPdfData,request,response);
+        }catch (Exception e){
+            String strE=Helper.exceptionToString(e);
+            logger.error(strE);
+            String strEInfo=strE.substring(0,500>strE.length()?strE.length():500);
+            System.out.println(strEInfo);
         }
     }
 }

@@ -1,5 +1,6 @@
 package cn.nzxxx.predict.config.pdftable;
 
+
 import cn.nzxxx.predict.toolitem.tool.Helper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -15,7 +16,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static com.sun.org.apache.xml.internal.security.keys.keyresolver.KeyResolver.length;
 
 //后期可直接指定表头列，如第一列是啥，进行优化(称为定制版(人为自定义表头),现在写的叫标准版(自动解析表头))
 //解析pdf,table数据

@@ -1,4 +1,4 @@
-package cn.nzxxx.predict.webrequest;
+package cn.nzxxx.predict.webrequest.controller;
 
 import cn.nzxxx.predict.config.pdftable.FormPdf;
 import org.jboss.logging.Logger;
@@ -30,7 +30,7 @@ public class HelloController {
         map2.put("text","uuuuu");
         list.add(map);
         list.add(map2);*/
-        return "";
+        return "110";
     }
     @RequestMapping("/hello")
     public String hello(ModelMap map) {
