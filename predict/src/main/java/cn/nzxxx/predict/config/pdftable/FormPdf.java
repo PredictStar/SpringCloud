@@ -26,11 +26,10 @@ import technology.tabula.extractors.BasicExtractionAlgorithm;
 import technology.tabula.extractors.SpreadsheetExtractionAlgorithm;
 
 import javax.imageio.ImageIO;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
+import java.io.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -96,7 +95,7 @@ public class FormPdf {
         //此行如果值和表头数不对,认为是同一条数据
         crjMap.put("tableRule",tableCRJ);
 
-        crjMap.put("temp","taskCardCRJT.docx");//模板名称
+        crjMap.put("temp","taskCardCRJT");//模板名称
         crjMap.put("imageW",660);//图片宽
         crjMap.put("imageH",960);//图片高
         //页面类型规则定义(1:word的首页;2:需解析的页面;剩余解析成图片(注意analyPdfM没值时图片数据先不赋进去))
@@ -299,7 +298,7 @@ public class FormPdf {
         mapp.put("crj",crjMap);//对crj的整体定义
         //------------BOEING 开始--------------------
         Map<String,Object> boeingMap=new HashMap<String,Object>();
-        boeingMap.put("temp","taskCardBoeingT.docx");//模板名称
+        boeingMap.put("temp","taskCardBoeingT");//模板名称
 
         //页面类型规则定义(1:word的首页;2:需解析的页面;剩余解析成图片(注意 analyPdfM 没值时图片数据先不赋进去))
         //下根据 indexOf 去匹配的
@@ -694,14 +693,26 @@ public class FormPdf {
      */
     public void putTable(Map<String, Object> setMap,Map<String, Object> tabMap,String key){
         //表头值
-        String[] tabHead=(String[]) tabMap.get("tabHead");
+        String[] tabHead;
+        Object tabHead1 = tabMap.get("tabHead");
+        if(tabHead1 instanceof List){
+            tabHead = ((List<String>)tabHead1).toArray(new String[((List<String>)tabHead1).size()]);
+        }else{
+            tabHead=(String[]) tabHead1;
+        }
         //表主体
-        List<String[]> tabBody=(List) tabMap.get("tabBody");
+        List tabBody=(List) tabMap.get("tabBody");
         List<RowRenderData> talist=new ArrayList<RowRenderData>();
         RowRenderData row0 = Rows.of(tabHead).textBold().center().create();//颜色即: .bgColor("607D8B") #607D8B
         talist.add(row0);
         for(int i=0;i<tabBody.size();i++){
-            String[] strings = tabBody.get(i);
+            String[] strings ;
+            Object o = tabBody.get(i);
+            if(o instanceof List){
+                strings = ((List<String>)o).toArray(new String[((List<String>)o).size()]);
+            }else{
+                strings=(String[]) o;
+            }
             RowRenderData tablRrow = Rows.of(strings).create();
             talist.add(tablRrow);
         }
@@ -719,13 +730,18 @@ public class FormPdf {
      * @Date 2021-01-07
      * @return  ReturnClass
      */
-    public ReturnClass cWordT(Map<String,Object> analyPdfM)throws Exception{
+    public ReturnClass cWordT(Map<String,Object> analyPdfM, HttpServletResponse response)throws Exception{
         ReturnClass reC=Help.returnClassT(200,"生成word成功","");
         String filePath = ResourceUtils.getURL("classpath:").getPath();//D:/SpringCloud/predict/target/classes/
         // 模板路径 //实际地址 target\classes\META-INF\resources\wordtemplate
         Map<String,Object> tMap=mapp.get(fileType);
         //主模板名称
         String mainNameT=(String)tMap.get("temp");
+        if(response!=null){ //说明是翻译方法translateTaskCard 执行此
+            mainNameT=mainNameT+"_EC.docx";
+        }else{
+            mainNameT=mainNameT+".docx";
+        }
         int imageW=(Integer)tMap.get("imageW");//图片宽
         int imageH=(Integer)tMap.get("imageH");//图片高
         filePath=filePath+"META-INF/resources/wordtemplate/";
@@ -779,11 +795,28 @@ public class FormPdf {
         }
         // 模板赋值
         template.render(params);
-        //保存所在文件夹
-        String saveUrl=(String) analyPdfM.get("saveUrl");
-        //保存后文件名
-        String saveName=(String) analyPdfM.get("saveName");
-        template.writeToFile(saveUrl+"/"+saveName+".docx");
+
+        if(response==null){
+            //保存所在文件夹
+            String saveUrl=(String) analyPdfM.get("saveUrl");
+            //保存后文件名
+            String saveName=(String) analyPdfM.get("saveName");
+            template.writeToFile(saveUrl+"/"+saveName+".docx");
+        }else {
+            Map vall=(Map) analyPdfM.get("vall");
+            String fileName=(String) vall.get("TaskCardNumber");
+            // 设置response参数，可以打开下载页面
+            response.reset();
+            response.setContentType("application/vnd.ms-excel;charset=utf-8");
+            if(fileName.equals(new String(fileName.getBytes("GB2312"), "GB2312"))){
+                fileName=new String(fileName.getBytes("GB2312"), "ISO_8859_1");//无此中文名不识别,会为""
+            }
+            response.setHeader("Content-Disposition", "attachment;fileName=" + fileName+".docx");
+            OutputStream out = response.getOutputStream();
+            template.write(out);
+            out.flush();
+            out.close();
+        }
         template.close();
         return reC;
     }
@@ -848,6 +881,7 @@ public class FormPdf {
         analyPdfM.put("saveUrl",saveUrl);
         String uuidd = UUID.randomUUID().toString();
         analyPdfM.put("UUID",uuidd);
+        analyPdfM.put("fileType",fileType);
         if("crj".equals(fileType)){
             // 普通文本赋值|table的赋值
             Map<String,String> vallMap=(Map)analyPdfM.get("vall");
@@ -2570,7 +2604,7 @@ public class FormPdf {
             return reC;
         }
         //生成word
-        reC=cWordT(analyPdfM);
+        reC=cWordT(analyPdfM,null);
         if(!reC.getStatusCode().equals("200")){
             return reC;
         }

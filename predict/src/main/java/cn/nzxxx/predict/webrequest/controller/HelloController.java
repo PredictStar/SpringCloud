@@ -37,6 +37,7 @@ public class HelloController {
         // 加入一个属性，用来在模板中读取
         map.addAttribute("name", "li");
         map.addAttribute("bookTitle", "近代简史");
+        logger.error(System.getProperty("user.dir")+"近代简史");
         return "/hello";
     }
 }

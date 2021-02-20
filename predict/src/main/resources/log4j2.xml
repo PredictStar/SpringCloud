@@ -6,10 +6,8 @@
         <console name="Console" target="SYSTEM_OUT">
             <PatternLayout pattern="[%d{HH:mm:ss:SSS}] [%p] - %l - %m%n"/>
         </console>
-        <!--${sys:user.home}
-            等价于  System.getProperty("user.home") 用户的主目录返回例 C:\Users\18722-->
-        <RollingFile name="RollingFileInfo" fileName="${sys:user.home}/logs/info.log"
-                     filePattern="${sys:user.home}/logs/$${date:yyyy-MM}/info-%d{yyyy-MM-dd}-%i.log">
+        <RollingFile name="RollingFileInfo" fileName="${sys:user.dir}/logs/predict.info.log"
+                     filePattern="${sys:user.dir}/logs/$${date:yyyy-MM}/predict.info-%d{yyyy-MM-dd}-%i.log">
             <!--控制台只输出level及以上级别的信息（onMatch），其他的直接拒绝（onMismatch）-->
             <Filters>
                 <ThresholdFilter level="INFO"/>
@@ -22,8 +20,8 @@
             </Policies>
         </RollingFile>
 
-        <RollingFile name="RollingFileWarn" fileName="${sys:user.home}/logs/warn.log"
-                     filePattern="${sys:user.home}/logs/$${date:yyyy-MM}/warn-%d{yyyy-MM-dd}-%i.log">
+        <RollingFile name="RollingFileWarn" fileName="${sys:user.dir}/logs/predict.warn.log"
+                     filePattern="${sys:user.dir}/logs/$${date:yyyy-MM}/predict.warn-%d{yyyy-MM-dd}-%i.log">
             <Filters>
                 <ThresholdFilter level="WARN"/>
                 <ThresholdFilter level="ERROR" onMatch="DENY" onMismatch="NEUTRAL"/>
@@ -35,8 +33,8 @@
             </Policies>
         </RollingFile>
 
-        <RollingFile name="RollingFileError" fileName="${sys:user.home}/logs/error.log"
-                     filePattern="${sys:user.home}/logs/$${date:yyyy-MM}/error-%d{yyyy-MM-dd}-%i.log">
+        <RollingFile name="RollingFileError" fileName="${sys:user.dir}/logs/predict.error.log"
+                     filePattern="${sys:user.dir}/logs/$${date:yyyy-MM}/predict.error-%d{yyyy-MM-dd}-%i.log">
             <ThresholdFilter level="ERROR"/>
             <PatternLayout pattern="[%d{HH:mm:ss:SSS}] [%p] - %l - %m%n"/>
             <Policies>

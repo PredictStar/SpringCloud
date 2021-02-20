@@ -30,6 +30,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import cn.nzxxx.predict.toolitem.entity.ReturnClass;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileItemFactory;
@@ -70,8 +72,7 @@ import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.opc.OPCPackage;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
+import com.alibaba.fastjson.JSONObject;
 //jackson包
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
@@ -610,12 +611,13 @@ public class Helper {
 // ----------------------------------------------------------------------------------------------------------------
 //--------------------------------------数据类型转换--------------------------------------------------------------------
 
+
 	/**
 	 *List<Map<String,Object>>-->List<实体类>
 	 *@param listMap 参1的key要同属性值;value是null则为默认值(逻辑见下continue处);
 	 *@param cla    参2是实体类的class对象,两个参其中一方为null返回null
 	 *@return 接收:List<实体类>对象=此方法;
-	 *实体类是Float|Long|float|long类型数据我没做处理,因此如果需要后期再添
+	 *实体类是Float|Long|float|long|List|Map类型数据我没做处理,因此如果需要后期再添
 	 *此方法会对map的值eToNULL;猜方法里是遍历属性,根据属性提map值,依据'@exception'规则赋值
 	 *现在只是对属性String|Double(不是数字为0.0)|Integer(不是数字为0)|Date值(此类型仅限"yyyy-MM-dd",不是日期为null)提取,其它类型以待后期补充
 	 *发生异常返回null,注无法转换的会赋值为默认值
@@ -733,58 +735,18 @@ public class Helper {
 	 * 前台的json->str,后台转换时不会报错,若自己写或拼一个传后台执行此方法(value是[]格式的字符串,即{'':'[]'}会报错,只能是\"['a']\"或'[\"a\"]'会报错,若就想"[""]"可用多个转义字符解决
 	 * 后台接收此方法返回值时:若写泛型要注意类型冲突,不写其泛型会默认为Object
 	 * String(json)
-	 * Helper.stringJSONToMap("null") 返回 {}
+	 * 旧写法发现数据里有 \r\n 或 \r 或 \n 转换时报错,下是新写法,所以没这问题
+	 * 但如果字符串输出内容带"\" 如 {"colMatch":["[A-Z0-9\-]} 执行下会报错(旧写法没这问题)
+	 * 	可 a()方法 暂时去掉"\" 转换Map后 b()方法,再转回来
+	 * 		.replaceAll("\\\\","反斜杠暂时去掉");
 	 * @return Map
 	 */
 	public static Map stringJSONToMap(final String json)
 	{
-		final HashMap map = new HashMap();
-		final JSONObject js =  JSONObject.fromObject(json);
-		populate(js,map);
+		Map<String,Object> map = JSON.parseObject(json, Map.class);
 		return map;
 	}
-	/**
-	 * @describe String(json)->Map附属
-	 */
-	public static Map populate(final JSONObject jsonObject,final Map map) {
-		for (final Iterator iterator = jsonObject.entrySet().iterator(); iterator
-				.hasNext();) {
-			final String entryStr = String.valueOf(iterator.next());
-			final String key = entryStr.substring(0, entryStr.indexOf("="));
-			final String value = entryStr.substring(entryStr.indexOf("=") + 1,
-					entryStr.length());
-			if (jsonObject.get(key).getClass().equals(JSONObject.class)) {
-				final HashMap _map = new LinkedHashMap();
-				map.put(key, _map);
-				populate(jsonObject.getJSONObject(key),_map);
-			} else if (jsonObject.get(key).getClass().equals(JSONArray.class)) {
-				final ArrayList list = new ArrayList();
-				map.put(key, list);
-				populateArray(jsonObject.getJSONArray(key),list);
-			} else {
-				map.put(key, jsonObject.get(key));
-			}
-		}
-		return map;
-	}
-	/**
-	 * @describe String(json)->Map附属
-	 */
-	public static void populateArray(final JSONArray jsonArray,final List list) {
-		for (int i = 0; i < jsonArray.size(); i++) {
-			if (jsonArray.get(i).getClass().equals(JSONArray.class)) {
-				final ArrayList _list = new ArrayList();
-				list.add(_list);
-				populateArray(jsonArray.getJSONArray(i),_list);
-			} else if (jsonArray.get(i).getClass().equals(JSONObject.class)) {
-				final HashMap _map = new HashMap();
-				list.add(_map);
-				populate(jsonArray.getJSONObject(i),_map);
-			} else {
-				list.add(jsonArray.get(i));
-			}
-		}
-	}
+
 
 	/**
 	 * "[]"->[]	输出此字符串应该是['pm25']而不是"['pm25']"在显示台		  *
@@ -801,15 +763,13 @@ public class Helper {
 	 *		通过前台的json->str进行转换,在后台获取执行此方法是可以的.
 	 * 	若后台执行此方法,参是自己定义的字符串(只能是"[\"['a']\",\"['a']\"]"或"['[\"a\"]','[\"a\"]']",若就想"[""]"可用多个转义字符解决
 	 * 当元素是[]格式,例"[['e','3'],[\"e\",\"r\"]]";->list<List>;当元素是{}格式->list<Map>
-	 * 旧- "[null]"	判断用equals("null")返回true;参为null    	list里会有一个元素,判断用equals("null")//转为integer报错
-	 * 新- "[null]"	|null返回[{}],获取的是个Map
+	 * 2.4版本json-lib- "[null]"	判断用equals("null")返回true;参为null list里会有一个元素,判断用equals("null")//转为integer报错
+	 * 2.1版本- "[null]"	| null返回[{}],获取的是个Map
 	 * 为什么规则变了,因为jar包2.1?
 	 */
 	public static List stringJSONToList(final String json)
 	{
-		final ArrayList list = new ArrayList();
-		final JSONArray ja = JSONArray.fromObject(json);
-		populateArray(ja,list);
+		final List list = JSONObject.parseArray(json);
 		return  list;
 	}
 
@@ -842,7 +802,7 @@ public class Helper {
 		try {
 			String writeValueAsString = MAPPER.writeValueAsString(object);
 			return writeValueAsString;
-		} catch (JsonProcessingException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -899,7 +859,8 @@ public class Helper {
 	 */
 	public static List<String> stringToArrayDate(String str){
 		List<String> date=new ArrayList<String>();
-		Pattern pattern = Pattern.compile("(\\d{1,4}(-|/| )(([0]?[1-9])|([1][0-2]))(-|/| )([12][0-9]|3[01]|0?[1-9]))|(\\d{1,4}年(([0]?[1-9])|([1][0-2]))月([12][0-9]|3[01]|0?[1-9])日)");
+		String pp="(\\d{1,4}(-|/| )(([0]?[1-9])|([1][0-2]))(-|/| )([12][0-9]|3[01]|0?[1-9]))|(\\d{1,4}年(([0]?[1-9])|([1][0-2]))月([12][0-9]|3[01]|0?[1-9])日)";
+		Pattern pattern = Pattern.compile(pp);
 		Matcher matcher = pattern.matcher(str);
 		while(matcher.find()){
 			date.add(matcher.group(0));
@@ -989,50 +950,17 @@ public class Helper {
 	 *
 	 */
 	public static String listToStringJSON(final List list){
-		return JSONArray.fromObject(list).toString();
-
+		return JSONArray.toJSONString(list);
 	}
 	/**
-	 * Map->String(json);注意Map的key必须为String类型
+	 * Map->String(json);猜:原旧写法key必须为String类型,如下新写法,没这问题
 	 * 转换后例：{"a":1,"b":2}		.js获取例：data.b
 	 * 返回值key顺序是按照哈希表排序
 	 * @param map Map
 	 * @return String
 	 */
 	public static String mapToStringJSON(final Map map){
-		return JSONObject.fromObject(map).toString();
-
-	}
-	/**
-	 * 具有参考价值--sy
-	 * {"data":[{"b":2,"a":1},{"A":"1","B":"2"}]}	.js获取例：data.data[0].b
-	 * 从指定的list[map]对象中获取要设置的值后组装成返回给前台的JSON对象字符串
-	 * @param list
-	 * @param count 总数
-	 * @return String
-	 */
-	public static String formListMap(final List list,final Object count) {
-		final JSONArray options = new JSONArray();
-		for(final Object obj : list) {
-			final Iterator it = ((Map)obj).keySet().iterator();
-			final JSONObject option = new JSONObject();
-			while (it.hasNext()) {
-				final String key = (String) it.next();
-				Object value = ((Map)obj).get(key);
-				value = value!=null?value:"";
-				option.put(key,value);
-			}
-			options.add(option);
-		}
-		final JSONObject result = new JSONObject();
-		result.put("data", options.toString());
-		if(count!=null)
-		{
-			final JSONObject page = new JSONObject();
-			page.put("totalRowNum", Integer.parseInt(String.valueOf(count)));
-			result.put("pageInfo", page);
-		}
-		return result.toString();
+		return JSONObject.toJSONString(map);
 	}
 	/**
 	 *获取堆栈异常信息Exception e->String
