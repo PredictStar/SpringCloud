@@ -4,6 +4,8 @@ package cn.nzxxx.predict.webrequest.service.impl;
 import cn.nzxxx.predict.config.pdftable.FormPdf;
 import cn.nzxxx.predict.toolitem.entity.ReturnClass;
 import cn.nzxxx.predict.toolitem.tool.Helper;
+import cn.nzxxx.predict.webrequest.controller.PDFController;
+import cn.nzxxx.predict.webrequest.controller.TranslateController;
 import cn.nzxxx.predict.webrequest.service.PdfServiceI;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
@@ -28,6 +30,8 @@ public class PdfServiceImpl implements PdfServiceI {
     private final Logger logger=Logger.getLogger(this.getClass());
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
+    @Autowired
+    TranslateController translateController ;
 	/**
 	 * 获取数据并翻译下载
 	 * @author 子火 

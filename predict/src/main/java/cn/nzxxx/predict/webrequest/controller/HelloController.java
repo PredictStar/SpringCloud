@@ -15,6 +15,10 @@ import java.util.Map;
 @Controller
 public class HelloController {
     private final Logger logger=Logger.getLogger(this.getClass());
+
+    /**
+     * http://localhost:8081/test/aa
+     */
     @RequestMapping(value="/test/aa")
     @ResponseBody
     public String testBB(String str) throws Exception{
