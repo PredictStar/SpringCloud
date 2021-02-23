@@ -25,14 +25,14 @@ public class TranslateController {
         return "ooo";
     }
     /**
-     * 英文转中文  http://localhost:8081/translate/etoc?vall=wordd
-     * @param professional 专业类型(单词匹配后:相同优先级,优先取其对应专业;句子匹配:相同相似度,优先取其对应专业)
+     * 英文转中文  http://localhost:8081/translate/etoc?vall=I have to learn to take care of myself
+     * @param professional 专业类型,可以为空(表不查专业类型单词)(查询条件有此则优先选专业类型是其的)
      * @param vall  英文内容
      * @param type	翻译类型(单词翻译word(结合语法推导单词词性获取单个单词含义并汇总)和句子翻译sentence(匹配句子表,获取最相近句子及其翻译内容))
      * @throws Exception
      */
     @RequestMapping(value="/etoc")
-    public String testBB(String professional,String vall,String type) throws Exception{
+    public String etoc(String professional,String vall,String type) throws Exception{
         String resStr="";
         try{
             if(StringUtils.isBlank(type)){
@@ -44,9 +44,9 @@ public class TranslateController {
             //professional 可以为空
             if("word".equals(type)){
                 resStr = translate.wordTranslate(vall,professional);
-            }else if("sentence".equals(type)){
+            }/*else if("sentence".equals(type)){
                 resStr = translate.sentenceTranslate(vall,professional);
-            }
+            }*/
         }catch (Exception e){
             String strE=Helper.exceptionToString(e);
             logger.error(strE);

@@ -243,11 +243,11 @@ public class PDFController {
             //提取值规则定义
             List<Map<String,Object>> ruleList=fpdf.getNewRule();
             //循环所有pdf页 -暂时先循环一次
-            //for(int i=737;i<=pagenum;i++){ //测试-后期去掉
+            //for(int i=123;i<=pagenum;i++){ //测试-后期去掉
             for(int i=1;i<=pagenum;i++){
                 Page page=fpdf.retPageC(oe,i);
                 //测试-后期去掉
-                /*if(i==744){
+                /*if(i==128){
                     i=pagenum;
                 }*/
                 //当前页的类型(1:word的首页;2:需解析的页面;)
@@ -298,7 +298,8 @@ public class PDFController {
     }
     /**
      *  下载翻译后的pdf
-     *  http://localhost:8081/pdf/translateTaskCard?idd=588
+     *  http://localhost:8081/pdf/translateTaskCard?idd=760
+     *  idd 是 crj_card 表的主键
      *  fileName 文件名 "section2.pdf"
      * @throws Exception
      */
@@ -317,4 +318,5 @@ public class PDFController {
             System.out.println(strEInfo);
         }
     }
+
 }
