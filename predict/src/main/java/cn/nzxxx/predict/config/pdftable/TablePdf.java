@@ -5,7 +5,8 @@ import cn.nzxxx.predict.toolitem.tool.Helper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPageTree;
-import org.jboss.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import technology.tabula.*;
 import technology.tabula.extractors.BasicExtractionAlgorithm;
 import technology.tabula.extractors.SpreadsheetExtractionAlgorithm;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 //后期可直接指定表头列，如第一列是啥，进行优化(称为定制版(人为自定义表头),现在写的叫标准版(自动解析表头))
 //解析pdf,table数据
 public class TablePdf {
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
     private Map<String,Map<String,Object>> mapp=new HashMap<String,Map<String,Object>>();
     private List<Map<String,String>> matchList=new ArrayList<Map<String,String>>();
     //上一次的 colXY 值,当此次表头不对,colXY值直接取此,有值就不覆盖了(即就赋一次)
@@ -417,7 +419,6 @@ public class TablePdf {
 
     }
 
-    protected static final Logger logger = Logger.getLogger(TablePdf.class);
     //根据文件名获取表名
     private String getTN(String fileName){
         //表名-根据文件名去定义(全小写校验)

@@ -14,7 +14,8 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPageTree;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.poi.ss.usermodel.BorderStyle;
-import org.jboss.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -38,6 +39,7 @@ import java.util.stream.Collectors;
 
 //解析pdf,form 数据 生成word
 public class FormPdf {
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
     private Map<String,Map<String,Object>> mapp=new HashMap<String,Map<String,Object>>();
     private String fileType="";
     private List<TextElement> pageTextT=new ArrayList<TextElement>();
@@ -682,8 +684,6 @@ public class FormPdf {
         List<Map<String,Object>> newRule=Helper.stringJSONToList(ruleStr);
         return newRule;
     }
-
-    protected static final Logger logger = Logger.getLogger(FormPdf.class);
     /*把word 的table对象赋给 MAP
      * setMap 被赋值的Map
      * tabMap 表Map 描述集合
@@ -2308,6 +2308,9 @@ public class FormPdf {
         }*/
         Map<String,Integer> spaceRule=(Map)mMap.get("spaceRule");
         Integer spaceNextNum=(Integer)mMap.get("spaceNextNum");
+        if(spaceNextNum==null){
+            spaceNextNum=0;
+        }
         boolean bol=true;
         for(String key:spaceRule.keySet()){
             Pattern pattern = Pattern.compile(key);

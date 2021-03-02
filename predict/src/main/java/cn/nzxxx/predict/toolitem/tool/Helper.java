@@ -32,6 +32,7 @@ import javax.servlet.http.HttpServletResponse;
 import cn.nzxxx.predict.toolitem.entity.ReturnClass;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileItemFactory;
@@ -69,12 +70,7 @@ import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
-import org.apache.poi.openxml4j.opc.OPCPackage;
-import org.apache.poi.poifs.filesystem.POIFSFileSystem;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import com.alibaba.fastjson.JSONObject;
 //jackson包
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.web.multipart.MultipartFile;
@@ -387,7 +383,25 @@ public class Helper {
 		return list;
 	}
 
-
+	/**
+	 * 清除字符串两侧的char
+	 * @param str 源字符串
+	 * @param charClear
+	 * @return
+	 */
+	public static String trimStringChar(String str, char charClear) {
+		int len = str.length();
+		int st = 0;
+		char[] val = str.toCharArray();
+		char sbeTrim = charClear;
+		while ((st < len) && (val[st] == sbeTrim)) {
+			st++;
+		}
+		while ((st < len) && (val[len - 1] == sbeTrim)) {
+			len--;
+		}
+		return ((st > 0) || (len < str.length())) ? str.substring(st, len) : str;
+	}
 
 	/**
 	 * String为null赋为"",否则去两边空格
@@ -735,6 +749,7 @@ public class Helper {
 	 * 前台的json->str,后台转换时不会报错,若自己写或拼一个传后台执行此方法(value是[]格式的字符串,即{'':'[]'}会报错,只能是\"['a']\"或'[\"a\"]'会报错,若就想"[""]"可用多个转义字符解决
 	 * 后台接收此方法返回值时:若写泛型要注意类型冲突,不写其泛型会默认为Object
 	 * String(json)
+	 * "" 或 " " 会报错 ,null 返回 null
 	 * 旧写法发现数据里有 \r\n 或 \r 或 \n 转换时报错,下是新写法,所以没这问题
 	 * 但如果字符串输出内容带"\" 如 {"colMatch":["[A-Z0-9\-]} 执行下会报错(旧写法没这问题)
 	 * 	可 a()方法 暂时去掉"\" 转换Map后 b()方法,再转回来
@@ -833,7 +848,7 @@ public class Helper {
 	}
 	/**
 	 * String(json)->List<类>
-	 * @param {}的key不为类属性名,json值无法转换为对应属性的,产生异常(猜不是标准的json字符串(要为\")也会异常)
+	 * @param {}的key,若有不为类属性名(区别大小写)的,json值无法转换为对应属性的,会产生异常(猜不是标准的json字符串(要为\")也会异常),直接返回null
 	 * 实体类 属性类型为Date-json为""(猜或null)值会为null	;json里无此属性,类属性值为默认值
 	 * 前台的json->str,后台转换时不会报错,若自己写或拼一个传后台执行此方法,属性是字符串,[]格式的json只能是\"['a']\",否则报错返回null;若就想"[""]"可用多个转义字符解决
 	 * @return List<类>

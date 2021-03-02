@@ -3,7 +3,8 @@ package cn.nzxxx.predict.toolitem.controller;
 
 import cn.nzxxx.predict.toolitem.service.TestPageServiceI;
 import cn.nzxxx.predict.toolitem.tool.Helper;
-import org.jboss.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,7 +20,7 @@ import java.util.List;
 @Controller
 @RequestMapping("/testPageController")
 public class TestPageController{
-	private Logger logger=Logger.getLogger(this.getClass());
+	private Logger logger = LoggerFactory.getLogger(this.getClass());
 	@Autowired
 	private TestPageServiceI testSer;
 	/**

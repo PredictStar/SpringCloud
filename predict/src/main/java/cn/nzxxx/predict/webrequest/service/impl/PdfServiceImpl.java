@@ -8,7 +8,8 @@ import cn.nzxxx.predict.webrequest.controller.PDFController;
 import cn.nzxxx.predict.webrequest.controller.TranslateController;
 import cn.nzxxx.predict.webrequest.service.PdfServiceI;
 import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -27,11 +28,13 @@ import java.util.regex.Pattern;
 @Service("pdfService")
 @Transactional
 public class PdfServiceImpl implements PdfServiceI {
-    private final Logger logger=Logger.getLogger(this.getClass());
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
     @Autowired
     TranslateController translateController ;
+    @Autowired
+    TranslateServiceImpl translateServiceImpl ;
 	/**
 	 * 获取数据并翻译下载
 	 * @author 子火 
@@ -52,8 +55,14 @@ public class PdfServiceImpl implements PdfServiceI {
         //对数值做处理进行翻译
         Map vallMap=(Map)analyPdfM.get("vall");
         Map sectionsMap=(Map)analyPdfM.get("sections");
-        translateVall(vallMap,vallList,fileType);
-        translateSections(sectionsMap,sectionsList,fileType);
+        String sentenceL="";
+        //获取所有句柄
+        List<Map<String, Object>> allSentence = translateServiceImpl.getAllSentence(fileType);
+        //句柄根据.拆分(从0开始,即a.b会放在1里,abc放在0里)
+        Map<Integer, List<Map<String, Object>>> splitSentenceL=translateServiceImpl.splitSentenceL(allSentence);
+        sentenceL=Helper.mapToStringJSON(splitSentenceL);
+        translateVall(vallMap,vallList,fileType,sentenceL);
+        translateSections(sectionsMap,sectionsList,fileType,sentenceL);
         ReturnClass returnClass = fpdf.cWordT(analyPdfM, response);
         if(!"200".equals(returnClass.getStatusCode())){
             String strE = Helper.pojoToStringJSON(returnClass);
@@ -72,16 +81,16 @@ public class PdfServiceImpl implements PdfServiceI {
         List sectionsList=new ArrayList();
         map.put("sections",sectionsList);
         if("crj".equals(fileType)){
-            vallList.add("Skill");
+            /*vallList.add("Skill");*/
             vallList.add("Description");
             sectionsList.add("titV");
             sectionsList.add("startV");
             sectionsList.add("endV");
         }else if("boeing".equals(fileType)){
-            vallList.add("TITLE");
+            /*vallList.add("TITLE");
             vallList.add("TASK");
             vallList.add("WORKAREA");
-            vallList.add("SKILL");
+            vallList.add("SKILL");*/
             vallList.add("CONTENT");
             sectionsList.add("STARTV");
             sectionsList.add("STAT");
@@ -89,7 +98,7 @@ public class PdfServiceImpl implements PdfServiceI {
         return map;
     }
     //对 analyPdfM 里的 sections(模板里的循环部分,即区块对) 进行获取并翻译
-    public void translateSections(Object obj,List sectionsList,String fileType){
+    public void translateSections(Object obj,List sectionsList,String fileType,String sentenceL){
         if(sectionsList==null||obj==null){
             return;
         }
@@ -99,12 +108,12 @@ public class PdfServiceImpl implements PdfServiceI {
                 String keyy=(String)key;
                 if(sectionsList.contains(keyy)){
                     String value=(String)map.get(keyy);
-                    value=translateEToC(value,fileType);
+                    value=translateEToC(value,fileType,sentenceL);
                     map.put(keyy,value);
                 }else{
                     Object value=map.get(keyy);
                     if(value instanceof Map||(value instanceof List)){
-                        translateSections(value,sectionsList,fileType);
+                        translateSections(value,sectionsList,fileType,sentenceL);
                     }
                 }
             }
@@ -113,13 +122,13 @@ public class PdfServiceImpl implements PdfServiceI {
             for(int i=0;i<list.size();i++){
                 Object value = list.get(i);
                 if((value instanceof Map)||(value instanceof List)){
-                    translateSections(value,sectionsList,fileType);
+                    translateSections(value,sectionsList,fileType,sentenceL);
                 }
             }
         }
     }
     //对 analyPdfM 里的 vall 进行获取并翻译
-    public void translateVall(Map vallMap,List vallList,String fileType){
+    public void translateVall(Map vallMap,List vallList,String fileType,String sentenceL){
         if(vallMap==null||vallList==null){
             return;
         }
@@ -127,19 +136,19 @@ public class PdfServiceImpl implements PdfServiceI {
             String keyy=(String)key;
             if(vallList.contains(keyy)){
                 String value=(String)vallMap.get(keyy);
-                value=tEToC(value,false,fileType);
+                value=tEToC(value,false,fileType,sentenceL);
                 vallMap.put(keyy,value);
             }
         }
     }
     //英文转中文
-    public String translateEToC(String English,String fileType){
+    public String translateEToC(String English,String fileType,String sentenceL){
         StringBuilder sbS=new StringBuilder();
         //大块划分为小块
         List<String> splitList = splitEnglish(English);
         for(String str: splitList){
             //再翻译
-            String s = tEToC(str,true,fileType);
+            String s = tEToC(str,true,fileType,sentenceL);
             if (sbS.length()==0){
                 sbS.append(s);
             }else{
@@ -149,7 +158,7 @@ public class PdfServiceImpl implements PdfServiceI {
         return sbS.toString();
     }
     //英文转中文,中英内容累加
-    public String tEToC(String English,boolean retract,String fileType){
+    public String tEToC(String English,boolean retract,String fileType,String sentenceL){
         String Chinese="";
         //被翻译内容前的空格获取
         String bla="";
@@ -162,7 +171,7 @@ public class PdfServiceImpl implements PdfServiceI {
         if(matcher.find()){
             bla=bla+matcher.group(0);
         }
-        String translate = translate(English,fileType);
+        String translate = translate(English,fileType,sentenceL);
         if(StringUtils.isNotBlank(translate)){
             translate=bla+translate;
             Chinese="\n"+translate;
@@ -173,12 +182,12 @@ public class PdfServiceImpl implements PdfServiceI {
     /**
      * 请求翻译接口
      */
-    public String translate(String English,String fileType){
+    public String translate(String English,String fileType,String sentenceL){
         if(StringUtils.isBlank(English)){
             return "";
         }
         English=twiceAnalysis(English);
-        String reStr=tranInterface(English,fileType);
+        String reStr=tranInterface(English,fileType,sentenceL);
         return  reStr;
     }
     //对需要翻译内容的二次处理,如去除两边空格,去掉如 (2)
@@ -194,10 +203,10 @@ public class PdfServiceImpl implements PdfServiceI {
         return reStr;
     }
     //翻译
-    public String tranInterface(String English,String fileType){
+    public String tranInterface(String English,String fileType,String sentenceL){
         String etoc="";
         try {
-            etoc = translateController.etoc(fileType, English, null);
+            etoc = translateController.etoc(fileType, English, "sentence",sentenceL);
         } catch (Exception e) {
             String strE=Helper.exceptionToString(e);
             logger.error(strE);
@@ -217,7 +226,7 @@ public class PdfServiceImpl implements PdfServiceI {
         String[] splitEnglish = English.split("\n");
         for(String str:splitEnglish){
             boolean bol=true;
-            String pp="^ *[A-Z]\\. |^ *\\([a-z]\\) |^ *\\(\\d+\\) |^ *\\d\\. ";
+            String pp="^ *[A-Z]\\. |^ *\\([a-z]\\) |^ *\\(\\d+\\) |^ *\\d\\. |^ *Refer to Figure";
             Pattern pattern = Pattern.compile(pp);
             Matcher matcher = pattern.matcher(str);
             if(matcher.find()){

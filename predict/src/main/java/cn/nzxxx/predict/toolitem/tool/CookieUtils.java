@@ -2,7 +2,8 @@ package cn.nzxxx.predict.toolitem.tool;
 
 
 
-import org.jboss.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -10,6 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
@@ -17,8 +19,8 @@ import java.net.URLEncoder;
  *
  */
 public final class CookieUtils {
-	
-	protected static final Logger logger = Logger.getLogger(CookieUtils.class);
+
+	private static final Logger logger = LoggerFactory.getLogger(CookieUtils.class);
 
 	/**
 	 * 得到Cookie的值, 不编码

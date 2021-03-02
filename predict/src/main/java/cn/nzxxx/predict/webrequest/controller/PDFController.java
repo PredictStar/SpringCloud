@@ -9,7 +9,9 @@ import cn.nzxxx.predict.toolitem.tool.Helper;
 import cn.nzxxx.predict.webrequest.service.PdfServiceI;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.jboss.logging.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,7 +28,7 @@ import java.util.*;
 @RestController
 @RequestMapping("/pdf")
 public class PDFController {
-    private final Logger logger=Logger.getLogger(this.getClass());
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
     @Autowired
     private PdfServiceI pdfSer;
 	@Autowired
@@ -34,7 +36,7 @@ public class PDFController {
     /**
      *  http://localhost:8081/pdf/analysis?param=null
      *  urll 文件地址 "C:/Users/18722/Desktop/tolg/CRJ/section2.pdf"
-     *  fileName 文件名 "section2.pdf"
+     *  fileName 文件名 "section2.pdf"  MPD 维修计划文档
      * @return 状态说明
      * @throws Exception
      */
@@ -146,7 +148,7 @@ public class PDFController {
      * http://localhost:8081/pdf/executePDFForm
      * @return 状态说明
      * @throws Exception
-     * 使用: 从 amm_file 提取标记是是0的,进行解析
+     * 使用: 从 amm_file 提取标记是是0的,进行解析PDF是Form格式的(即工卡)
      */
     @RequestMapping("/executePDFForm")
     public ReturnClass executePDFForm(){
@@ -191,7 +193,9 @@ public class PDFController {
             //占数据,使 IS_EXECUTE=1
             int updateN=update( re,0,1);
             if(updateN!=re.size()){
-                System.out.println("数据争取存在!!!");
+                String s="getPDF方法数据争取存在!!!";
+                logger.error(s);
+                System.out.println(s);
             }
         }
         return re;
@@ -210,7 +214,7 @@ public class PDFController {
                 strin+=","+String.valueOf(key);
             }
         }
-        String updatesql="update amm_file set IS_EXECUTE="+IS_EXECUTE+" where AMM_FILE_ID in ("+strin+");";
+        String updatesql="update amm_file set IS_EXECUTE="+IS_EXECUTE+" where AMM_FILE_ID in ("+strin+") and IS_EXECUTE = 0";
         int update = jdbcTemplate.update(updatesql);
         return update;
     }
@@ -297,7 +301,7 @@ public class PDFController {
         }
     }
     /**
-     *  下载翻译后的pdf
+     *  下载翻译后的工卡word
      *  http://localhost:8081/pdf/translateTaskCard?idd=760
      *  idd 是 crj_card 表的主键
      *  fileName 文件名 "section2.pdf"
