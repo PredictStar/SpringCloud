@@ -801,7 +801,9 @@ public class FormPdf {
             String saveUrl=(String) analyPdfM.get("saveUrl");
             //保存后文件名
             String saveName=(String) analyPdfM.get("saveName");
-            template.writeToFile(saveUrl+"/"+saveName+".docx");
+            String pathh=saveUrl+"/"+saveName+".docx";
+            template.writeToFile(pathh);
+            reC=Help.returnClassT(200,"生成word成功",pathh);
         }else {
             Map vall=(Map) analyPdfM.get("vall");
             String fileName=(String) vall.get("TaskCardNumber");
@@ -882,6 +884,8 @@ public class FormPdf {
         String uuidd = UUID.randomUUID().toString();
         analyPdfM.put("UUID",uuidd);
         analyPdfM.put("fileType",fileType);
+        //数据的处理  s=s.replaceAll("'","‘");//单引号转为中文的单引号
+        clearData(analyPdfM);
         if("crj".equals(fileType)){
             // 普通文本赋值|table的赋值
             Map<String,String> vallMap=(Map)analyPdfM.get("vall");
@@ -984,6 +988,7 @@ public class FormPdf {
             }
         }else if("boeing".equals(fileType)) {
             Map<String,String> vallMap=(Map)analyPdfM.get("vall");
+            String analyPdfM_S = Helper.mapToStringJSON(analyPdfM);
             String cardSql ="insert into boeing_card " +
                     "(AMM_FILE_ID,UNIQUE_IDENTIFIER,WORD_PATH," +
                     "TITLE,CARDNUM,TASK,WORKAREA," +
@@ -1003,7 +1008,7 @@ public class FormPdf {
                     Helper.nvlString(vallMap.get("ZONE"))+"','"+
                     analyPdfM.get("VERSION_DATE")+"','"+
                     Helper.nvlString(vallMap.get("SKILL"))+"','"+
-                    Helper.mapToStringJSON(analyPdfM)+"')";
+                    analyPdfM_S+"')";
             jdbcTemplate.update(cardSql);
             //主键
             CARD_ID = String.valueOf(getBOEINGKey(uuidd,jdbcTemplate));
@@ -1084,6 +1089,32 @@ public class FormPdf {
         //工卡主键做表名
         analyPdfM.put("saveName",CARD_ID);
         return reC;
+    }
+    //单引号转为中文的单引号
+    public void clearData(Object obj){
+        if(obj instanceof Map){
+            Map<String,Object> map=(Map)obj;
+            for(String key:map.keySet()){
+                Object value=map.get(key);
+                if(value instanceof Map||(value instanceof List)){
+                    clearData(value);
+                }else if(value instanceof String){
+                    value= ((String)value).replaceAll("'","‘");//单引号转为中文的单引号
+                    map.put(key,value);
+                }
+            }
+        }else if(obj instanceof List){
+            List list=(List)obj;
+            for(int i=0;i<list.size();i++){
+                Object value = list.get(i);
+                if((value instanceof Map)||(value instanceof List)){
+                    clearData(value);
+                }else if(value instanceof String){
+                    value= ((String)value).replaceAll("'","‘");//单引号转为中文的单引号
+                    list.set(i,value);
+                }
+            }
+        }
     }
     public void getCRJTableKey(Map<String,String> umap,Object obj){
         if(obj instanceof Map){

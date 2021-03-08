@@ -207,6 +207,7 @@ public class TranslateServiceImpl implements TranslateServiceI {
      * 后期的优化:使数字不影响匹配,且匹配后能替换翻译结果里的数字
      *  六个单词以下,要100%才表示匹配上
      *  匹配时去掉非必要特征值,如the
+     *  professional 专业类型,可以为空(表不查专业类型单词)(查询条件有此则优先选专业类型是其的)
      */
     public String sentenceTranslate(String vall, String professional,Map<Integer, List<Map<String, Object>>> splitSentenceL) {
         if(splitSentenceL==null||splitSentenceL.size()==0){

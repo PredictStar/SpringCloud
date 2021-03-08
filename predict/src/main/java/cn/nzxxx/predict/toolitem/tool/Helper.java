@@ -754,6 +754,16 @@ public class Helper {
 	 * 但如果字符串输出内容带"\" 如 {"colMatch":["[A-Z0-9\-]} 执行下会报错(旧写法没这问题)
 	 * 	可 a()方法 暂时去掉"\" 转换Map后 b()方法,再转回来
 	 * 		.replaceAll("\\\\","反斜杠暂时去掉");
+	 * 	值里是双引号注意事项
+	 * 		Map的value里有" Helper.mapToStringJSON 会自动转为字符串 "{\"KEY\":\"a\\\"bc\"}"(此时用stringJSONToMap是没问题的)
+	 * 		但jdbc存进数据库值会为  "{\"KEY\":\"a\"bc\"}"
+	 * 		此时从数据库提取值 Helper转为Map时报错
+	 * 		方案一
+	 * 			改为中文的“
+	 * 		方案一
+	 * 			Map的value值 "a\"b" 写为  "a\\\"b" 再mapToStringJSON  再jdbc存数据库
+	 * 			从数据库获值是 "{\"KEY\":\"a\\\"bc\"}"
+	 * 			Helper转为Map时正常
 	 * @return Map
 	 */
 	public static Map stringJSONToMap(final String json)

@@ -5,9 +5,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
+import org.springframework.util.ResourceUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,10 +24,10 @@ public class HelloController {
      */
     @RequestMapping(value="/test/aa")
     @ResponseBody
-    public String testBB(String str) throws Exception{
+    public String testBB(String str, HttpServletRequest request) throws Exception{
         FormPdf fpdf=new FormPdf();
         int abc = 0;
-        System.out.println(a);
+        System.out.println(ResourceUtils.getURL("classpath:").getPath());
         a++;
         /*List list=new ArrayList();
         Map map=new HashMap();

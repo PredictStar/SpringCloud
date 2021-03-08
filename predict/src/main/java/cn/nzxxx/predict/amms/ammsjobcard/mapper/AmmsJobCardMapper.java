@@ -1,6 +1,6 @@
-package cn.nzxxx.predict.amms.jobcard.mapper;
+package cn.nzxxx.predict.amms.ammsjobcard.mapper;
 
-import cn.nzxxx.predict.amms.jobcard.entity.AmmsJobCard;
+import cn.nzxxx.predict.amms.ammsjobcard.entity.AmmsJobCard;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**

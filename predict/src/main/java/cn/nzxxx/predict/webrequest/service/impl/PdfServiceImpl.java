@@ -17,10 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.File;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,11 +39,8 @@ public class PdfServiceImpl implements PdfServiceI {
 	 * 2021年2月19日13:59:01
 	 */
 	@Override
-	public void translateTaskCard(String analyPdfData, HttpServletRequest request, HttpServletResponse response)throws Exception{
-	    //解决 stringJSONToMap 会报错的问题(analyPdfData的colMatch(列匹配规则中有\导致))
-        String analyPdfDataN=analyPdfData.replaceAll("\\\\","反斜杠暂时去掉");
-        //System.out.println(analyPdfDataN);
-        Map analyPdfM = Helper.stringJSONToMap(analyPdfDataN);
+	public String translateTaskCard(Map analyPdfM, HttpServletRequest request, HttpServletResponse response)throws Exception{
+	    String re="";
         FormPdf fpdf=new FormPdf();
         String fileType=(String) analyPdfM.get("fileType");
         fpdf.setFileType(fileType);
@@ -67,7 +62,11 @@ public class PdfServiceImpl implements PdfServiceI {
         if(!"200".equals(returnClass.getStatusCode())){
             String strE = Helper.pojoToStringJSON(returnClass);
             logger.error(strE);
-		}
+		}else{
+            re=Helper.pojoToStringJSON(returnClass);
+        }
+		return re;
+
     }
 
     /**
@@ -250,16 +249,30 @@ public class PdfServiceImpl implements PdfServiceI {
 	 * 2021年2月19日13:58:47
 	 */
     @Override
-	public String getAnalyPdfData(String idd){
+	public String getAnalyPdfData(String idd,String type){
         String reStr="";
-        if(StringUtils.isBlank(idd)){
+        if(StringUtils.isBlank(idd)||StringUtils.isBlank(type)){
             return reStr;
         }
-		String sql="SELECT\n" +
-				"crj_card.ANALY_PDF_DATA AS pdfdata\n" +
-				"FROM\n" +
-				"crj_card\n" +
-				"WHERE CRJ_CARD_ID="+idd;
+        //转小写
+        type=type.toLowerCase();
+        String sql="";
+        if("crj".equals(type)){
+            sql="SELECT\n" +
+            "crj_card.ANALY_PDF_DATA AS pdfdata\n" +
+            "FROM\n" +
+            "crj_card\n" +
+            "WHERE CRJ_CARD_ID="+idd;
+        }else if("boeing".equals(type)){
+            sql="SELECT\n" +
+            " boeing_card.ANALY_PDF_DATA AS pdfdata\n" +
+            " FROM\n" +
+            " boeing_card\n" +
+            " WHERE BOEING_CARD_ID="+idd;
+        }
+        if (StringUtils.isBlank(sql)){
+            return reStr;
+        }
 		List<Map<String, Object>> re=jdbcTemplate.queryForList(sql);
 		if(re.size()>0){
             Map<String, Object> stringObjectMap = re.get(0);

@@ -42,7 +42,7 @@ public class TaskParserAction {
     }
     /**
      * http://localhost:8081/TaskParserAction/createWord?idd=126629494
-     * 根据 amms_job_card 主键生成word
+     * 根据 amms_job_card 主键生成 word
      * @param request
      */
     @RequestMapping("/createWord")

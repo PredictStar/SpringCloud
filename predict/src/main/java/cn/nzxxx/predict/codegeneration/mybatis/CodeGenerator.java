@@ -1,11 +1,8 @@
-package cn.nzxxx.predict.mybatis;
+package cn.nzxxx.predict.codegeneration.mybatis;
 
 import com.baomidou.mybatisplus.core.exceptions.MybatisPlusException;
-import com.baomidou.mybatisplus.core.toolkit.StringPool;
 import com.baomidou.mybatisplus.generator.AutoGenerator;
-import com.baomidou.mybatisplus.generator.InjectionConfig;
 import com.baomidou.mybatisplus.generator.config.*;
-import com.baomidou.mybatisplus.generator.config.po.TableInfo;
 import com.baomidou.mybatisplus.generator.config.rules.NamingStrategy;
 import com.baomidou.mybatisplus.generator.engine.FreemarkerTemplateEngine;
 import org.apache.commons.lang3.StringUtils;
@@ -41,7 +38,7 @@ public class CodeGenerator {
         // 全局配置
         GlobalConfig gc = new GlobalConfig();
         String projectPath = System.getProperty("user.dir");
-        gc.setOutputDir(projectPath + "/src/main/java/cn/nzxxx/predict/mybatis/");
+        gc.setOutputDir(projectPath + "/src/main/java/cn/nzxxx/predict/codegeneration/mybatis/");
         gc.setAuthor("LG");
         gc.setOpen(false);
         // gc.setSwagger2(true); 实体属性 Swagger2 注解
@@ -59,7 +56,7 @@ public class CodeGenerator {
         // 包配置
         PackageConfig pc = new PackageConfig();
         pc.setModuleName(scanner("模块名"));
-        pc.setParent("cn.nzxxx.predict.mybatis");//package cn.nzxxx.predict.mybatis;
+        pc.setParent("cn.nzxxx.predict.codegeneration.mybatis");
         mpg.setPackageInfo(pc);
         // 如果模板引擎是 freemarker
         String templatePath = "/templates/mapper.xml.ftl";

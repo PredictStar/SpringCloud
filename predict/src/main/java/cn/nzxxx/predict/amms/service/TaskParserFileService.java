@@ -1,7 +1,6 @@
 package cn.nzxxx.predict.amms.service;
 
 import java.io.File;
-import java.io.OutputStream;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -9,8 +8,8 @@ import javax.annotation.Resource;
 
 import cn.nzxxx.predict.amms.inter.AmmErrorInterface;
 import cn.nzxxx.predict.amms.inter.AmmFileBean;
-import cn.nzxxx.predict.amms.jobcard.entity.AmmsJobCard;
-import cn.nzxxx.predict.amms.jobcard.mapper.AmmsJobCardMapper;
+import cn.nzxxx.predict.amms.ammsjobcard.entity.AmmsJobCard;
+import cn.nzxxx.predict.amms.ammsjobcard.mapper.AmmsJobCardMapper;
 import cn.nzxxx.predict.toolitem.entity.Help;
 import cn.nzxxx.predict.toolitem.tool.Helper;
 import com.deepoove.poi.XWPFTemplate;
@@ -21,7 +20,6 @@ import com.deepoove.poi.data.Pictures;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ResourceUtils;
 
@@ -44,12 +42,12 @@ public class TaskParserFileService {
 		Integer id=sqlService.getOneFile(idd);
 		String res="";
 		if(id==null){
-			return Help.returnClass(200,"无查询结果","");
+			return Help.returnClass(200,"无要生成原始word的数据","");
 		}
 		List<Map<String, Object>> getBody=sqlService.getBody(id);
 		Map<String,Object> operatemap=sqlService.operateList(getBody);
 		operatemap.put("id",id);
-		String pathh=setTemp(operatemap);
+		String pathh=setTemp(operatemap,"amms");
 		res=Help.returnClass(200,"word生成成功",pathh);
 		return res;
 	}
@@ -94,7 +92,7 @@ public class TaskParserFileService {
 	 * {{titV}}
 	 * {{+images}}
 	 */
-	public String setTemp(Map<String,Object> operatemap)throws Exception{
+	public String setTemp(Map<String,Object> operatemap,String fileName)throws Exception{
 		String filePath = ResourceUtils.getURL("classpath:").getPath();//D:/SpringCloud/predict/target/classes/
 		//主模板名称
 		String mainNameT="taskCardAMMS.docx";
@@ -127,7 +125,7 @@ public class TaskParserFileService {
 		String saveMain = re.getString("saveurl.main");
 		String saveExtend = re.getString("saveurl.taskcard.extend");
 		//保存后的文件夹位置(要事先存在)
-		String saveUrl=saveMain+saveExtend+"amms";
+		String saveUrl=saveMain+saveExtend+fileName;
 		// 创建文件夹
 		File file = new File(saveUrl);
 		if (!file.exists()) {

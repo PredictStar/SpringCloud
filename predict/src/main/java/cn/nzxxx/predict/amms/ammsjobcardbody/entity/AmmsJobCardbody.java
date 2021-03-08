@@ -1,4 +1,4 @@
-package cn.nzxxx.predict.amms.jobcardbody.entity;
+package cn.nzxxx.predict.amms.ammsjobcardbody.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;

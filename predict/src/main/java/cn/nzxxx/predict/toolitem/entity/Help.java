@@ -86,7 +86,7 @@ public class Help {
 		str2=Helper.eToNULL(str2);
 		str3=Helper.eToNULL(str3);
 		if(str1==null||str2==null|str3==null){
-			return Help.returnClass(500, "异常,传递的参为NULL或''!","参1为"+str1+"参2为"+str2+".");
+			return Help.returnClass(500, "异常,传递的参为NULL或''!","参1为"+str1+"参2为"+str2+"参3为"+str3+".");
 		}else{
 			return null;
 		}

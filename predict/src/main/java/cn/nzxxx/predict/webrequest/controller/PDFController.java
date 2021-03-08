@@ -302,25 +302,46 @@ public class PDFController {
     }
     /**
      *  下载翻译后的工卡word
-     *  http://localhost:8081/pdf/translateTaskCard?idd=760
-     *  idd 是 crj_card 表的主键
-     *  fileName 文件名 "section2.pdf"
+     *  http://localhost:8081/pdf/translateTaskCard?idd=760&type=crj
+     *  idd 是 crj_card|boeing 表的主键
+     *  type 是 crj|boeing|amms
      * @throws Exception
      */
     @RequestMapping(value="/translateTaskCard")
-    public void translateTaskCard(String idd, HttpServletRequest request, HttpServletResponse response){
+    public String translateTaskCard(String idd,String type, HttpServletRequest request, HttpServletResponse response){
+        String re="";
         try{
-            String analyPdfData=pdfSer.getAnalyPdfData(idd);
+            String analyPdfData=pdfSer.getAnalyPdfData(idd,type);
             if(StringUtils.isBlank(analyPdfData)){
-                return;
+                return re;
             }
-            pdfSer.translateTaskCard(analyPdfData,request,response);
+            //解决 stringJSONToMap 会报错的问题(analyPdfData的colMatch(列匹配规则中有\导致))
+            String analyPdfDataN=analyPdfData.replaceAll("\\\\","反斜杠暂时去掉");
+            //System.out.println(analyPdfDataN);
+            Map analyPdfM = Helper.stringJSONToMap(analyPdfDataN);
+
+            //配置文件值获取
+            ResourceBundle resourceBundle = java.util.ResourceBundle.getBundle("application");//application.properties里值
+            String saveMain = resourceBundle.getString("saveurl.main");
+            String saveExtend = resourceBundle.getString("saveurl.taskcard.extend");
+            //保存后的文件夹位置(要事先存在)
+            String saveUrl=saveMain+saveExtend+type+"Trans";
+            // 创建文件夹
+            File file = new File(saveUrl);
+            if (!file.exists()) {
+                file.mkdirs();
+            }
+            //翻译word所存储位置
+            analyPdfM.put("saveUrl",saveUrl);
+            analyPdfM.put("saveName",idd);
+            re=pdfSer.translateTaskCard(analyPdfM,request,response);
         }catch (Exception e){
             String strE=Helper.exceptionToString(e);
             logger.error(strE);
             String strEInfo=strE.substring(0,500>strE.length()?strE.length():500);
             System.out.println(strEInfo);
         }
+        return re;
     }
 
 }
