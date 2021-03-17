@@ -1,11 +1,8 @@
 package cn.nzxxx.predict.webinterface.service.impl;
 
 
-import cn.nzxxx.predict.amms.ammsjobcard.entity.AmmsJobCard;
-import cn.nzxxx.predict.amms.ammsjobcard.mapper.AmmsJobCardMapper;
-import cn.nzxxx.predict.amms.ammsjobcardbody.entity.AmmsJobCardbody;
-import cn.nzxxx.predict.amms.service.AmComFileImpl;
-import cn.nzxxx.predict.amms.service.TaskParserFileService;
+import cn.nzxxx.predict.business.amms.service.AmComFileImplLG;
+import cn.nzxxx.predict.business.amms.service.TaskParserFileService;
 import cn.nzxxx.predict.toolitem.entity.Help;
 import cn.nzxxx.predict.toolitem.entity.ReturnClass;
 import cn.nzxxx.predict.toolitem.tool.Helper;
@@ -22,10 +19,8 @@ import cn.nzxxx.predict.webrequest.mybatisJ.jobcard.mapper.JobCardToolMapper;
 import cn.nzxxx.predict.webrequest.service.TranslateServiceI;
 import cn.nzxxx.predict.webrequest.service.impl.PdfServiceImpl;
 import cn.nzxxx.predict.webrequest.service.impl.TranslateServiceImpl;
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.poi.ss.formula.functions.T;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,8 +54,8 @@ public class InterfaceServiceImpl implements InterfaceServiceI {
     TranslateServiceImpl translateServiceImpl ;
     @Autowired
     PdfServiceImpl pdfServiceImpl;
-    @Resource(name = "AmComFileImpl")
-    AmComFileImpl sqlService;
+    @Resource(name = "AmComFileImplLG")
+    AmComFileImplLG sqlService;
     @Autowired
     private TranslateServiceI translate;
     @Override
@@ -91,6 +86,7 @@ public class InterfaceServiceImpl implements InterfaceServiceI {
         String translateTaskCard="" ;
         if("AIRBUS".equals(CARDSOURCE)){
             translateTaskCard= translateAirbusRC(idInit);
+
         }else{ //适应 CRJ BOEING
             translateTaskCard= pdfController.translateTaskCard(String.valueOf(idInit), CARDSOURCE, null, null);
         }
@@ -99,9 +95,15 @@ public class InterfaceServiceImpl implements InterfaceServiceI {
             resstr=Help.returnClass(300,"根据主键生成翻译后word方法返回为空","主键:"+idInit+";类型:crj");
             return resstr;
         }
-        ReturnClass ReturnClass = Helper.stringJSONToPojo(translateTaskCard,ReturnClass.class);
-        //翻译后word生成地址所在
-        String pathh = (String)ReturnClass.getValueDescribe();
+        String pathh;
+        if("AIRBUS".equals(CARDSOURCE)){
+            //翻译后word生成地址所在
+            pathh = translateTaskCard;
+        }else{
+            ReturnClass ReturnClass = Helper.stringJSONToPojo(translateTaskCard,ReturnClass.class);
+            //翻译后word生成地址所在
+            pathh = (String)ReturnClass.getValueDescribe();
+        }
         String uuid = UUID.randomUUID().toString().replaceAll("-", "");
         minM.put("pathh",pathh);
         minM.put("uuid",uuid);

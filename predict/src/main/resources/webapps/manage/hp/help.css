@@ -1,0 +1,62 @@
+/* 宽高定义 */
+.hp_body{
+    height: 100%;
+    width: 100%;
+    margin: 0px;
+    padding: 0px;
+    box-sizing:border-box;	
+}
+.hp_divwh{
+    height: 100%;
+    width: 100%;
+}
+.hp_height10{
+    height: 10%;
+}
+.hp_height40{
+    height: 40%;
+}
+.hp_height50{
+    height: 50%;
+}
+.hp_height100{
+    height: 100%;
+}
+.hp_width100{
+    width: 100%;
+}
+/* 鼠标手 */
+.hp_curpoi{
+    cursor: pointer;
+}
+/* 图标样式参考 */
+.hp_icon {
+    width: 2em;
+    height: 2em;
+    fill: white;/* 修改默认图标改色,(发现fill: currentColor(默认颜色);时color: white;生效) */
+    overflow: hidden;		   
+    vertical-align: text-bottom;
+}
+/* 垂直居中 */
+.hp_disinlblo{
+    display: inline-block;
+}
+.hp_disflex{
+    display: flex;
+}
+.hp_marauto{
+    margin:auto;
+}
+.hp_veralmid{
+    vertical-align:middle;
+}
+/* 浮动 */
+.hp_floatnone{
+    float:none;
+}
+.hp_floatr{
+    float: right;
+}
+.hp_floatl{
+    float: left;
+}

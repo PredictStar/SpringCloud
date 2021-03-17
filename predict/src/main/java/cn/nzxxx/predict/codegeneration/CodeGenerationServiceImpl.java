@@ -5,7 +5,6 @@ package cn.nzxxx.predict.codegeneration;
 import cn.nzxxx.predict.toolitem.entity.Help;
 import cn.nzxxx.predict.toolitem.entity.ReturnClass;
 import cn.nzxxx.predict.toolitem.tool.Helper;
-import com.sun.deploy.config.Config;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateExceptionHandler;

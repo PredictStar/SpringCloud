@@ -96,9 +96,6 @@ public class Helper {
 
 	}
 
-
-
-
 //-----------------------------------协助-----------------------------------------------------------------------------------
 
 	/**
@@ -1148,21 +1145,23 @@ public class Helper {
 	}
 
 	/**
-	 * 请求一卡易接口--示例代码在SSM(MAVEN)\技术汇总\跨域+接口\请求一卡易接口
-	 * 和HttpClient看着就不一样
-	 * @param urls 参urls例http://openapi.1card1.cn/OpenApi/Get_MembersPagedV2?openId=E1FC5F553C2D48188000D386E86AC663&signature="+urlString+"&timestamp="+time
-	 * @param data 参data例"{\"cardId\":\"desc\",\"orderBy\":\"\",\"pageSize\":\"10\",\"userAccount\":\"10000\",\"pageIndex\":\"0\"}"
-	 * @param bol 在方法外声明个bol,若值被更改为true表是异常直接返回前台即可
+	 * 请求一卡易接口
+	 * 和HttpClient看着就不一样,需根据实际情况编辑下代码
+	 * @param urls 参urls例http://openapi.1card1.cn/OpenApi/Get_MembersPagedV2?openId=E1FC5F553C2D48
+	 * @param data 参data例"{\"cardId\":\"desc\"}"
+	 * 类似于ajax-data:{param:参2,openId:"E1FC5F553C2D48"}
 	 */
-	public static String doPostYKY(String urls,String data,boolean bol){
+	public static String doPostYKY(String urls,String data){
 		PrintWriter printWriter = null;
 		BufferedReader bufferedReader = null;
 		// BufferedReader bufferedReader = null;
 		StringBuffer responseResult = new StringBuffer();
 		StringBuffer params = new StringBuffer();
 		HttpURLConnection httpURLConnection = null;
-		// 组织请求参数
-		params = params.append("&data=" + data);
+		//请求参数(原写为"&param=",请求海航项目接口,带上反而报错)
+		params.append("param=" + data);
+		//若再添加新参数,猜如下
+		//params.append("&aa=xxx");
 
 		try {
 			URL realUrl = new URL(urls);
@@ -1175,8 +1174,7 @@ public class Helper {
 
 			httpURLConnection.setRequestProperty("accept", "*/*");
 			httpURLConnection.setRequestProperty("connection", "Keep-Alive");
-			httpURLConnection.setRequestProperty("Content-Length", String
-					.valueOf(params.length()));
+			httpURLConnection.setRequestProperty("Content-Length", String.valueOf(params.length()));
 			httpURLConnection.setRequestProperty("Accept-Charset", "UTF-8");
 			//	httpURLConnection.setRequestProperty("Content-type", "text/html");
 			httpURLConnection.setRequestProperty("contentType", "utf-8");
@@ -1206,12 +1204,14 @@ public class Helper {
 				return responseResult.toString();
 
 			} else {
-				bol=true;
-				return "{statusCode: \"300\", stateDescribe: \"查询接口发生错误\", valueDescribe: \"!?\"}";
+				System.out.println("doPostYKY方法查询接口发生错误!?");
+				return "";
 			}
 		} catch (Exception e) {
-			bol=true;
-			return "{statusCode: \"300\", stateDescribe: \"请求接口异常\", valueDescribe: \""+Helper.exceptionToString(e)+"\"}";
+			String strE=Helper.exceptionToString(e);
+			String strEInfo=strE.substring(0,500>strE.length()?strE.length():500);
+			System.out.println(strEInfo);
+			return "";
 
 		} finally {
 			httpURLConnection.disconnect();
@@ -1223,8 +1223,10 @@ public class Helper {
 					bufferedReader.close();
 				}
 			} catch (IOException e) {
-				bol=true;
-				return "{statusCode: \"300\", stateDescribe: \"请求接口异常\", valueDescribe: \""+Helper.exceptionToString(e)+"\"}";
+				String strE=Helper.exceptionToString(e);
+				String strEInfo=strE.substring(0,500>strE.length()?strE.length():500);
+				System.out.println(strEInfo);
+				return "";
 			}
 
 		}

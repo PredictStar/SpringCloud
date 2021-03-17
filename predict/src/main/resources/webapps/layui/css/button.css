@@ -1,0 +1,72 @@
+@charset "UTF-8";
+/*页面背景色*/
+body{
+	background-color: #F0F2F5;
+}
+/*选择流程等橘色渐变按钮*/
+.btn_org{
+	width: 110px;
+	height: 40px;
+	background: -webkit-linear-gradient(
+	top, #F9943C, #FC9338, #F37207
+	);
+	color: #ffffff;
+	text-align: center;
+}
+/*确认等红色渐变按钮*/
+.btn_red{
+	width: 120px;
+	height: 40px;
+	background: -webkit-linear-gradient(
+	top, #F3493F, #EE4036, #E21D0a
+	);
+	color: #ffffff;
+}
+/*暂存意见等蓝色渐变按钮*/
+.btn_blue{
+	width: 150px;
+	height: 40px;
+	background: -webkit-linear-gradient(
+	top, #7294B4, #5F819F, #587E9B
+	);
+	color: #ffffff;
+}
+/*新建流程等灰色渐变按钮*/
+.btn_gray{
+	width: 100px;
+	height: 40px;
+	background: -webkit-linear-gradient(
+	top, #E5E5E5, #E3E3E3, #DBDBDB
+	);
+	color: black;
+}
+/*设置默认收件人等字体颜色*/
+.col_def{
+	color: #D8A68E;
+}
+/*边框*/
+.root_border{
+	padding: 20px;
+	border: 2px solid #ffffff;
+	border-radius: 10px;
+}
+/*头部灰色向下渐变成白色的背景*/
+.root_bg{
+	background: -webkit-linear-gradient(
+		top, #ECECEC, #F3F3F3, #FFFFFF 20%
+		);
+}
+/*表格头部背景色*/
+th{
+    background-color: #8C98A4; /* MediumSeaGreen */
+    color: #ffffff;
+    text-align: center;
+}
+/*透明input*/
+.tm_input{
+	background-color: transparent;
+	border: 0;
+	width: 200px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}

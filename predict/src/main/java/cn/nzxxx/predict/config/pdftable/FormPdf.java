@@ -884,7 +884,7 @@ public class FormPdf {
         String uuidd = UUID.randomUUID().toString();
         analyPdfM.put("UUID",uuidd);
         analyPdfM.put("fileType",fileType);
-        //数据的处理  s=s.replaceAll("'","‘");//单引号转为中文的单引号
+        //数据的处理 //单引号转为中文的单引号;双引号转为中文的双引号
         clearData(analyPdfM);
         if("crj".equals(fileType)){
             // 普通文本赋值|table的赋值
@@ -1090,7 +1090,7 @@ public class FormPdf {
         analyPdfM.put("saveName",CARD_ID);
         return reC;
     }
-    //单引号转为中文的单引号
+    //单引号转为中文的单引号;双引号转为中文的双引号
     public void clearData(Object obj){
         if(obj instanceof Map){
             Map<String,Object> map=(Map)obj;
@@ -1099,7 +1099,8 @@ public class FormPdf {
                 if(value instanceof Map||(value instanceof List)){
                     clearData(value);
                 }else if(value instanceof String){
-                    value= ((String)value).replaceAll("'","‘");//单引号转为中文的单引号
+                    //单引号转为中文的单引号;双引号转为中文的双引号
+                    value= ((String)value).replaceAll("'","‘").replaceAll("\"","“");
                     map.put(key,value);
                 }
             }
