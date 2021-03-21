@@ -732,7 +732,7 @@ public class FormPdf {
      */
     public ReturnClass cWordT(Map<String,Object> analyPdfM, HttpServletResponse response)throws Exception{
         ReturnClass reC=Help.returnClassT(200,"生成word成功","");
-        String filePath = ResourceUtils.getURL("classpath:").getPath();//D:/SpringCloud/predict/target/classes/
+        //String filePath = ResourceUtils.getURL("classpath:").getPath();//D:/SpringCloud/predict/target/classes/
         // 模板路径 //实际地址 target\classes\META-INF\resources\wordtemplate
         Map<String,Object> tMap=mapp.get(fileType);
         //主模板名称
@@ -744,7 +744,8 @@ public class FormPdf {
         }
         int imageW=(Integer)tMap.get("imageW");//图片宽
         int imageH=(Integer)tMap.get("imageH");//图片高
-        filePath=filePath+"META-INF/resources/wordtemplate/";
+        //filePath=filePath+"META-INF/resources/wordtemplate/";
+        String filePath=java.util.ResourceBundle.getBundle("application").getString("saveurl.taskcard.tempFilePath");
         String templatePath = filePath+mainNameT;
         //System.out.println(filePath);
         XWPFTemplate template = XWPFTemplate.compile(templatePath);
@@ -884,6 +885,11 @@ public class FormPdf {
         String uuidd = UUID.randomUUID().toString();
         analyPdfM.put("UUID",uuidd);
         analyPdfM.put("fileType",fileType);
+
+        /*String a=(String) ((Map)analyPdfM.get("vall")).get("CARDNUM");
+        if((a.equals("20-110-01-01"))){ //测试方便打断点
+            System.out.println("xx");
+        }*/
         //数据的处理 //单引号转为中文的单引号;双引号转为中文的双引号
         clearData(analyPdfM);
         if("crj".equals(fileType)){
@@ -1095,8 +1101,11 @@ public class FormPdf {
         if(obj instanceof Map){
             Map<String,Object> map=(Map)obj;
             for(String key:map.keySet()){
+                /*if(key.equals("tabBody")){ //--测试用
+                    System.out.println(key);
+                }*/
                 Object value=map.get(key);
-                if(value instanceof Map||(value instanceof List)){
+                if(value instanceof Map||(value instanceof List||value instanceof String[])){
                     clearData(value);
                 }else if(value instanceof String){
                     //单引号转为中文的单引号;双引号转为中文的双引号
@@ -1108,12 +1117,20 @@ public class FormPdf {
             List list=(List)obj;
             for(int i=0;i<list.size();i++){
                 Object value = list.get(i);
-                if((value instanceof Map)||(value instanceof List)){
+                if((value instanceof Map)||(value instanceof List)||(value instanceof String[])){
                     clearData(value);
                 }else if(value instanceof String){
-                    value= ((String)value).replaceAll("'","‘");//单引号转为中文的单引号
+                    //单引号转为中文的单引号;双引号转为中文的双引号
+                    value= ((String)value).replaceAll("'","‘").replaceAll("\"","“");
                     list.set(i,value);
                 }
+            }
+        }else if(obj instanceof String[]){
+            String[] strs=(String[])obj;
+            for(int i=0;i<strs.length;i++){
+                String value = strs[i];
+                value= value.replaceAll("'","‘").replaceAll("\"","“");
+                strs[i]=value;
             }
         }
     }

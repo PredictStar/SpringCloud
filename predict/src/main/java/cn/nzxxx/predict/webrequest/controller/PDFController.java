@@ -155,7 +155,7 @@ public class PDFController {
         ReturnClass reC=Help.returnClassT(200,"executePDFForm操作成功","");
         Date sdate=new Date();
         //每次查多少个(最好少于450,in里达到459个的时候就不会用索引了)
-        int limitt=2;
+        int limitt=60;
         List<Map<String, Object>> pdf = getPDF(limitt);
         if(pdf.size()==0){
             reC=Help.returnClassT(200,"文件表无查询结果","");
@@ -182,7 +182,8 @@ public class PDFController {
                 "f.AMM_FILE_ID,\n" +
                 "f.FILENAME,\n" +
                 "f.FILETYPE,\n" +
-                "f.AMMPATH\n" +
+                "f.AMMPATH,\n" +
+                "f.AMMID\n"+
                 "FROM\n" +
                 "amm_file AS f\n" +
                 "WHERE\n" +
@@ -223,6 +224,11 @@ public class PDFController {
         String urll=(String)pdfMap.get("AMMPATH");
         //文件存储的上级文件夹名,这样就能通过文件夹指定工卡通过此pdf生成的,存的文件名是工卡表主键(如 CRJ_CARD BOEING_CARD)
         String folderName=(String)pdfMap.get("FILENAME");
+        Integer AMMID=(Integer)pdfMap.get("AMMID");
+        if(AMMID==null){
+            AMMID=0;
+        }
+        folderName=AMMID+"/"+folderName;
         String fileType=(String)pdfMap.get("FILETYPE");
         Integer AMM_FILE_ID=(Integer)pdfMap.get("AMM_FILE_ID");
         ReturnClass reP=Help.return5003DescribeT(urll,folderName,fileType);

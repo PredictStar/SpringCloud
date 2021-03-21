@@ -27,7 +27,6 @@ public class HelloController {
     public String testBB(String str, HttpServletRequest request) throws Exception{
         FormPdf fpdf=new FormPdf();
         int abc = 0;
-        System.out.println(ResourceUtils.getURL("classpath:").getPath());
         a++;
         /*List list=new ArrayList();
         Map map=new HashMap();
