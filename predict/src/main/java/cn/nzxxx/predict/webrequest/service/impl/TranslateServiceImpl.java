@@ -260,7 +260,7 @@ public class TranslateServiceImpl implements TranslateServiceI {
         //最大匹配度
         double  maxMatchRate=0.0;
         //允许匹配度//如匹配值要大于60%
-        ResourceBundle re = java.util.ResourceBundle.getBundle("application");//application.properties里值
+        ResourceBundle re = java.util.ResourceBundle.getBundle("amms");//application.properties里值
         String pro = re.getString("translate.allow.match.rate");
         double allowMatchRate=Double.parseDouble(pro);
         for(int i=0;i<allSentence.size();i++){

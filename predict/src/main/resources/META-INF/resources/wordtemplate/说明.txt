@@ -1,0 +1,2 @@
+工卡生成word模板记录所在,实际项目中,模板是放如下地方的
+	D:\ruijian\wordtemplate

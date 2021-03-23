@@ -327,8 +327,9 @@ public class PDFController {
             Map analyPdfM = Helper.stringJSONToMap(analyPdfDataN);
 
             //配置文件值获取
-            ResourceBundle resourceBundle = java.util.ResourceBundle.getBundle("application");//application.properties里值
-            String saveMain = resourceBundle.getString("saveurl.main");
+            ResourceBundle resourceBundle = java.util.ResourceBundle.getBundle("amms");//amms.properties里值
+            String typepath = java.util.ResourceBundle.getBundle("application").getString("spring.profiles.active");//application.properties里值
+            String saveMain=java.util.ResourceBundle.getBundle("application-"+typepath).getString("saveurl.main");
             String saveExtend = resourceBundle.getString("saveurl.taskcard.extend");
             //保存后的文件夹位置(要事先存在)
             String saveUrl=saveMain+saveExtend+type+"Trans";

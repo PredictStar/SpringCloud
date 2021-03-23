@@ -745,7 +745,7 @@ public class FormPdf {
         int imageW=(Integer)tMap.get("imageW");//图片宽
         int imageH=(Integer)tMap.get("imageH");//图片高
         //filePath=filePath+"META-INF/resources/wordtemplate/";
-        String filePath=java.util.ResourceBundle.getBundle("application").getString("saveurl.taskcard.tempFilePath");
+        String filePath=java.util.ResourceBundle.getBundle("amms").getString("saveurl.taskcard.tempFilePath");
         String templatePath = filePath+mainNameT;
         //System.out.println(filePath);
         XWPFTemplate template = XWPFTemplate.compile(templatePath);
@@ -871,8 +871,9 @@ public class FormPdf {
         //crj_card 表主键
         String CARD_ID="";
         //配置文件值获取
-        ResourceBundle re = java.util.ResourceBundle.getBundle("application");//application.properties里值
-        String saveMain = re.getString("saveurl.main");
+        ResourceBundle re = java.util.ResourceBundle.getBundle("amms");//amms.properties里值
+        String typepath = java.util.ResourceBundle.getBundle("application").getString("spring.profiles.active");//application.properties里值
+        String saveMain=java.util.ResourceBundle.getBundle("application-"+typepath).getString("saveurl.main");
         String saveExtend = re.getString("saveurl.taskcard.extend");
         //保存后的文件夹位置(要事先存在)
         String saveUrl=saveMain+saveExtend+folderName;

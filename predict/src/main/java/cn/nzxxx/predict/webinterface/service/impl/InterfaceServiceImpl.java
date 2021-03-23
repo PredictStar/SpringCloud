@@ -136,6 +136,7 @@ public class InterfaceServiceImpl implements InterfaceServiceI {
         return resstr;
     }
     //生成 Airbus 翻译后 word 并返回生成地址
+    @Override
     public String translateAirbusRC(Integer idInit)throws Exception{
         List<Map<String, Object>> getBody=sqlService.getBody(idInit);
         Map<String,Object> operatemap=sqlService.operateList(getBody);
@@ -257,7 +258,12 @@ public class InterfaceServiceImpl implements InterfaceServiceI {
         jc.setAppl((String) minM.get("APPL"));
         jc.setCardsource((String) minM.get("CARDSOURCE"));
         jc.setRevison((String)minM.get("REVISON"));
-        jc.setWordpath((String) minM.get("pathh"));//翻译后word路径
+        String pathh=(String) minM.get("pathh");
+        if(StringUtils.isBlank(pathh)){
+            jc.setWordpath(null);//翻译后word路径
+        }else{
+            jc.setWordpath(pathh);//翻译后word路径
+        }
         jc.setInitdataid((String) minM.get("uuid"));//	 原始数据id即crj_card,boeing_card,amms_job_card的主键;当前做中间列作用
         int insert = jobCardMapper.insert(jc);
         return insert;

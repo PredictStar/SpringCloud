@@ -35,7 +35,7 @@ public class WebInterfaceController {
     private InterfaceServiceI interfaceServiceI;
 
     /**
-     *  同步数据到 job_card job_card_tool job_card_materials job_card_reference
+     *  同步数据到 job_card job_card_tool job_card_materials job_card_reference --同步数据会同时生成翻译word(地址存在job_card-WORDPATH )
      *  localhost:8081/interface/syncJobCard?param=%7BACTYPE:%22CRJ700/900/1000%22,CARDSOURCE:%22CRJ%22,JOBCARDNO:%22000-25-900-101%20(Config%20A43)%22%7D
      *  CARDSOURCE 值: CRJ BOEING  AIRBUS
      * @throws Exception
@@ -56,7 +56,7 @@ public class WebInterfaceController {
             //工卡号
             String JOBCARDNO=(String)map.get("JOBCARDNO");
             //参数非空校验
-            resstr = Help.return5003Describe(ACTYPE, CARDSOURCE, JOBCARDNO);
+            resstr = Help.return5002Describe(CARDSOURCE, JOBCARDNO);
             if(resstr!=null){
                 return resstr;
             }
@@ -70,7 +70,38 @@ public class WebInterfaceController {
         }
         return resstr;
     }
+    /**
+     * localhost:8081/interface/airbusTWord?idd=126629494
+     * from amms_job_cardbody b where b.cardid ="+idd
+     *  生成翻译的airbus word,地址在方法返回值能看到
+     * @throws Exception
+     */
+    @RequestMapping(value="/airbusTWord")
+    public String airbusTWord(String idd){
+        String resstr=Help.returnClass(200,"生成完成","");
+        try{
+            String translateTaskCard="" ;
+            if(StringUtils.isBlank(idd)){
+                resstr=Help.returnClass(200,"idd值为空","");
+                return resstr;
+            }
+            if(!Helper.isInt(idd,false)){
+                resstr=Help.returnClass(200,"idd不为数字","");
+                return resstr;
+            }
+            int i=Integer.parseInt(idd);
+            translateTaskCard= interfaceServiceI.translateAirbusRC(i);
+            resstr=Help.returnClass(200,"生成完成",translateTaskCard);
 
+        }catch (Exception e){
+            String strE=Helper.exceptionToString(e);
+            logger.error(strE);
+            String strEInfo=strE.substring(0,500>strE.length()?strE.length():500);
+            System.out.println(strEInfo);
+            resstr=Help.returnClass(500,"接口异常",strEInfo);
+        }
+        return resstr;
+    }
 
 
     /**
