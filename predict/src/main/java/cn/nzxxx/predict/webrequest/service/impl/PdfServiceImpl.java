@@ -223,22 +223,37 @@ public class PdfServiceImpl implements PdfServiceI {
         List<String> splitList=new ArrayList();
         splitList.add("");
         String[] splitEnglish = English.split("\n");
+        boolean nextBol=false;//匹配到后,下一行是否是句子的开头
         for(String str:splitEnglish){
-            boolean bol=true;
-            String pp="^ *[A-Z]\\. |^ *\\([a-z]\\) |^ *\\(\\d+\\) |^ *\\d\\. |^ *Refer to Figure";
+            if(!nextBol){
+                nextBol=false;
+                splitList.add(str);
+                continue;
+            }
+            boolean bol=false;//当前匹配行是否是句子的开头
+            String pp="^ *[A-Z]\\. |^ *\\([a-z]\\) |^ *\\(\\d+\\) |^ *Refer to Figure";
             Pattern pattern = Pattern.compile(pp);
             Matcher matcher = pattern.matcher(str);
             if(matcher.find()){
-                bol=false;
+                bol=true;//本行是句子的开头
+            }else{
+                pp="^ *\\d\\. |^ *Ref\\.Refer";
+                pattern = Pattern.compile(pp);
+                matcher = pattern.matcher(str);
+                if(matcher.find()){
+                    bol=true;//本行是句子的开头
+                    nextBol=true;//下一行也是句子的开头
+                }
             }
             if(bol){
+                splitList.add(str);
+            }else {
                 int size=splitList.size() - 1;
                 String s = splitList.get(size);
                 s=s+"\n"+str;
                 splitList.set(size,s);
-            }else {
-                splitList.add(str);
             }
+
         }
         return splitList;
     }

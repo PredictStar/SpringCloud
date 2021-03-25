@@ -48,15 +48,17 @@ public class TranslateController {
             vall=Helper.nvlString(vall);
             //清除两侧的.
             vall=Helper.trimStringChar(vall,'.');
-            vall=vall.replaceAll(","," ").replaceAll("\\s+"," ");
+            //翻译数据的二次处理,要和TranslateServiceImpl-splitSentenceL-句柄数据的二次处理统一
+            vall=vall.replaceAll("[\\d\\*\\-\\(\\),]"," ").replaceAll("\\s+"," ");
+            vall=Helper.nvlString(vall);
             //professional 可以为空
             if("word".equals(type)){
                 resStr = translate.wordTranslate(vall,professional);
             }else if("sentence".equals(type)){
-                if(StringUtils.isBlank(sentenceL)){
-                    sentenceL=null;
+                Map<Integer, List<Map<String, Object>>> splitSentenceL=null;
+                if(StringUtils.isNotBlank(sentenceL)){
+                    splitSentenceL=Helper.stringJSONToMap(sentenceL);
                 }
-                Map<Integer, List<Map<String, Object>>> splitSentenceL=Helper.stringJSONToMap(sentenceL);
                 resStr = translate.sentenceTranslate(vall,professional,splitSentenceL);
             }
         }catch (Exception e){

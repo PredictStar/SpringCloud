@@ -224,6 +224,7 @@ public class TranslateServiceImpl implements TranslateServiceI {
             //先整体翻译
             List<Map<String, Object>> sentenceA=splitSentenceL.get(paragraphs.length-1);
             Integer indexx = sentenceMatch(vall,sentenceA);
+            //根据idd获取sentence_chinese
             String sentence = getIddV(indexx);
             //当整段就是一句话,就不用逐句翻译了,前已经匹配执行过了
             if(StringUtils.isBlank(sentence)&&paragraphsL>1){
@@ -402,7 +403,9 @@ public class TranslateServiceImpl implements TranslateServiceI {
             String sentence_val=(String) ele.get("sentence_val");
             sentence_val=Helper.nvlString(sentence_val);
             sentence_val=Helper.trimStringChar(sentence_val,'.');
-            sentence_val=sentence_val.replaceAll(","," ").replaceAll("\\s+"," ");
+            //句柄数据的二次处理
+            sentence_val=sentence_val.replaceAll("[\\d\\*\\-\\(\\),]"," ").replaceAll("\\s+"," ");
+            sentence_val=Helper.nvlString(sentence_val);
             ele.put("sentence_val",sentence_val);
             //获取.的个数
             int bLeg=sentence_val.length()-sentence_val.replaceAll("\\.","").length();
