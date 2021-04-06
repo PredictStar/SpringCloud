@@ -8,18 +8,16 @@ import cn.nzxxx.predict.toolitem.entity.ReturnClass;
 import cn.nzxxx.predict.toolitem.tool.Helper;
 import cn.nzxxx.predict.webinterface.service.InterfaceServiceI;
 import cn.nzxxx.predict.webrequest.controller.PDFController;
-import cn.nzxxx.predict.webrequest.mybatisJ.jobcard.entity.JobCard;
-import cn.nzxxx.predict.webrequest.mybatisJ.jobcard.entity.JobCardMaterials;
-import cn.nzxxx.predict.webrequest.mybatisJ.jobcard.entity.JobCardReference;
-import cn.nzxxx.predict.webrequest.mybatisJ.jobcard.entity.JobCardTool;
-import cn.nzxxx.predict.webrequest.mybatisJ.jobcard.mapper.JobCardMapper;
-import cn.nzxxx.predict.webrequest.mybatisJ.jobcard.mapper.JobCardMaterialsMapper;
-import cn.nzxxx.predict.webrequest.mybatisJ.jobcard.mapper.JobCardReferenceMapper;
-import cn.nzxxx.predict.webrequest.mybatisJ.jobcard.mapper.JobCardToolMapper;
+import cn.nzxxx.predict.webrequest.mybatisJ.jobcard.entity.*;
+import cn.nzxxx.predict.webrequest.mybatisJ.jobcard.mapper.*;
 import cn.nzxxx.predict.webrequest.service.TranslateServiceI;
 import cn.nzxxx.predict.webrequest.service.impl.PdfServiceImpl;
 import cn.nzxxx.predict.webrequest.service.impl.TranslateServiceImpl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.deepoove.poi.data.DocxRenderData;
+import com.deepoove.poi.data.PictureRenderData;
+import com.deepoove.poi.data.PictureType;
+import com.deepoove.poi.data.Pictures;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.io.File;
 import java.util.*;
 
 
@@ -58,6 +57,8 @@ public class InterfaceServiceImpl implements InterfaceServiceI {
     AmComFileImplLG sqlService;
     @Autowired
     private TranslateServiceI translate;
+    @Autowired
+    private JobCardBodyMapper jobCardBodyMapper;
     @Override
     public String syncJobCard(String ACTYPE, String CARDSOURCE, String JOBCARDNO)throws Exception {
         String resstr;
@@ -82,30 +83,7 @@ public class InterfaceServiceImpl implements InterfaceServiceI {
         Map<String, Object> minM=re.get(0);
         //元素数据主键
         Integer idInit=(Integer)minM.get("IDD");
-        //根据主键生成翻译后word
-        String translateTaskCard="" ;
-        if("AIRBUS".equals(CARDSOURCE)){
-            translateTaskCard= translateAirbusRC(idInit);
-
-        }else{ //适应 CRJ BOEING
-            translateTaskCard= pdfController.translateTaskCard(String.valueOf(idInit), CARDSOURCE, null, null);
-        }
-
-        if(StringUtils.isBlank(translateTaskCard)){
-            resstr=Help.returnClass(300,"根据主键生成翻译后word方法返回为空","主键:"+idInit+";类型:crj");
-            return resstr;
-        }
-        String pathh;
-        if("AIRBUS".equals(CARDSOURCE)){
-            //翻译后word生成地址所在
-            pathh = translateTaskCard;
-        }else{
-            ReturnClass ReturnClass = Helper.stringJSONToPojo(translateTaskCard,ReturnClass.class);
-            //翻译后word生成地址所在
-            pathh = (String)ReturnClass.getValueDescribe();
-        }
         String uuid = UUID.randomUUID().toString().replaceAll("-", "");
-        minM.put("pathh",pathh);
         minM.put("uuid",uuid);
         minM.put("CARDSOURCE",CARDSOURCE);
         //插入 JobCard 表
@@ -116,6 +94,19 @@ public class InterfaceServiceImpl implements InterfaceServiceI {
         }
         //返回新增的 JobCard 表主键
         Integer jobCardId = selInitdataid(uuid, String.valueOf(idInit));
+        //根据主键翻译并保存进 job_card_body
+        String translateTaskCard="" ;
+        if("AIRBUS".equals(CARDSOURCE)){
+            translateTaskCard= transAirbusTCInStorage(idInit,jobCardId);
+        }else{ //适应 CRJ BOEING
+            //根据主键和类型 查询 AnalyPdfData 数据
+            translateTaskCard=pdfController.transTCInStorage(String.valueOf(idInit), CARDSOURCE,jobCardId);
+        }
+        if(StringUtils.isBlank(translateTaskCard)){
+            resstr=Help.returnClass(300,"同步数据到job_card_body异常","主键:"+idInit+";类型:"+CARDSOURCE);
+            return resstr;
+        }
+
         //同步三个从表数据
         List<Map<String, Object>> getSyncTool = getSyncTool(idInit, CARDSOURCE );
         if(getSyncTool.size()>0){
@@ -148,10 +139,62 @@ public class InterfaceServiceImpl implements InterfaceServiceI {
         //句柄根据.拆分(从0开始,即a.b会放在1里,abc放在0里)
         Map<Integer, List<Map<String, Object>>> splitSentenceL=translateServiceImpl.splitSentenceL(allSentence);
         String sentenceL=Helper.mapToStringJSON(splitSentenceL);
-        textt=pdfServiceImpl.translateEToC(textt,null,sentenceL);
+        textt=pdfServiceImpl.translateEToC(textt,null,sentenceL,null);
         operatemap.put("textt",textt);
         String pathh=taskParserFileService.setTemp(operatemap,"AIRBUSTrans");
         return pathh;
+    }
+    //Airbus 翻译后数据入库-job_card_body
+    public String transAirbusTCInStorage(Integer idInit,Integer jobCardId)throws Exception{
+        String re="";
+        try {
+            //amms_job_cardbody 数据
+            List<Map<String, Object>> getBody=sqlService.getBody(idInit);
+            Map<String,Object> operatemap=sqlService.operateList(getBody);
+            operatemap.put("id",idInit);
+            operatemap.put("jobCardId",jobCardId);
+            String textt =(String) operatemap.get("textt");
+            //翻译
+            //获取所有句柄
+            List<Map<String, Object>> allSentence = translateServiceImpl.getAllSentence(null);
+            //句柄根据.拆分(从0开始,即a.b会放在1里,abc放在0里)
+            Map<Integer, List<Map<String, Object>>> splitSentenceL=translateServiceImpl.splitSentenceL(allSentence);
+            String sentenceL=Helper.mapToStringJSON(splitSentenceL);
+            //需要入库的数据
+            List<JobCardBody> list=new ArrayList<JobCardBody>();
+            pdfServiceImpl.translateEToC(textt,null,sentenceL,list);
+            //图片入数据集
+            List<byte[]> imageL =(List) operatemap.get("image");
+            if(imageL.size()>0){
+                List<String> imageTit =(List) operatemap.get("imageTit");
+                for(int i=0;i<imageL.size();i++){
+                    byte[] bytes = imageL.get(i);
+                    String base64 = Helper.byteToBase64(bytes);
+                    String imageT = imageTit.get(i);
+                    //图片数据的二次处理
+                    base64=base64.replaceFirst("^imageSingle_IMW[^;]+;|^","data:image/png;base64,");
+                    JobCardBody jcb=new JobCardBody();
+                    jcb.setBodytype("IMAGE");
+                    jcb.setBodyval("<div><img src='"+base64+"'/></div><div>"+imageT+"</div>");
+                    list.add(jcb);
+                }
+            }
+            //入库job_card_body
+            for(int i=0;i<list.size();i++){
+                JobCardBody jcb = list.get(i);
+                jcb.setJobcardid(jobCardId);
+                double di=i;
+                jcb.setOrderby(di);
+                jobCardBodyMapper.insert(jcb);
+            }
+            re=Help.returnClass(200,"Airbus 翻译后数据入库-job_card_body成功","");
+        } catch (Exception e) {
+            String strE=Helper.exceptionToString(e);
+            logger.error(strE);
+            String strEInfo=strE.substring(0,500>strE.length()?strE.length():500);
+            System.out.println(strEInfo);
+        }
+        return re;
     }
     //000-25-900-101 (Config A43)  CRJ900
     public String jobCardCrj(String ACTYPE, String JOBCARDNO)throws Exception{
@@ -248,7 +291,7 @@ public class InterfaceServiceImpl implements InterfaceServiceI {
         String TITLEEN=(String) minM.get("TITLEEN");
         if(StringUtils.isNotBlank(TITLEEN)){
             String titlech="";
-            titlech = translate.sentenceTranslate(TITLEEN,null,null);
+            titlech = translate.sentenceTranslate(TITLEEN,null,null,null,null);
             //翻译标题
             jc.setTitlech(titlech);
         }
@@ -258,12 +301,12 @@ public class InterfaceServiceImpl implements InterfaceServiceI {
         jc.setAppl((String) minM.get("APPL"));
         jc.setCardsource((String) minM.get("CARDSOURCE"));
         jc.setRevison((String)minM.get("REVISON"));
-        String pathh=(String) minM.get("pathh");
-        if(StringUtils.isBlank(pathh)){
+        /*String pathh=(String) minM.get("pathh");*/
+        /*if(StringUtils.isBlank(pathh)){
             jc.setWordpath(null);//翻译后word路径
         }else{
             jc.setWordpath(pathh);//翻译后word路径
-        }
+        }*/
         jc.setInitdataid((String) minM.get("uuid"));//	 原始数据id即crj_card,boeing_card,amms_job_card的主键;当前做中间列作用
         int insert = jobCardMapper.insert(jc);
         return insert;

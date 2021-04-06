@@ -35,9 +35,10 @@ public class WebInterfaceController {
     private InterfaceServiceI interfaceServiceI;
 
     /**
-     *  同步数据到 job_card job_card_tool job_card_materials job_card_reference --同步数据会同时生成翻译word(地址存在job_card-WORDPATH )
+     *  同步数据到 job_card job_card_tool job_card_materials job_card_reference --翻译数据会存在 job_card_body
      *  localhost:8081/interface/syncJobCard?param=%7BACTYPE:%22CRJ700/900/1000%22,CARDSOURCE:%22CRJ%22,JOBCARDNO:%22000-25-900-101%20(Config%20A43)%22%7D
      *  CARDSOURCE 值: CRJ BOEING  AIRBUS
+     *  ACTYPE 值 即如 crj_card 的TASK_CARD_AC(CRJ700/900/1000) 可不传
      * @throws Exception
      */
     @RequestMapping(value="/syncJobCard")
@@ -73,7 +74,7 @@ public class WebInterfaceController {
     /**
      * localhost:8081/interface/airbusTWord?idd=126629494
      * from amms_job_cardbody b where b.cardid ="+idd
-     *  生成翻译的airbus word,地址在方法返回值能看到
+     *  生成翻译的airbus word,地址在方法返回值能看到,这个翻译word的地址不会存在数据库
      * @throws Exception
      */
     @RequestMapping(value="/airbusTWord")

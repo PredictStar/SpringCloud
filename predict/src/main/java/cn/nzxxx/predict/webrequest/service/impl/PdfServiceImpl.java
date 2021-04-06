@@ -6,6 +6,7 @@ import cn.nzxxx.predict.toolitem.entity.ReturnClass;
 import cn.nzxxx.predict.toolitem.tool.Helper;
 import cn.nzxxx.predict.webrequest.controller.PDFController;
 import cn.nzxxx.predict.webrequest.controller.TranslateController;
+import cn.nzxxx.predict.webrequest.mybatisJ.jobcard.entity.JobCardBody;
 import cn.nzxxx.predict.webrequest.service.PdfServiceI;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -33,6 +34,8 @@ public class PdfServiceImpl implements PdfServiceI {
     TranslateController translateController ;
     @Autowired
     TranslateServiceImpl translateServiceImpl ;
+    @Autowired
+    TrInStorageServiceImpl trInStorageServiceImpl ;
 	/**
 	 * 获取数据并翻译下载
 	 * @author 子火 
@@ -70,6 +73,36 @@ public class PdfServiceImpl implements PdfServiceI {
     }
 
     /**
+     * CRJ BOEING 数据翻译并入 job_card_body 库
+     * @param analyPdfM
+     * @return
+     * @throws Exception
+     */
+    @Override
+    public String transTCInStorage(Map analyPdfM,Integer jobCardId)throws Exception{
+        String re="";
+        FormPdf fpdf=new FormPdf();
+        String fileType=(String) analyPdfM.get("fileType");
+        fpdf.setFileType(fileType);
+        LinkedHashMap<String,Map<String,String>> translateTemp = getInStorageTemp(fileType);
+        String sentenceL="";
+        //获取所有句柄
+        List<Map<String, Object>> allSentence = translateServiceImpl.getAllSentence(fileType);
+        //句柄根据.拆分(从0开始,即a.b会放在1里,abc放在0里)
+        Map<Integer, List<Map<String, Object>>> splitSentenceL=translateServiceImpl.splitSentenceL(allSentence);
+        sentenceL=Helper.mapToStringJSON(splitSentenceL);
+        ReturnClass returnClass = trInStorageServiceImpl.transInStorage(analyPdfM,translateTemp,sentenceL,jobCardId);
+        if(!"200".equals(returnClass.getStatusCode())){
+            String strE = Helper.pojoToStringJSON(returnClass);
+            logger.error(strE);
+        }else{
+            re=Helper.pojoToStringJSON(returnClass);
+        }
+        return re;
+
+    }
+
+    /**
      * 获取需要翻译的模板数据
      * @return
      */
@@ -96,6 +129,45 @@ public class PdfServiceImpl implements PdfServiceI {
         }
         return map;
     }
+
+    /**
+     * 获取入 job_card_body 库的模板名称
+     * @param fileType
+     * @return
+     */
+    public LinkedHashMap<String,Map<String,String>> getInStorageTemp(String fileType){
+        LinkedHashMap<String,Map<String,String>> map=new LinkedHashMap();
+        if("crj".equals(fileType)){
+            Map titV=new HashMap();
+            titV.put("type","txt");
+            map.put("titV",titV);
+
+            Map startV=new HashMap();
+            startV.put("type","txt");
+            map.put("startV",startV);
+
+            Map tablee=new HashMap();
+            tablee.put("type","table");
+            map.put("tablee",tablee);
+
+            Map endV=new HashMap();
+            endV.put("type","txt");
+            map.put("endV",endV);
+        }else if("boeing".equals(fileType)){
+            Map STAT=new HashMap();
+            STAT.put("type","txt");
+            map.put("STAT",STAT);
+
+            Map TABLET=new HashMap();
+            TABLET.put("type","table");
+            map.put("TABLET",TABLET);
+
+            Map IMAGET=new HashMap();
+            IMAGET.put("type","image");
+            map.put("IMAGET",IMAGET);
+        }
+        return map;
+    }
     //对 analyPdfM 里的 sections(模板里的循环部分,即区块对) 进行获取并翻译
     public void translateSections(Object obj,List sectionsList,String fileType,String sentenceL){
         if(sectionsList==null||obj==null){
@@ -107,7 +179,7 @@ public class PdfServiceImpl implements PdfServiceI {
                 String keyy=(String)key;
                 if(sectionsList.contains(keyy)){
                     String value=(String)map.get(keyy);
-                    value=translateEToC(value,fileType,sentenceL);
+                    value=translateEToC(value,fileType,sentenceL,null);
                     map.put(keyy,value);
                 }else{
                     Object value=map.get(keyy);
@@ -135,19 +207,19 @@ public class PdfServiceImpl implements PdfServiceI {
             String keyy=(String)key;
             if(vallList.contains(keyy)){
                 String value=(String)vallMap.get(keyy);
-                value=tEToC(value,false,fileType,sentenceL);
+                value=tEToC(value,false,fileType,sentenceL,null);
                 vallMap.put(keyy,value);
             }
         }
     }
     //英文转中文
-    public String translateEToC(String English,String fileType,String sentenceL){
+    public String translateEToC(String English,String fileType,String sentenceL,List<JobCardBody> list){
         StringBuilder sbS=new StringBuilder();
         //大块划分为小块
         List<String> splitList = splitEnglish(English);
         for(String str: splitList){
             //再翻译
-            String s = tEToC(str,true,fileType,sentenceL);
+            String s = tEToC(str,true,fileType,sentenceL,list);
             if (sbS.length()==0){
                 sbS.append(s);
             }else{
@@ -157,7 +229,7 @@ public class PdfServiceImpl implements PdfServiceI {
         return sbS.toString();
     }
     //英文转中文,中英内容累加
-    public String tEToC(String English,boolean retract,String fileType,String sentenceL){
+    public String tEToC(String English,boolean retract,String fileType,String sentenceL,List<JobCardBody> list){
         String Chinese="";
         //被翻译内容前的空格获取
         String bla="";
@@ -170,7 +242,7 @@ public class PdfServiceImpl implements PdfServiceI {
         if(matcher.find()){
             bla=bla+matcher.group(0);
         }
-        String translate = translate(English,fileType,sentenceL);
+        String translate = translate(English,fileType,sentenceL,list);
         if(StringUtils.isNotBlank(translate)){
             translate=bla+translate;
             Chinese="\n"+translate;
@@ -181,12 +253,14 @@ public class PdfServiceImpl implements PdfServiceI {
     /**
      * 请求翻译接口
      */
-    public String translate(String English,String fileType,String sentenceL){
+    public String translate(String English,String fileType,String sentenceL,List<JobCardBody> list){
         if(StringUtils.isBlank(English)){
             return "";
         }
+        //初始数据
+        String initEnglish=English;
         English=twiceAnalysis(English);
-        String reStr=tranInterface(English,fileType,sentenceL);
+        String reStr=tranInterface(English,fileType,sentenceL,list,initEnglish);
         return  reStr;
     }
     //对需要翻译内容的二次处理,如去除两边空格,去掉如 (2)
@@ -202,10 +276,10 @@ public class PdfServiceImpl implements PdfServiceI {
         return reStr;
     }
     //翻译
-    public String tranInterface(String English,String fileType,String sentenceL){
+    public String tranInterface(String English,String fileType,String sentenceL,List<JobCardBody> list,String initEnglish){
         String etoc="";
         try {
-            etoc = translateController.etoc(fileType, English, "sentence",sentenceL);
+            etoc = translateController.etocList(fileType, English, sentenceL,list,initEnglish);
         } catch (Exception e) {
             String strE=Helper.exceptionToString(e);
             logger.error(strE);
@@ -225,13 +299,15 @@ public class PdfServiceImpl implements PdfServiceI {
         String[] splitEnglish = English.split("\n");
         boolean nextBol=false;//匹配到后,下一行是否是句子的开头
         for(String str:splitEnglish){
-            if(!nextBol){
+            if(nextBol){
                 nextBol=false;
                 splitList.add(str);
                 continue;
             }
             boolean bol=false;//当前匹配行是否是句子的开头
-            String pp="^ *[A-Z]\\. |^ *\\([a-z]\\) |^ *\\(\\d+\\) |^ *Refer to Figure";
+            //String pp="^ *[A-Z]\\. |^ *\\([a-z]\\) |^ *\\(\\d+\\) |^ *Refer to Figure";
+            //airbus 开头值如 A.Get Access 没有空格
+            String pp="^ *[A-Z]\\.|^ *\\([a-z]\\) |^ *\\(\\d+\\) |^ *Refer to Figure";
             Pattern pattern = Pattern.compile(pp);
             Matcher matcher = pattern.matcher(str);
             if(matcher.find()){

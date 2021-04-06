@@ -2,6 +2,7 @@ package cn.nzxxx.predict.webrequest.controller;
 
 import cn.nzxxx.predict.config.pdftable.FormPdf;
 import cn.nzxxx.predict.toolitem.tool.Helper;
+import cn.nzxxx.predict.webrequest.mybatisJ.jobcard.entity.JobCardBody;
 import cn.nzxxx.predict.webrequest.service.PdfServiceI;
 import cn.nzxxx.predict.webrequest.service.TranslateServiceI;
 import org.apache.commons.lang3.StringUtils;
@@ -45,12 +46,6 @@ public class TranslateController {
             if(StringUtils.isBlank(vall)){
                 return "";
             }
-            vall=Helper.nvlString(vall);
-            //清除两侧的.
-            vall=Helper.trimStringChar(vall,'.');
-            //翻译数据的二次处理,要和TranslateServiceImpl-splitSentenceL-句柄数据的二次处理统一
-            vall=vall.replaceAll("[\\d\\*\\-\\(\\),]"," ").replaceAll("\\s+"," ");
-            vall=Helper.nvlString(vall);
             //professional 可以为空
             if("word".equals(type)){
                 resStr = translate.wordTranslate(vall,professional);
@@ -59,8 +54,26 @@ public class TranslateController {
                 if(StringUtils.isNotBlank(sentenceL)){
                     splitSentenceL=Helper.stringJSONToMap(sentenceL);
                 }
-                resStr = translate.sentenceTranslate(vall,professional,splitSentenceL);
+                resStr = translate.sentenceTranslate(vall,professional,splitSentenceL,null,null);
             }
+        }catch (Exception e){
+            String strE=Helper.exceptionToString(e);
+            logger.error(strE);
+            String strEInfo=strE.substring(0,500>strE.length()?strE.length():500);
+            System.out.println(strEInfo);
+        }
+        return resStr;
+    }
+    public String etocList(String professional,String vall,String sentenceL,List<JobCardBody> list,String initEnglish) throws Exception{
+        String resStr="";
+        try{
+
+            Map<Integer, List<Map<String, Object>>> splitSentenceL=null;
+            if(StringUtils.isNotBlank(sentenceL)){
+                splitSentenceL=Helper.stringJSONToMap(sentenceL);
+            }
+            resStr = translate.sentenceTranslate(vall,professional,splitSentenceL,list,initEnglish);
+
         }catch (Exception e){
             String strE=Helper.exceptionToString(e);
             logger.error(strE);

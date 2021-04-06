@@ -1,8 +1,17 @@
 package cn.nzxxx.predict.webrequest.controller;
 
 import cn.nzxxx.predict.config.pdftable.FormPdf;
+import cn.nzxxx.predict.toolitem.tool.Helper;
+import com.itextpdf.html2pdf.ConverterProperties;
+import com.itextpdf.html2pdf.HtmlConverter;
+import com.itextpdf.html2pdf.resolver.font.DefaultFontProvider;
+import com.itextpdf.io.font.FontProgram;
+import com.itextpdf.io.font.FontProgramFactory;
+import com.itextpdf.layout.font.FontProvider;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.util.ResourceUtils;
@@ -10,6 +19,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,7 +33,7 @@ public class HelloController {
     private Logger logger = LoggerFactory.getLogger(this.getClass());
     public int a=2;
     /**
-     * http://localhost:8081/test/aa
+     * http://localhost:8181/test/aa
      */
     @RequestMapping(value="/test/aa")
     @ResponseBody
@@ -28,15 +41,16 @@ public class HelloController {
         FormPdf fpdf=new FormPdf();
         int abc = 0;
         a++;
-        /*List list=new ArrayList();
-        Map map=new HashMap();
-        map.put("value","12");
-        map.put("text","ggg");
-        Map map2=new HashMap();
-        map2.put("value","2222");
-        map2.put("text","uuuuu");
-        list.add(map);
-        list.add(map2);*/
+        String s="<p style=''>xx黑xx</p><style>p{color:green}</style>";
+        File pdfDest = new File("d:/ruijian/a.pdf");
+        ConverterProperties converterProperties = new ConverterProperties();
+        FontProvider fontProvider = new DefaultFontProvider();
+        InputStream fis = getClass().getClassLoader().getResourceAsStream("META-INF/resources/ttf/heiti.ttf");
+        byte[] in_b = Helper.inputStreamToByte(fis);
+        FontProgram fontProgram1 = FontProgramFactory.createFont(in_b);//("C:/Users/18722/Desktop/heiti.ttf");
+        fontProvider.addFont(fontProgram1);
+        converterProperties.setFontProvider(fontProvider);
+        HtmlConverter.convertToPdf(s,new FileOutputStream(pdfDest), converterProperties);
         return "110";
     }
     @RequestMapping("/hello")

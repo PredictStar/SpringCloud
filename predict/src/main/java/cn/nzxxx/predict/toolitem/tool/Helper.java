@@ -37,11 +37,13 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileItemFactory;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
-import org.apache.commons.lang3.StringUtils;
+
 
 import java.util.Collections;
 import java.util.Comparator;
 import java.net.URI;
+
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -77,6 +79,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.commons.CommonsMultipartFile;
 import sun.misc.BASE64Decoder;
 import sun.misc.BASE64Encoder;
+
+import static org.openxmlformats.schemas.spreadsheetml.x2006.main.STCfvoType.FORMULA;
 
 public class Helper {
 
@@ -382,6 +386,7 @@ public class Helper {
 
 	/**
 	 * 清除字符串两侧的char
+	 * Helper.trimStringChar("112131",'1')->213
 	 * @param str 源字符串
 	 * @param charClear
 	 * @return
@@ -419,7 +424,20 @@ public class Helper {
 		return str==null||str.equals("") ? null : str.trim();
 	}
 
-
+	/**
+	 * InputStream->byte[]
+	 */
+	public static byte[] inputStreamToByte(InputStream inputStream)throws Exception {
+		ByteArrayOutputStream swapStream = new ByteArrayOutputStream();
+		byte[] buff = new byte[1024]; //buff用于存放循环读取的临时数据,即每次从inputStream读取1024字节再赋值给swapStream
+		int rc = 0;
+		while ((rc = inputStream.read(buff, 0, 1024)) > 0) {
+			swapStream.write(buff, 0, rc);
+		}
+		byte[] in_b = swapStream.toByteArray(); //in_b为转换之后的结果
+		swapStream.close();//要关闭Stream流
+		return  in_b;
+	}
 
 	/**
 	 * byte[]转换为BASE64位的字符串

@@ -31,6 +31,7 @@ public class CodeGenerator {
         throw new MybatisPlusException("请输入正确的" + tip + "！");
     }
     //输入如 jobcard amms_job_card
+    //注意 数据源配置要修改!!!!
     public static void main(String[] args) {
         // 代码生成器
         AutoGenerator mpg = new AutoGenerator();
@@ -46,7 +47,7 @@ public class CodeGenerator {
 
         // 数据源配置
         DataSourceConfig dsc = new DataSourceConfig();
-        dsc.setUrl("jdbc:mysql://predictstar.mysql.rds.aliyuncs.com:3306/memp?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC");
+        dsc.setUrl("jdbc:mysql://127.0.0.1:3306/memp?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC");
         // dsc.setSchemaName("public");
         dsc.setDriverName("com.mysql.jdbc.Driver");
         dsc.setUsername("memp");

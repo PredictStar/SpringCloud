@@ -4,8 +4,10 @@ package cn.nzxxx.predict.webrequest.service.impl;
 import cn.nzxxx.predict.config.pdftable.FormPdf;
 import cn.nzxxx.predict.toolitem.entity.ReturnClass;
 import cn.nzxxx.predict.toolitem.tool.Helper;
+import cn.nzxxx.predict.webrequest.mybatisJ.jobcard.entity.JobCardBody;
 import cn.nzxxx.predict.webrequest.service.PdfServiceI;
 import cn.nzxxx.predict.webrequest.service.TranslateServiceI;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.util.StringUtil;
 import org.apache.taglibs.standard.lang.jstl.NullLiteral;
@@ -18,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -209,7 +212,17 @@ public class TranslateServiceImpl implements TranslateServiceI {
      *  匹配时去掉非必要特征值,如the
      *  professional 专业类型,可以为空(表不查专业类型单词)(查询条件有此则优先选专业类型是其的)
      */
-    public String sentenceTranslate(String vall, String professional,Map<Integer, List<Map<String, Object>>> splitSentenceL) {
+    public String sentenceTranslate(String vall, String professional,Map<Integer, List<Map<String, Object>>> splitSentenceL,List<JobCardBody> list,String initEnglish) {
+
+        //翻译内容的二次处理
+        vall=Helper.nvlString(vall);
+        //清除两侧的.
+        vall=Helper.trimStringChar(vall,'.');
+        //所需翻译数据的二次处理,要和TranslateServiceImpl-splitSentenceL-句柄数据的二次处理统一
+        //vall=vall.replaceAll("(\\w+-)+\\w{1,}|[\\d\\*\\-\\(\\),:;&]"," ").replaceAll("\\s+"," ");
+        vall=vall.replaceAll("(\\w+-)+\\w{1,}","x-x").replaceAll("\\d+(\\.\\d+)?","0").replaceAll("[\\*\\(\\),:;&]"," ").replaceAll("\\s+"," ");
+
+        vall=Helper.nvlString(vall);
         if(splitSentenceL==null||splitSentenceL.size()==0){
             //获取所有句柄
             List<Map<String, Object>> allSentence = getAllSentence(professional);
@@ -223,38 +236,68 @@ public class TranslateServiceImpl implements TranslateServiceI {
             int paragraphsL=paragraphs.length;
             //先整体翻译
             List<Map<String, Object>> sentenceA=splitSentenceL.get(paragraphs.length-1);
-            Integer indexx = sentenceMatch(vall,sentenceA);
+            Map m=sentenceMatch(vall,sentenceA);
+            Integer indexx =(Integer) m.get("idd");
+            //段落匹配度
+            double dlMatchRate=(double) m.get("reMatchRate");
+            logger.info("段落匹配度:"+dlMatchRate);
             //根据idd获取sentence_chinese
             String sentence = getIddV(indexx);
             //当整段就是一句话,就不用逐句翻译了,前已经匹配执行过了
             if(StringUtils.isBlank(sentence)&&paragraphsL>1){
                 List<Map<String, Object>> sentence0=splitSentenceL.get(0);
+                int i=0; dlMatchRate=0.0;String des="单句匹配度:";
                 for(String strP:paragraphs){
+                    i++;
                     //句子的获取
                     strP=Helper.nvlString(strP);
                     //翻译后的句子
-                    indexx = sentenceMatch(strP,sentence0);
+                    m=sentenceMatch(strP,sentence0);
+                    indexx = (Integer) m.get("idd");
+                    double jzMatchRate=(double) m.get("reMatchRate");
+                    dlMatchRate+=jzMatchRate;
+                    des+=jzMatchRate+";";
                     sentence = getIddV(indexx);
                     if(StringUtils.isBlank(sentence)){
-                        sentence="无此句柄,需自行查询";
+                        sentence="";//匹配度过低
                     }
                     if(resStr.length()==0){
                         resStr.append(sentence);
                     }else {
-                        resStr.append("。"+sentence);
+                        resStr.append("."+sentence);
                     }
                 }
+                dlMatchRate=dlMatchRate/i;
+                logger.info("多句子综合匹配度:"+dlMatchRate+";"+des);
             }else{
                 resStr.append(sentence);
             }
             if(StringUtils.isBlank(sentence)){
-                resStr.append("无此句柄,需自行查询");
+                resStr.append("");//匹配度过低
+            }
+            if(list!=null){
+                JobCardBody jcb=new JobCardBody();
+                jcb.setBodytype("TXT");
+                String[] bs=initEnglish.split("\n");
+                StringBuilder initE=new StringBuilder();
+                for(String str:bs){
+                    str= str.replaceAll("  ","&nbsp;&nbsp;");
+                    initE.append("<p>"+str+"</p>");
+                }
+                jcb.setBodyval("<div>"+initE.toString()+"</div>");//原始内容
+                BigDecimal beichushu=new BigDecimal(dlMatchRate);
+                beichushu=beichushu.setScale(5,BigDecimal.ROUND_DOWN);
+                double matchN=beichushu.doubleValue();//匹配度
+                jcb.setMatchn(matchN);
+                String ranslateres=resStr.toString();//内容翻译结果
+                jcb.setTranslateres(ranslateres);
+                list.add(jcb);
             }
         }
         return resStr.toString();
     }
     //匹配查询到的所有句柄,获取匹配最高的那个
-    public Integer sentenceMatch(String strP,List<Map<String, Object>> allSentence){
+    public Map sentenceMatch(String strP,List<Map<String, Object>> allSentence){
         Integer idd=null;
         //最大匹配度时对应下标,方便提取其它关键数据
         Integer indexx=null;
@@ -273,10 +316,10 @@ public class TranslateServiceImpl implements TranslateServiceI {
             /*if(strP.equals("Refer to Figure 1")){
                 System.out.println("匹配度:"+reMatchRate);
             }*/
-            if(reMatchRate>allowMatchRate){
-                if(reMatchRate>maxMatchRate){
+            if(reMatchRate>maxMatchRate){
+                maxMatchRate=reMatchRate;
+                if(reMatchRate>allowMatchRate){
                     indexx=i;
-                    maxMatchRate=reMatchRate;
                 }
             }
         }
@@ -284,7 +327,10 @@ public class TranslateServiceImpl implements TranslateServiceI {
             Map<String, Object> stringObjectMap = allSentence.get(indexx);
             idd=(Integer)stringObjectMap.get("idd");
         }
-        return idd;
+        Map map=new HashMap();
+        map.put("idd",idd);
+        map.put("reMatchRate",maxMatchRate);
+        return map;
     }
     /**
      * 返回俩字符串匹配度,b和a的相似度
@@ -404,7 +450,8 @@ public class TranslateServiceImpl implements TranslateServiceI {
             sentence_val=Helper.nvlString(sentence_val);
             sentence_val=Helper.trimStringChar(sentence_val,'.');
             //句柄数据的二次处理
-            sentence_val=sentence_val.replaceAll("[\\d\\*\\-\\(\\),]"," ").replaceAll("\\s+"," ");
+            //sentence_val=sentence_val.replaceAll("(\\w+-)+\\w{1,}|[\\d\\*\\-\\(\\),:;&]"," ").replaceAll("\\s+"," ");
+            sentence_val=sentence_val.replaceAll("(\\w+-)+\\w{1,}","x-x").replaceAll("\\d+(\\.\\d+)?","0").replaceAll("[\\*\\(\\),:;&]"," ").replaceAll("\\s+"," ");
             sentence_val=Helper.nvlString(sentence_val);
             ele.put("sentence_val",sentence_val);
             //获取.的个数

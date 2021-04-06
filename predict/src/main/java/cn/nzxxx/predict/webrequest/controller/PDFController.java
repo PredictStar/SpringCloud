@@ -351,4 +351,31 @@ public class PDFController {
         return re;
     }
 
+    /**
+     * CRJ BOEING 数据翻译并入 job_card_body 库
+     * @param idd
+     * @param type
+     * jobCardId   JobCard 表主键
+     * @return
+     */
+    @RequestMapping(value="/transTCInStorage")
+    public String transTCInStorage(String idd,String type,Integer jobCardId){
+        String re="";
+        try{
+            String analyPdfData=pdfSer.getAnalyPdfData(idd,type);
+            if(StringUtils.isBlank(analyPdfData)){
+                return re;
+            }
+            //解决 stringJSONToMap 会报错的问题(analyPdfData的colMatch(列匹配规则中有\导致))
+            String analyPdfDataN=analyPdfData.replaceAll("\\\\","反斜杠暂时去掉");
+            Map analyPdfM = Helper.stringJSONToMap(analyPdfDataN);
+            re=pdfSer.transTCInStorage(analyPdfM,jobCardId);
+        }catch (Exception e){
+            String strE=Helper.exceptionToString(e);
+            logger.error(strE);
+            String strEInfo=strE.substring(0,500>strE.length()?strE.length():500);
+            System.out.println(strEInfo);
+        }
+        return re;
+    }
 }
