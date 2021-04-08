@@ -211,6 +211,7 @@ public class TranslateServiceImpl implements TranslateServiceI {
      *  六个单词以下,要100%才表示匹配上
      *  匹配时去掉非必要特征值,如the
      *  professional 专业类型,可以为空(表不查专业类型单词)(查询条件有此则优先选专业类型是其的)
+     *  vall 是不包括如 A. 2. 内容的元素;initEnglish 是最原始的翻译前数据
      */
     public String sentenceTranslate(String vall, String professional,Map<Integer, List<Map<String, Object>>> splitSentenceL,List<JobCardBody> list,String initEnglish) {
 
@@ -219,7 +220,7 @@ public class TranslateServiceImpl implements TranslateServiceI {
         //清除两侧的.
         vall=Helper.trimStringChar(vall,'.');
         //所需翻译数据的二次处理,要和TranslateServiceImpl-splitSentenceL-句柄数据的二次处理统一
-        //vall=vall.replaceAll("(\\w+-)+\\w{1,}|[\\d\\*\\-\\(\\),:;&]"," ").replaceAll("\\s+"," ");
+        String oldvall=vall.replaceAll("[\\*\\(\\),:;&]"," ").replaceAll("\\s+"," ");;
         vall=vall.replaceAll("(\\w+-)+\\w{1,}","x-x").replaceAll("\\d+(\\.\\d+)?","0").replaceAll("[\\*\\(\\),:;&]"," ").replaceAll("\\s+"," ");
 
         vall=Helper.nvlString(vall);
@@ -232,10 +233,11 @@ public class TranslateServiceImpl implements TranslateServiceI {
         StringBuilder resStr=new StringBuilder();
         if(StringUtils.isNotBlank(vall)){
             //段落拆分为句子数组
-            String[] paragraphs = vall.split("\\.");
-            int paragraphsL=paragraphs.length;
+            List<String> paragraphs = Helper.splitList(vall);
+            List<String> oldparagraphs = Helper.splitList(oldvall);
+            int paragraphsL=paragraphs.size();
             //先整体翻译
-            List<Map<String, Object>> sentenceA=splitSentenceL.get(paragraphs.length-1);
+            List<Map<String, Object>> sentenceA=splitSentenceL.get(paragraphs.size()-1);
             Map m=sentenceMatch(vall,sentenceA);
             Integer indexx =(Integer) m.get("idd");
             //段落匹配度
@@ -244,11 +246,14 @@ public class TranslateServiceImpl implements TranslateServiceI {
             //根据idd获取sentence_chinese
             String sentence = getIddV(indexx);
             //当整段就是一句话,就不用逐句翻译了,前已经匹配执行过了
-            if(StringUtils.isBlank(sentence)&&paragraphsL>1){
+            if(StringUtils.isBlank(sentence)&&paragraphsL>0){
                 List<Map<String, Object>> sentence0=splitSentenceL.get(0);
-                int i=0; dlMatchRate=0.0;String des="单句匹配度:";
-                for(String strP:paragraphs){
-                    i++;
+                //int i=0;
+                dlMatchRate=0.0;
+                String des="单句匹配度:";
+                for(int ii=0;ii<paragraphs.size();ii++){
+                    String strP=paragraphs.get(ii);
+                    //i++;
                     //句子的获取
                     strP=Helper.nvlString(strP);
                     //翻译后的句子
@@ -260,6 +265,12 @@ public class TranslateServiceImpl implements TranslateServiceI {
                     sentence = getIddV(indexx);
                     if(StringUtils.isBlank(sentence)){
                         sentence="";//匹配度过低
+                    }else{
+                        if(oldparagraphs.size()!=paragraphs.size()){
+                            logger.error("paragraphs与oldparagraphs长度不符,请前往调试");
+                        }else{
+                            sentence=Helper.replaceStr(oldparagraphs.get(ii),sentence,"(\\w+-)+\\w{1,}");
+                        }
                     }
                     if(resStr.length()==0){
                         resStr.append(sentence);
@@ -267,9 +278,10 @@ public class TranslateServiceImpl implements TranslateServiceI {
                         resStr.append("."+sentence);
                     }
                 }
-                dlMatchRate=dlMatchRate/i;
+                dlMatchRate=dlMatchRate/paragraphs.size();
                 logger.info("多句子综合匹配度:"+dlMatchRate+";"+des);
             }else{
+                sentence=Helper.replaceStr(oldvall,sentence,"(\\w+-)+\\w{1,}");
                 resStr.append(sentence);
             }
             if(StringUtils.isBlank(sentence)){
@@ -298,6 +310,9 @@ public class TranslateServiceImpl implements TranslateServiceI {
     }
     //匹配查询到的所有句柄,获取匹配最高的那个
     public Map sentenceMatch(String strP,List<Map<String, Object>> allSentence){
+        if(allSentence==null){
+            allSentence=new ArrayList<>();
+        }
         Integer idd=null;
         //最大匹配度时对应下标,方便提取其它关键数据
         Integer indexx=null;

@@ -60,24 +60,24 @@ public class InterfaceServiceImpl implements InterfaceServiceI {
     @Autowired
     private JobCardBodyMapper jobCardBodyMapper;
     @Override
-    public String syncJobCard(String ACTYPE, String CARDSOURCE, String JOBCARDNO)throws Exception {
+    public String syncJobCard(String IDD,String CARDSOURCE,String CREATEDBY)throws Exception {
         String resstr;
         //转大写
         CARDSOURCE=CARDSOURCE.toUpperCase();
         String sql;
         if("CRJ".equalsIgnoreCase(CARDSOURCE)){
-            sql =jobCardCrj(ACTYPE, JOBCARDNO);
+            sql =jobCardCrj(IDD);
         }else if("BOEING".equalsIgnoreCase(CARDSOURCE)){
-            sql =jobCardBoeing(ACTYPE, JOBCARDNO);
+            sql =jobCardBoeing(IDD);
         }else if("AIRBUS".equalsIgnoreCase(CARDSOURCE)){
-            sql =jobCardAirbus(ACTYPE, JOBCARDNO);
+            sql =jobCardAirbus(IDD);
         }else{
             resstr =Help.returnClass(300,"来源不匹配","非CRJ/BOEING/AIRBUS");
             return resstr;
         }
         List<Map<String, Object>> re=jdbcTemplate.queryForList(sql);
         if(re.size()==0){
-            resstr =Help.returnClass(200,"无查询结果","ACTYPE:"+ACTYPE);
+            resstr =Help.returnClass(200,"无查询结果","CARDSOURCE:"+CARDSOURCE+";IDD"+IDD);
             return resstr;
         }
         Map<String, Object> minM=re.get(0);
@@ -86,6 +86,7 @@ public class InterfaceServiceImpl implements InterfaceServiceI {
         String uuid = UUID.randomUUID().toString().replaceAll("-", "");
         minM.put("uuid",uuid);
         minM.put("CARDSOURCE",CARDSOURCE);
+        minM.put("CREATEDBY",CREATEDBY);
         //插入 JobCard 表
         int insert = insertJobCard(minM);
         if(insert==0){
@@ -123,7 +124,7 @@ public class InterfaceServiceImpl implements InterfaceServiceI {
             //赋值 Reference 数据
             setSyncReference(jobCardId, getSyncReference);
         }
-        resstr=Help.returnClass(200,"数据同步成功","ACTYPE:"+ACTYPE+";CARDSOURCE:"+CARDSOURCE+";JOBCARDNO:"+JOBCARDNO);
+        resstr=Help.returnClass(200,"数据同步成功","IDD:"+IDD+";CARDSOURCE:"+CARDSOURCE+";CREATEDBY:"+CREATEDBY);
         return resstr;
     }
     //生成 Airbus 翻译后 word 并返回生成地址
@@ -197,14 +198,8 @@ public class InterfaceServiceImpl implements InterfaceServiceI {
         return re;
     }
     //000-25-900-101 (Config A43)  CRJ900
-    public String jobCardCrj(String ACTYPE, String JOBCARDNO)throws Exception{
+    public String jobCardCrj(String IDD)throws Exception{
         //工卡机型 TASK_CARD_AC,值如 CRJ700/900/1000
-        //工卡号 TASK_CARD_NUMBER
-        //适用性 AIRCRAFT_EFFECTIVITY
-        /*String type="CRJ";
-        if(StringUtils.isNotBlank(ACTYPE)){
-            ACTYPE=ACTYPE.replaceAll(type,"");
-        }*/
         String sql="SELECT\n" +
                 "t.CRJ_CARD_ID as IDD,\n" +
                 "t.TASK_CARD_AC as ACTYPE,\n" +
@@ -220,21 +215,11 @@ public class InterfaceServiceImpl implements InterfaceServiceI {
                 "'' as REVISON\n" +
                 "FROM\n" +
                 "crj_card AS t\n" +
-                "where t.TASK_CARD_NUMBER='"+JOBCARDNO+"' ";
-
-        if(StringUtils.isNotBlank(ACTYPE)){
-            // sql+="and FIND_IN_SET('"+ACTYPE+"',REPLACE(REPLACE(t.TASK_CARD_AC,'CRJ',''),'/',','))>0 ";
-            sql+="and t.TASK_CARD_AC='"+ACTYPE+"' ";
-        }
+                "where t.CRJ_CARD_ID='"+IDD+"' ";
         return sql;
     }
-    public String jobCardBoeing(String ACTYPE, String JOBCARDNO)throws Exception{
+    public String jobCardBoeing(String IDD)throws Exception{
         //工卡机型 TASK_CARD_AC,值如 737-600/700/800/900
-        //工卡号 CARDNUM
-        //适用性 AIRPLANE(即飞机的适应性)  ENGINE(即引擎的适应性-暂时没用上)
-        /*if(StringUtils.isNotBlank(ACTYPE)){
-            ACTYPE=ACTYPE.replaceAll("737-","");
-        }*/
         String sql="SELECT \n" +
                 "t.BOEING_CARD_ID as IDD,\n" +
                 "t.TASK_CARD_AC as ACTYPE,\n" +
@@ -249,13 +234,10 @@ public class InterfaceServiceImpl implements InterfaceServiceI {
                 "t.AIRPLANE as APPL,\n" +
                 "t.VERSION as REVISON\n" +
                 "FROM boeing_card t\n" +
-                "where t.CARDNUM='"+JOBCARDNO+"'" ;
-        if(StringUtils.isNotBlank(ACTYPE)){
-            sql+="and t.TASK_CARD_AC='"+ACTYPE+"' ";
-        }
+                "where t.BOEING_CARD_ID='"+IDD+"'" ;
         return sql;
     }
-    public String jobCardAirbus(String ACTYPE, String JOBCARDNO)throws Exception{
+    public String jobCardAirbus(String IDD)throws Exception{
         String sql="SELECT \n" +
                 "t.CARDID as IDD,\n" +
                 "t.ACTYPE as ACTYPE,\n" +
@@ -270,10 +252,7 @@ public class InterfaceServiceImpl implements InterfaceServiceI {
                 "t.EFFRG as APPL,\n" +
                 "t.REVISON as REVISON\n" +
                 "FROM amms_job_card t\n" +
-                "where t.JOBCARDNO='"+JOBCARDNO+"'" ;
-        if(StringUtils.isNotBlank(ACTYPE)){
-            sql+="and t.ACTYPE='"+ACTYPE+"' ";
-        }
+                "where t.CARDID='"+IDD+"'" ;
         return sql;
     }
     /**
@@ -301,6 +280,7 @@ public class InterfaceServiceImpl implements InterfaceServiceI {
         jc.setAppl((String) minM.get("APPL"));
         jc.setCardsource((String) minM.get("CARDSOURCE"));
         jc.setRevison((String)minM.get("REVISON"));
+        jc.setCreatedby((String)minM.get("CREATEDBY"));
         /*String pathh=(String) minM.get("pathh");*/
         /*if(StringUtils.isBlank(pathh)){
             jc.setWordpath(null);//翻译后word路径

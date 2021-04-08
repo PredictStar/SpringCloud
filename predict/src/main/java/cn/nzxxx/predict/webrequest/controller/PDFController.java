@@ -145,18 +145,20 @@ public class PDFController {
 
     }
     /**
-     * http://localhost:8081/pdf/executePDFForm
+     * http://localhost:8181/pdf/executePDFForm?AMMID=2
      * @return 状态说明
      * @throws Exception
      * 使用: 从 amm_file 提取标记是是0的,进行解析PDF是Form格式的(即工卡)
      */
     @RequestMapping("/executePDFForm")
-    public ReturnClass executePDFForm(){
-        ReturnClass reC=Help.returnClassT(200,"executePDFForm操作成功","");
+    public ReturnClass executePDFForm(String AMMID){
+        ReturnClass reC= Help.return5001DescribeT(AMMID);
+        if(reC!=null){
+            return reC;
+        }
+        reC=Help.returnClassT(200,"executePDFForm操作成功","");
         Date sdate=new Date();
-        //每次查多少个(最好少于450,in里达到459个的时候就不会用索引了)
-        int limitt=60;
-        List<Map<String, Object>> pdf = getPDF(limitt);
+        List<Map<String, Object>> pdf = getPDF(AMMID);
         if(pdf.size()==0){
             reC=Help.returnClassT(200,"文件表无查询结果","");
         }else{
@@ -177,7 +179,7 @@ public class PDFController {
         return reC;
     }
     //查询需操作文件
-    public List<Map<String, Object>> getPDF(int limitt){
+    public List<Map<String, Object>> getPDF(String AMMID){
         String sql="SELECT\n" +
                 "f.AMM_FILE_ID,\n" +
                 "f.FILENAME,\n" +
@@ -188,7 +190,7 @@ public class PDFController {
                 "amm_file AS f\n" +
                 "WHERE\n" +
                 "f.IS_EXECUTE = 0\n" +
-                "LIMIT "+limitt;
+                "and f.AMMID="+AMMID;
         List<Map<String, Object>> re=jdbcTemplate.queryForList(sql);
         if(re.size()>0){
             //占数据,使 IS_EXECUTE=1

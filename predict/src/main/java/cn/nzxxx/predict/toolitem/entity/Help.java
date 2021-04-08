@@ -95,7 +95,6 @@ public class Help {
 	/**
 	 * 根据参返回状态码类描述
 	 * 参1,参2,参3为NULL或'',返回已经定义好的状态码描述
-	 * @return 返回null表正常 ;否则返回,Help.returnClassT(500, "异常,传递的参为NULL或''!");//理论上前台应该已经拦截验证.
 	 */
 	public static ReturnClass return5003DescribeT(String str1,String str2,String str3) {
 		str1=Helper.eToNULL(str1);
@@ -120,7 +119,18 @@ public class Help {
 		}else{
 			return null;
 		}
-
+	}
+	/**
+	 * 根据参返回状态码类描述
+	 * 参1为NULL或'',返回已经定义好的状态码描述
+	 */
+	public static ReturnClass return5001DescribeT(String str) {
+		str=Helper.eToNULL(str);
+		if(str==null){
+			return Help.returnClassT(500, "异常,传递的参为NULL或''!",null);//理论上前台应该已经拦截验证.
+		}else{
+			return null;
+		}
 	}
 	/**
 	 * 根据参返回状态码类描述-前台值为空Internet默认为null

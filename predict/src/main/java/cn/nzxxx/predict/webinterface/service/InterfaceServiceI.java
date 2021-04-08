@@ -6,7 +6,7 @@ import java.util.Map;
 
 public interface InterfaceServiceI {
 
-	public String syncJobCard(String ACTYPE,String CARDSOURCE,String JOBCARDNO)throws Exception;
+	public String syncJobCard(String ID,String CARDSOURCE,String CREATEDBY)throws Exception;
 
 	public String translateAirbusRC(Integer idInit)throws Exception;
 }

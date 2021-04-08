@@ -36,9 +36,10 @@ public class WebInterfaceController {
 
     /**
      *  同步数据到 job_card job_card_tool job_card_materials job_card_reference --翻译数据会存在 job_card_body
-     *  localhost:8081/interface/syncJobCard?param=%7BACTYPE:%22CRJ700/900/1000%22,CARDSOURCE:%22CRJ%22,JOBCARDNO:%22000-25-900-101%20(Config%20A43)%22%7D
-     *  CARDSOURCE 值: CRJ BOEING  AIRBUS
-     *  ACTYPE 值 即如 crj_card 的TASK_CARD_AC(CRJ700/900/1000) 可不传
+     *  localhost:8081/interface/syncJobCard?param=%7BID:%22957%22,CREATEDBY:%22ligeng%22,CARDSOURCE:%22CRJ%22%7D
+     *  CARDSOURCE :CRJ;BOEING;AIRBUS (类型)
+     *  ID :主键
+     *  CREATEDBY :创建人
      * @throws Exception
      */
     @RequestMapping(value="/syncJobCard")
@@ -50,18 +51,18 @@ public class WebInterfaceController {
                 return resstr;
             }
             Map map = Helper.stringJSONToMap(param);
-            //机型
-            String ACTYPE=(String)map.get("ACTYPE");
-            //来源
+            //主键
+            String ID=(String)map.get("ID");
+            //类型
             String CARDSOURCE=(String)map.get("CARDSOURCE");
-            //工卡号
-            String JOBCARDNO=(String)map.get("JOBCARDNO");
+            //创建人
+            String CREATEDBY=(String)map.get("CREATEDBY");
             //参数非空校验
-            resstr = Help.return5002Describe(CARDSOURCE, JOBCARDNO);
+            resstr = Help.return5002Describe(ID, CARDSOURCE);
             if(resstr!=null){
                 return resstr;
             }
-            resstr =interfaceServiceI.syncJobCard(ACTYPE, CARDSOURCE, JOBCARDNO);
+            resstr =interfaceServiceI.syncJobCard(ID, CARDSOURCE, CREATEDBY);
         }catch (Exception e){
             String strE=Helper.exceptionToString(e);
             logger.error(strE);
@@ -103,34 +104,4 @@ public class WebInterfaceController {
         }
         return resstr;
     }
-
-
-    /**
-     * 获取所在磁盘信息
-     * @author 子火
-     * @Date 2019年5月5日12:12:59
-     * @return 实体类
-     * @throws  Exception 接口若扔出了异常要有此
-     */
-    @RequestMapping(value="/getDiskInfo")
-    public List<Map> getDiskInfo() throws Exception{
-        List<Map> list=new ArrayList<>();
-        File[] roots = File.listRoots();//获取磁盘分区列表
-        for (File file : roots) {
-            double totalSize=file.getTotalSpace()/1024/1024/1024;//总空间
-            double freeSize=file.getFreeSpace()/1024/1024/1024;//空闲空间
-            double usableSize=file.getUsableSpace()/1024/1024/1024;//可用空间
-            double usedSize=totalSize-freeSize;//已使用容量
-            Map map=new HashMap();
-            map.put("fpath",file.getPath());
-            map.put("total",totalSize+"G");//总容量
-            map.put("free",freeSize+"G");//空闲空间
-            map.put("usable",usableSize+"G");//可用空间
-            map.put("used",usedSize+"G");//已使用容量-总减空闲
-            list.add(map);
-        }
-        return list;
-    }
-
-
 }

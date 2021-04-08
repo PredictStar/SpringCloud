@@ -383,6 +383,79 @@ public class Helper {
 		}
 		return list;
 	}
+	/**
+	 * splitList("44.3.dd")
+	 * 返回  [44.3,dd]
+	 */
+	public static List<String> splitList(String str){
+		List<String> list=new ArrayList<String>();
+		StringBuilder sb=new StringBuilder();
+		boolean istrue=true;
+		for (int i = 0; i < str.length(); i++) {
+			char  item =  str.charAt(i);
+			if((item=='.')&&(istrue)){
+				list.add(sb.toString());
+				sb=new StringBuilder("");
+			}else{
+				sb.append(item);
+			}
+			istrue=true;
+			if(Helper.isInt(String.valueOf(item),false)){
+				int i1 = i + 2;
+				if(i1<str.length()){
+					char  item1 =  str.charAt(i1);
+					if(Helper.isInt(String.valueOf(item1),false)){
+						istrue=false;
+					}
+				}
+			}
+		}
+		if(sb.length()!=0){
+			list.add(sb.toString());
+		}
+		return list;
+	}
+	/**
+	 * replaceStr("SUBTASKNO: 24-21-00-410-074-A1 dsa 24-21-00-410-074-B2", "子任务: 00-00-0220-000-000-A12 00-00-00-000-000-A","(\\w+-)+\\w{1,}");
+	 * 返回 子任务: 24-21-00-410-074-A1 24-21-00-410-074-B2
+	 * 匹配到的内容个数要相同,否则返回b
+	 */
+	public static String replaceStr(String a,String b,String match){
+		if(StringUtils.isBlank(a)||StringUtils.isBlank(b)){
+			return b;
+		}
+		try{
+			List<String> lista=new ArrayList<String>();
+			Pattern pattern = Pattern.compile(match);
+			Matcher matcher = pattern.matcher(a);
+			while(matcher.find()){
+				String group = matcher.group(0);
+				lista.add(group);
+			}
+			int size = lista.size();
+			//System.out.println(size);
+			if(size>0){
+				String c=b.replaceAll(match,"%s");
+				int lengthc = c.length();
+				String d=c.replaceAll("%s"," ");
+				int lengthd = d.length();
+				//占位符个数
+				int i=lengthc-lengthd;
+				//System.out.println(i);
+				if(i==size){
+					//执行替换
+					String[] stra = lista.toArray(new String[lista.size()]);
+					String str=String.format(c,stra);
+					//System.out.println(str);
+					return str;
+				}
+			}
+		}catch(Exception e){
+			System.out.println(Helper.exceptionToString(e));
+			return b;
+		}
+		return b;
+	}
 
 	/**
 	 * 清除字符串两侧的char

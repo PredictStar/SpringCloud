@@ -98,8 +98,6 @@ public class FormPdf {
         crjMap.put("tableRule",tableCRJ);
 
         crjMap.put("temp","taskCardCRJT");//模板名称
-        crjMap.put("imageW",660);//图片宽
-        crjMap.put("imageH",960);//图片高
         //页面类型规则定义(1:word的首页;2:需解析的页面;剩余解析成图片(注意analyPdfM没值时图片数据先不赋进去))
         //前260字包含(7)(8)(9)(10)(11)表是测试页面
         Map<String, Integer> pageTypeCM=new LinkedCaseInsensitiveMap();
@@ -297,6 +295,10 @@ public class FormPdf {
         crjMap.put("spaceRule",spaceRuleCRJ);
         //缩进空格数
         crjMap.put("spaceNextNum",3);
+        //图片页面的头和底坐标
+        crjMap.put("imageTBY",Arrays.asList(200,1400));
+        crjMap.put("imageW",660);//图片宽
+        crjMap.put("imageH",960);//图片高
         mapp.put("crj",crjMap);//对crj的整体定义
         //------------BOEING 开始--------------------
         Map<String,Object> boeingMap=new HashMap<String,Object>();

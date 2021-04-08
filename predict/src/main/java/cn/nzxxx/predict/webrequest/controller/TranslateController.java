@@ -67,7 +67,6 @@ public class TranslateController {
     public String etocList(String professional,String vall,String sentenceL,List<JobCardBody> list,String initEnglish) throws Exception{
         String resStr="";
         try{
-
             Map<Integer, List<Map<String, Object>>> splitSentenceL=null;
             if(StringUtils.isNotBlank(sentenceL)){
                 splitSentenceL=Helper.stringJSONToMap(sentenceL);
