@@ -35,7 +35,7 @@
         <jstl.version>1.2</jstl.version>
         <servlet-api.version>3.0-alpha-1</servlet-api.version>
         <jsp-api.version>2.0</jsp-api.version>
-        <jackson.version>2.11.4</jackson.version>
+        <jackson.version>2.12.6.1</jackson.version>
         <org.apache.poi>4.1.2</org.apache.poi>
         <commons-fileupload.version>1.4</commons-fileupload.version>
         <jedis.version>3.0.1</jedis.version>
